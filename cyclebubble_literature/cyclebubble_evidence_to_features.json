@@ -1,0 +1,64 @@
+{
+  "定位": "把文献当成产品设计依据，而不是论文综述",
+  "可用证据": [
+    {
+      "group": "周期与情绪有关",
+      "usable_evidence": "文献共同说明：月经周期存在显著个体差异，PMS/PMDD 等研究也表明部分用户在特定周期阶段更容易出现情绪、身体或行为变化。因此，周期可以作为理解情绪波动的一个重要线索，但不能被当成确定诊断。",
+      "feature": "周期泡泡 + 情绪倾向提示",
+      "design_decision": "把周期状态做成可视化泡泡，用颜色、大小和概率表达“当前可能处于哪个阶段、可能更容易出现哪些情绪倾向”。不说“你一定会焦虑/低落”，而说“你可能更敏感、更需要休息”。",
+      "supporting_papers": [
+        "Real-world menstrual cycle characteristics of more than 600,000 menstrual cycles",
+        "Recent advances in understanding/management of premenstrual dysphoric disorder/premenstrual syndrome",
+        "A scoping review of hormonal clinical trials in menstrual cycle-related brain disorders"
+      ],
+      "simple_chain": "文献证明周期差异和情绪关联存在 → 周期状态可视化 → 只做趋势提示，不做医学诊断"
+    },
+    {
+      "group": "用户需要自我理解工具",
+      "usable_evidence": "文献共同说明：用户使用周期追踪 App 的目的不只是预测经期，还包括理解身体、管理健康、提升健康素养和观察情绪变化。EMA/日记类研究也支持通过持续、轻量、情境化记录来捕捉日常情绪波动。",
+      "feature": "周期记录 + 情绪日记 + 温和反馈",
+      "design_decision": "把产品重点放在“帮助用户看懂自己”，而不是单纯做经期提醒。情绪日记应像便签一样轻量，反馈应温和、非评判，避免给用户贴“焦虑”“易怒”等强标签。",
+      "supporting_papers": [
+        "Menstrual Cycle Management and Period Tracker App Use in Millennial and Generation Z Individuals",
+        "A good little tool to get to know yourself a bit better",
+        "Possible Application of Ecological Momentary Assessment to Older Adults’ Daily Depressive Mood",
+        "Barriers to and Facilitators of User Engagement With Digital Mental Health Interventions"
+      ],
+      "simple_chain": "文献证明用户需要了解自己 → 情绪日记 + 温和反馈 → 降低记录负担，减少标签化表达"
+    },
+    {
+      "group": "匿名表达和同伴支持有效",
+      "usable_evidence": "文献共同说明：在线求助和同伴支持能降低表达门槛，为用户提供情感支持、经验分享和归属感；同时，女性健康数据高度敏感，必须重视隐私、匿名和最小化数据采集。语义相似度技术可支撑基于文本表达的相似经历匹配。",
+      "feature": "匿名共鸣卡片",
+      "design_decision": "用匿名内容卡片连接相似经历，而不是做好友关系、私信或公开社区。系统只匹配表达相似的人和内容，不展示身份，不抓取外部互联网内容，优先保护隐私和表达安全。",
+      "supporting_papers": [
+        "Online Peer-to-Peer Support for Young People With Mental Health Problems",
+        "Young People’s Online Help-Seeking and Mental Health Difficulties",
+        "Privacy, Data Sharing, and Data Security Policies of Women’s mHealth Apps",
+        "How private is your period?",
+        "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks"
+      ],
+      "simple_chain": "文献证明匿名支持有效 → 匿名共鸣卡片 → 不做好友/私信，只做内容回应"
+    }
+  ],
+  "功能映射": [
+    {
+      "evidence": "周期差异和周期相关情绪变化存在",
+      "feature": "周期泡泡可视化",
+      "product_expression": "用泡泡状态表达周期阶段概率和情绪倾向",
+      "boundary": "不做医学诊断，只做趋势提示"
+    },
+    {
+      "evidence": "用户需要通过记录理解自己",
+      "feature": "情绪日记 + 温和反馈",
+      "product_expression": "用便签式日记记录事件和感受，并给出非评判式解释",
+      "boundary": "减少标签化，不把情绪判断成对错"
+    },
+    {
+      "evidence": "匿名表达和同伴支持能提供共鸣",
+      "feature": "匿名共鸣卡片",
+      "product_expression": "把语义相似的匿名表达做成温和回应卡片",
+      "boundary": "不做好友/私信，不暴露身份，不抓取外部内容"
+    }
+  ]
+}
