@@ -4,6 +4,12 @@
 
 | 文件 | 内容 |
 |---|---|
+| `cyclebubble_v4_four_pages_liquid_overview.png` | 最新四页面总览：液体泡泡视觉版本 |
+| `cyclebubble_v4_home_liquid_bubble.png` | 最新首页：液体泡泡视觉版本 |
+| `cyclebubble_v4_cycle_bubble_liquid.png` | 最新周期泡泡页：液体容器视觉 |
+| `cyclebubble_v4_emotion_record_minimal.png` | 最新情绪记录页：极简书写版本 |
+| `cyclebubble_v4_anonymous_resonance_minimal.png` | 最新匿名共鸣页：克制卡片版本 |
+| `cyclebubble_v4_liquid_bubble_asset.png` | 液体泡泡单独视觉资产 |
 | `cyclebubble_home_real_product_375.png` | 最新首页设计稿：真实产品首页布局，优先展示用户数据 |
 | `cyclebubble_home_real_product_board.png` | 最新首页设计说明版 |
 | `cyclebubble_three_core_pages_hifi.png` | 三个核心页面总览图 |
