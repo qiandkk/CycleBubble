@@ -10,223 +10,261 @@
   <body>
     <main class="demo-stage" aria-label="CycleBubble interactive demo">
 
-      <!-- 紧凑信息头 -->
       <section class="stage-header">
         <p class="kicker">CycleBubble · 生活娱乐赛道</p>
         <h1>先感知自己的状态，再理解它从哪里来</h1>
-        <p class="lead">泡泡是状态翻译器，不是数据面板。点击底部 Tab 体验完整路径：今日 → 记录 → 共鸣 → 规律。</p>
-        <div class="flow-mini">
-          <span>今日</span><i></i>
-          <span>记录</span><i></i>
-          <span>共鸣</span><i></i>
-          <span>规律</span>
-        </div>
+        <p class="lead">每页有「下一步」引导，走完：今日 → 记录 → 共鸣 → 规律。</p>
       </section>
 
-      <!-- 单手机可交互 -->
       <section class="phone-frame" aria-label="Phone">
         <div class="phone-screen" id="phone">
 
-          <!-- 状态栏 -->
-          <div class="status-bar">
-            <span>09:41</span>
-            <span id="statusLabel">今日</span>
-          </div>
-
           <!-- ====== 屏 1: 今日 ====== -->
           <div class="screen screen-home active" data-screen="home">
-            <header class="screen-head">
-              <p class="micro">6 月 19 日 · 周期第 21 天</p>
-              <h2>今天的周期泡泡</h2>
-            </header>
-
-            <section class="breathing-bubble-wrap" aria-label="Current cycle bubble">
-              <div class="breathing-bubble">
-                <div class="bubble-glass"></div>
-                <div class="bubble-liquid" id="bubbleLiquid">
-                  <span class="wave wave-one"></span>
-                  <span class="wave wave-two"></span>
-                </div>
-                <div class="bubble-light"></div>
-                <div class="bubble-text">
-                  <strong>黄体期</strong>
-                  <span>接近周期后段</span>
-                </div>
+            <div class="nav-bar">
+              <span class="nav-spacer"></span>
+              <div class="step-indicator">
+                <span class="dot active"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
               </div>
-              <!-- P2: 极简图例 -->
-              <div class="bubble-legend">
-                <span><i class="dot coral"></i>液面高度＝周期进度</span>
-                <span><i class="dot rose"></i>色调＝当前阶段</span>
-              </div>
-            </section>
+              <span class="nav-spacer"></span>
+            </div>
 
-            <!-- P1: 个人线索微卡 -->
-            <section class="clue-card" aria-label="Personal clue">
-              <p class="label">你的近期线索</p>
-              <p>本周你记录了 <strong>2 次「被评价」</strong>，多出现在<strong>黄体期</strong>。</p>
-            </section>
+            <div class="screen-body">
+              <header class="screen-head">
+                <p class="micro">6 月 19 日 · 周期第 21 天</p>
+                <h2>今天的周期泡泡</h2>
+              </header>
 
-            <section class="answer-card primary">
-              <p class="label">今天可以这样理解</p>
-              <h3>你可能更需要稳定节奏和少一点临时变化</h3>
-              <p>这不是预测，也不是诊断。只是给今天停在心里的感受，一个可能的身体背景。</p>
-            </section>
+              <section class="breathing-bubble-wrap" aria-label="Current cycle bubble">
+                <div class="breathing-bubble">
+                  <div class="bubble-glass"></div>
+                  <div class="bubble-liquid" id="bubbleLiquid">
+                    <span class="wave wave-one"></span>
+                    <span class="wave wave-two"></span>
+                    <span class="wave wave-three"></span>
+                    <span class="glow glow-one"></span>
+                    <span class="glow glow-two"></span>
+                  </div>
+                  <div class="bubble-light"></div>
+                  <div class="bubble-text">
+                    <strong>黄体期</strong>
+                    <span>接近周期后段</span>
+                  </div>
+                </div>
+                <div class="bubble-legend">
+                  <span><i class="dot coral"></i>液面高度＝周期进度</span>
+                  <span><i class="dot rose"></i>色调＝当前阶段</span>
+                </div>
+              </section>
+
+              <section class="clue-card">
+                <p class="label">你的近期线索</p>
+                <p>本周你记录了 <strong>2 次「被评价」</strong>，多出现在<strong>黄体期</strong>。</p>
+              </section>
+
+              <section class="answer-card primary">
+                <p class="label">今天可以这样理解</p>
+                <h3>你可能更需要稳定节奏和少一点临时变化</h3>
+                <p>这不是预测，也不是诊断。只是给今天停在心里的感受，一个可能的身体背景。</p>
+                <p class="link-row"><a href="#" data-goto="cycle">了解周期背景 →</a></p>
+              </section>
+            </div>
 
             <div class="action-stack">
-              <button class="primary-action" type="button" data-goto="record">记录今天发生了什么</button>
-              <button class="secondary-action" type="button" data-goto="resonance">看看相似经历</button>
+              <button class="primary-action" type="button" data-next="record">记录今天发生了什么</button>
             </div>
           </div>
 
-          <!-- ====== 屏 2: 周期 ====== -->
+          <!-- ====== 屏 2: 周期（分支页） ====== -->
           <div class="screen screen-cycle" data-screen="cycle">
-            <header class="screen-head">
-              <p class="micro">周期背景</p>
-              <h2>泡泡正在告诉你什么</h2>
-            </header>
+            <div class="nav-bar">
+              <button class="back-btn" type="button" data-back="home">‹</button>
+              <span class="nav-title">周期背景</span>
+              <span class="nav-spacer"></span>
+            </div>
 
-            <section class="breathing-bubble-wrap compact-bubble" aria-label="Cycle phase bubble">
-              <div class="breathing-bubble">
-                <div class="bubble-glass"></div>
-                <div class="bubble-liquid">
-                  <span class="wave wave-one"></span>
-                  <span class="wave wave-two"></span>
-                </div>
-                <div class="bubble-light"></div>
-                <div class="bubble-text">
-                  <strong>黄体期</strong>
-                  <span>更需要稳定</span>
-                </div>
-              </div>
-              <div class="bubble-legend">
-                <span>液面接近满，说明进入周期后段</span>
-              </div>
-            </section>
+            <div class="screen-body">
+              <header class="screen-head">
+                <p class="micro">周期背景</p>
+                <h2>泡泡正在告诉你什么</h2>
+              </header>
 
-            <section class="context-card">
-              <p class="label">身体背景</p>
-              <p>有些人在周期后段会更需要休息、确定感和低打扰环境。</p>
-            </section>
-            <section class="context-card">
-              <p class="label">你的近期线索</p>
-              <p>最近几次让你难受的事情，似乎都和 <strong>外界评价</strong> 有关。</p>
-              <p class="ai-source">AI 从你近 3 周的记录中提炼 · <a href="#" data-goto="pattern">查看规律</a></p>
-            </section>
+              <section class="breathing-bubble-wrap compact-bubble" aria-label="Cycle phase bubble">
+                <div class="breathing-bubble">
+                  <div class="bubble-glass"></div>
+                  <div class="bubble-liquid">
+                    <span class="wave wave-one"></span>
+                    <span class="wave wave-two"></span>
+                    <span class="wave wave-three"></span>
+                    <span class="glow glow-one"></span>
+                  </div>
+                  <div class="bubble-light"></div>
+                  <div class="bubble-text">
+                    <strong>黄体期</strong>
+                    <span>更需要稳定</span>
+                  </div>
+                </div>
+                <div class="bubble-legend">
+                  <span>液面接近满，说明进入周期后段</span>
+                </div>
+              </section>
+
+              <section class="context-card">
+                <p class="label">身体背景</p>
+                <p>有些人在周期后段会更需要休息、确定感和低打扰环境。</p>
+              </section>
+              <section class="context-card">
+                <p class="label">你的近期线索</p>
+                <p>最近几次让你难受的事情，似乎都和 <strong>外界评价</strong> 有关。</p>
+                <p class="ai-source">AI 从你近 3 周的记录中提炼</p>
+              </section>
+            </div>
+
+            <div class="action-stack">
+              <button class="secondary-action" type="button" data-back="home">回到今天</button>
+            </div>
           </div>
 
           <!-- ====== 屏 3: 记录 ====== -->
           <div class="screen screen-record" data-screen="record">
-            <header class="screen-head">
-              <p class="micro">事件，而不是评分</p>
-              <h2>今天什么事情停在心里？</h2>
-            </header>
-
-            <label class="note-field">
-              <span>写下具体场景</span>
-              <textarea id="recordInput" placeholder="比如：今天会议里有一句评价，我一直反复想起……"></textarea>
-            </label>
-
-            <section class="choice-block">
-              <p class="label">它可能和什么有关？</p>
-              <div class="chips" id="chips">
-                <button type="button" data-chip="被评价">被评价</button>
-                <button type="button" data-chip="计划被打乱">计划被打乱</button>
-                <button type="button" data-chip="身体很累">身体很累</button>
-                <button type="button" data-chip="想先安静">想先安静</button>
+            <div class="nav-bar">
+              <button class="back-btn" type="button" data-back="home">‹</button>
+              <div class="step-indicator">
+                <span class="dot done"></span><span class="dot active"></span><span class="dot"></span><span class="dot"></span>
               </div>
-            </section>
-
-            <!-- P0: AI 过程态 -->
-            <div class="ai-processing" id="aiProcessing" hidden>
-              <div class="ai-pulse"></div>
-              <p>AI 正在理解你写下的场景……</p>
+              <span class="nav-spacer"></span>
             </div>
 
-            <!-- P0: AI 提取结果 -->
-            <div class="ai-result" id="aiResult" hidden>
-              <p class="label">AI 识别到的线索</p>
-              <p>你提到的场景，和 <strong>外界评价</strong> 有关。这类感受在<strong>黄体期</strong>更容易出现。</p>
+            <div class="screen-body">
+              <header class="screen-head">
+                <p class="micro">事件，而不是评分</p>
+                <h2>今天什么事情停在心里？</h2>
+              </header>
+
+              <label class="note-field">
+                <span>写下具体场景</span>
+                <textarea id="recordInput" placeholder="比如：今天会议里有一句评价，我一直反复想起……"></textarea>
+              </label>
+
+              <section class="choice-block">
+                <p class="label">它可能和什么有关？</p>
+                <div class="chips" id="chips">
+                  <button type="button" data-chip="被评价">被评价</button>
+                  <button type="button" data-chip="计划被打乱">计划被打乱</button>
+                  <button type="button" data-chip="身体很累">身体很累</button>
+                  <button type="button" data-chip="想先安静">想先安静</button>
+                </div>
+              </section>
+
+              <div class="ai-processing" id="aiProcessing" hidden>
+                <div class="ai-pulse"></div>
+                <p>AI 正在理解你写下的场景……</p>
+              </div>
+
+              <div class="ai-result" id="aiResult" hidden>
+                <p class="label">AI 识别到的线索</p>
+                <p>你提到的场景，和 <strong>外界评价</strong> 有关。这类感受在<strong>黄体期</strong>更容易出现。</p>
+              </div>
             </div>
 
-            <button class="primary-action" type="button" id="saveBtn">保存并寻找共鸣</button>
+            <div class="action-stack">
+              <button class="primary-action" type="button" id="saveBtn">保存并寻找共鸣</button>
+            </div>
           </div>
 
           <!-- ====== 屏 4: 共鸣 ====== -->
           <div class="screen screen-resonance" data-screen="resonance">
-            <header class="screen-head">
-              <p class="micro">匿名共鸣</p>
-              <h2>有人也在类似阶段经历过</h2>
-            </header>
-
-            <!-- P0: AI 匹配说明 -->
-            <section class="match-card">
-              <p class="label">AI 找到 4 条相似经历</p>
-              <p>AI 从 <strong>128 条匿名记录</strong>中，匹配到和你一样提到 <strong>外界评价</strong>、<strong>周期后段</strong> 和 <strong>需要安静恢复</strong> 的经历。</p>
-            </section>
-
-            <section class="resonance-card">
-              <p class="anonymous">匿名泡泡 27</p>
-              <p>"我也会在这个阶段把一句话放在心里很久。后来我发现，那不一定是自己变脆弱了，而是当时更需要确认和安静恢复。"</p>
-              <div class="resonance-actions">
-                <button type="button" class="chip-btn" id="empathyBtn">我也有过</button>
-                <button type="button" class="chip-btn ghost">谢谢你</button>
+            <div class="nav-bar">
+              <button class="back-btn" type="button" data-back="record">‹</button>
+              <div class="step-indicator">
+                <span class="dot done"></span><span class="dot done"></span><span class="dot active"></span><span class="dot"></span>
               </div>
-              <p class="empathy-feedback" id="empathyFeedback" hidden>已有 12 人在同一阶段有过相似感受，你不是一个人。</p>
-            </section>
+              <span class="nav-spacer"></span>
+            </div>
 
-            <section class="understanding-card">
-              <p class="label">可以这样理解</p>
-              <h3>你不是反应太大</h3>
-              <p>只是这类事情在这个阶段更容易被你接收到。</p>
-            </section>
+            <div class="screen-body">
+              <header class="screen-head">
+                <p class="micro">匿名共鸣</p>
+                <h2>有人也在类似阶段经历过</h2>
+              </header>
+
+              <section class="match-card">
+                <p class="label">AI 找到 4 条相似经历</p>
+                <p>AI 从 <strong>128 条匿名记录</strong>中，匹配到和你一样提到 <strong>外界评价</strong>、<strong>周期后段</strong> 和 <strong>需要安静恢复</strong> 的经历。</p>
+              </section>
+
+              <section class="resonance-card">
+                <p class="anonymous">匿名泡泡 27</p>
+                <p>"我也会在这个阶段把一句话放在心里很久。后来我发现，那不一定是自己变脆弱了，而是当时更需要确认和安静恢复。"</p>
+                <div class="resonance-actions">
+                  <button type="button" class="chip-btn" id="empathyBtn">我也有过</button>
+                  <button type="button" class="chip-btn ghost">谢谢你</button>
+                </div>
+                <p class="empathy-feedback" id="empathyFeedback" hidden>已有 12 人在同一阶段有过相似感受，你不是一个人。</p>
+              </section>
+
+              <section class="understanding-card">
+                <p class="label">可以这样理解</p>
+                <h3>你不是反应太大</h3>
+                <p>只是这类事情在这个阶段更容易被你接收到。</p>
+              </section>
+            </div>
+
+            <div class="action-stack">
+              <button class="primary-action" type="button" data-next="pattern">看看我的规律</button>
+            </div>
           </div>
 
           <!-- ====== 屏 5: 规律 ====== -->
           <div class="screen screen-pattern" data-screen="pattern">
-            <header class="screen-head">
-              <p class="micro">规律发现，不是问题统计</p>
-              <h2>这个周期里，什么更容易影响你？</h2>
-            </header>
+            <div class="nav-bar">
+              <button class="back-btn" type="button" data-back="resonance">‹</button>
+              <div class="step-indicator">
+                <span class="dot done"></span><span class="dot done"></span><span class="dot done"></span><span class="dot active"></span>
+              </div>
+              <span class="nav-spacer"></span>
+            </div>
 
-            <section class="pattern-list">
-              <div>
-                <span>常出现的场景</span>
-                <strong>工作压力、被评价、身体发沉</strong>
-                <p class="ai-source">基于你近 3 个周期的 14 条记录</p>
-              </div>
-              <div>
-                <span>常出现的背景</span>
-                <strong>更多在黄体期前后出现</strong>
-                <p class="ai-source">AI 对比了你的记录时间与周期阶段</p>
-              </div>
-              <div>
-                <span>对你有帮助的方式</span>
-                <strong>先离开一下，晚一点再回应</strong>
-                <p class="ai-source">来自你标记"后来好一点了"的记录</p>
-              </div>
-            </section>
+            <div class="screen-body">
+              <header class="screen-head">
+                <p class="micro">规律发现，不是问题统计</p>
+                <h2>这个周期里，什么更容易影响你？</h2>
+              </header>
 
-            <section class="answer-card">
-              <p class="label">下次可以试试</p>
-              <h3>提前留一个低打扰的晚上</h3>
-              <p>不是为了避免情绪，而是给自己多一点恢复空间。</p>
-            </section>
+              <section class="pattern-list">
+                <div>
+                  <span>常出现的场景</span>
+                  <strong>工作压力、被评价、身体发沉</strong>
+                  <p class="ai-source">基于你近 3 个周期的 14 条记录</p>
+                </div>
+                <div>
+                  <span>常出现的背景</span>
+                  <strong>更多在黄体期前后出现</strong>
+                  <p class="ai-source">AI 对比了你的记录时间与周期阶段</p>
+                </div>
+                <div>
+                  <span>对你有帮助的方式</span>
+                  <strong>先离开一下，晚一点再回应</strong>
+                  <p class="ai-source">来自你标记"后来好一点了"的记录</p>
+                </div>
+              </section>
+
+              <section class="answer-card">
+                <p class="label">下次可以试试</p>
+                <h3>提前留一个低打扰的晚上</h3>
+                <p>不是为了避免情绪，而是给自己多一点恢复空间。</p>
+              </section>
+            </div>
+
+            <div class="action-stack">
+              <button class="primary-action" type="button" data-next="home">回到今天</button>
+            </div>
           </div>
-
-          <!-- 底部 Tab -->
-          <nav class="tabbar" aria-label="App sections">
-            <span class="active" data-goto="home">今日</span>
-            <span data-goto="record">记录</span>
-            <span data-goto="resonance">共鸣</span>
-            <span data-goto="pattern">规律</span>
-            <span data-goto="cycle">周期</span>
-          </nav>
 
         </div>
       </section>
 
-      <!-- 操作提示 -->
-      <p class="demo-hint">点击底部 Tab 切换页面 · 在「记录」页输入文字后点保存，体验 AI 理解过程</p>
+      <p class="demo-hint">每页底部有「下一步」按钮引导 · 顶部 ‹ 可返回上一页</p>
     </main>
 
     <script src="./script.js"></script>

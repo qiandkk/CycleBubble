@@ -1,47 +1,49 @@
 /**
  * CycleBubble 可交互 Demo
- * 核心路径：今日 → 记录 → 共鸣 → 规律 → 理解自己
+ * 线性流程：今日 → 记录 → 共鸣 → 规律（每页有"下一步"按钮）
+ * 分支页：周期（从今日链接进入，可返回）
  */
 (function () {
   "use strict";
 
-  var screenLabels = {
-    home: "今日",
-    cycle: "周期",
-    record: "记录",
-    resonance: "共鸣",
-    pattern: "规律"
-  };
-
-  // ====== 屏幕切换 ======
-  function switchTo(name) {
+  // ====== 页面切换 ======
+  function switchTo(name, isBack) {
     var screens = document.querySelectorAll(".screen");
     for (var i = 0; i < screens.length; i++) {
-      screens[i].classList.remove("active");
+      screens[i].classList.remove("active", "from-back");
     }
     var target = document.querySelector('.screen[data-screen="' + name + '"]');
     if (target) {
       target.classList.add("active");
-      target.scrollTop = 0;
+      if (isBack) target.classList.add("from-back");
+      // 滚动到顶部
+      var body = target.querySelector(".screen-body");
+      if (body) body.scrollTop = 0;
     }
-
-    var tabs = document.querySelectorAll(".tabbar span");
-    for (var j = 0; j < tabs.length; j++) {
-      tabs[j].classList.remove("active");
-    }
-    var activeTab = document.querySelector('.tabbar span[data-goto="' + name + '"]');
-    if (activeTab) activeTab.classList.add("active");
-
-    var label = document.getElementById("statusLabel");
-    if (label) label.textContent = screenLabels[name] || "";
   }
 
-  // 绑定所有 data-goto 元素（Tab、按钮、链接）
+  // 绑定"下一步"按钮（data-next）
+  var nextEls = document.querySelectorAll("[data-next]");
+  for (var i = 0; i < nextEls.length; i++) {
+    nextEls[i].addEventListener("click", function () {
+      switchTo(this.getAttribute("data-next"), false);
+    });
+  }
+
+  // 绑定"返回"按钮（data-back）
+  var backEls = document.querySelectorAll("[data-back]");
+  for (var j = 0; j < backEls.length; j++) {
+    backEls[j].addEventListener("click", function () {
+      switchTo(this.getAttribute("data-back"), true);
+    });
+  }
+
+  // 绑定普通跳转链接（data-goto，如"了解周期背景"）
   var gotoEls = document.querySelectorAll("[data-goto]");
-  for (var i = 0; i < gotoEls.length; i++) {
-    gotoEls[i].addEventListener("click", function (e) {
+  for (var k = 0; k < gotoEls.length; k++) {
+    gotoEls[k].addEventListener("click", function (e) {
       e.preventDefault();
-      switchTo(this.getAttribute("data-goto"));
+      switchTo(this.getAttribute("data-goto"), false);
     });
   }
 
@@ -61,7 +63,7 @@
     });
   }
 
-  // ====== 记录页：保存 → AI 理解过程 ======
+  // ====== 记录页：保存 → AI 理解过程 → 下一步 ======
   var saveBtn = document.getElementById("saveBtn");
   var aiProcessing = document.getElementById("aiProcessing");
   var aiResult = document.getElementById("aiResult");
@@ -105,9 +107,9 @@
             "你提到的场景，和 <strong>" + chipStr + "</strong> 有关。这类感受在<strong>黄体期</strong>更容易出现。";
         }
 
-        // 3 秒后自动跳转到共鸣页
+        // 3 秒后自动进入共鸣页（下一步）
         setTimeout(function () {
-          switchTo("resonance");
+          switchTo("resonance", false);
           // 重置记录页状态，方便再次体验
           setTimeout(function () {
             saveBtn.style.display = "";
@@ -131,14 +133,6 @@
       this.disabled = true;
       if (empathyFeedback) empathyFeedback.hidden = false;
     });
-  }
-
-  // ====== 泡泡液面随周期天数变化 ======
-  // 周期第 21 天（黄体期），液面较高
-  var bubbleLiquid = document.getElementById("bubbleLiquid");
-  if (bubbleLiquid) {
-    // 62% 是默认高度，黄体期接近满
-    bubbleLiquid.style.height = "68%";
   }
 
 })();

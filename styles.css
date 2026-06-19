@@ -16,7 +16,6 @@
 }
 
 * { box-sizing: border-box; }
-
 html { background: var(--milk); }
 
 body {
@@ -34,7 +33,7 @@ body {
 button, textarea { font: inherit; }
 button { cursor: pointer; }
 
-/* ====== 演示舞台布局 ====== */
+/* ====== 演示舞台 ====== */
 .demo-stage {
   max-width: 520px;
   margin: 0 auto;
@@ -44,10 +43,7 @@ button { cursor: pointer; }
   align-items: center;
 }
 
-.stage-header {
-  text-align: center;
-  margin-bottom: 28px;
-}
+.stage-header { text-align: center; margin-bottom: 28px; }
 
 .kicker {
   margin: 0 0 12px;
@@ -65,47 +61,17 @@ button { cursor: pointer; }
   line-height: 1.2;
 }
 
-.lead {
-  margin: 0 0 16px;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.7;
-}
-
-.flow-mini {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.flow-mini span {
-  color: var(--coral);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.flow-mini i {
-  display: inline-block;
-  width: 20px;
-  height: 1.5px;
-  background: var(--line);
-  border-radius: 1px;
-}
+.lead { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
 
 /* ====== 手机外框 ====== */
-.phone-frame {
-  width: 100%;
-  max-width: 375px;
-}
+.phone-frame { width: 100%; max-width: 375px; }
 
 .phone-screen {
   position: relative;
   display: flex;
   flex-direction: column;
   height: 760px;
-  padding: 16px;
+  padding: 14px;
   overflow: hidden;
   border: 1px solid rgba(82, 63, 74, .12);
   border-radius: 36px;
@@ -113,33 +79,105 @@ button { cursor: pointer; }
   box-shadow: var(--shadow);
 }
 
-/* ====== 状态栏 ====== */
-.status-bar {
+/* ====== 顶部导航栏 ====== */
+.nav-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
-  color: var(--subtle);
-  font-size: 12px;
-  font-weight: 800;
+  gap: 8px;
+  min-height: 36px;
+  margin-bottom: 10px;
   flex: none;
 }
 
-/* ====== 屏幕切换 ====== */
+.nav-spacer { width: 32px; flex: none; }
+
+.back-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  transition: background .2s, color .2s;
+  flex: none;
+  padding: 0;
+}
+
+.back-btn:hover { background: var(--milk); color: var(--coral); }
+
+.nav-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+/* 步骤指示器 */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.step-indicator .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--line);
+  transition: all .35s ease;
+}
+
+.step-indicator .dot.done {
+  background: var(--coral);
+  opacity: .45;
+}
+
+.step-indicator .dot.active {
+  background: var(--coral);
+  width: 20px;
+  border-radius: 4px;
+}
+
+/* ====== 页面切换 ====== */
 .screen {
   display: none;
   flex: 1;
   flex-direction: column;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
 }
 
 .screen.active {
   display: flex;
+  animation: page-in .35s cubic-bezier(.4, 0, .2, 1);
 }
 
-/* 滚动条隐藏 */
-.screen::-webkit-scrollbar { width: 0; }
+.screen.active.from-back {
+  animation: page-in-back .35s cubic-bezier(.4, 0, .2, 1);
+}
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes page-in-back {
+  from { opacity: 0; transform: translateX(-28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.screen-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.screen-body::-webkit-scrollbar { width: 0; }
 
 /* ====== 通用文字 ====== */
 .micro, .label {
@@ -152,10 +190,7 @@ button { cursor: pointer; }
 
 h2, h3, p { margin-top: 0; }
 
-.screen-head {
-  margin-bottom: 14px;
-  flex: none;
-}
+.screen-head { margin-bottom: 14px; }
 
 .screen-head h2 {
   margin: 5px 0 0;
@@ -168,12 +203,11 @@ h2, h3, p { margin-top: 0; }
 .breathing-bubble-wrap {
   display: grid;
   place-items: center;
-  min-height: 220px;
+  min-height: 210px;
   margin: 4px 0 14px;
-  flex: none;
 }
 
-.compact-bubble { min-height: 200px; }
+.compact-bubble { min-height: 190px; }
 
 .breathing-bubble {
   position: relative;
@@ -208,19 +242,21 @@ h2, h3, p { margin-top: 0; }
   pointer-events: none;
 }
 
+/* ====== 液体（水母色系：粉→紫→蓝） ====== */
 .bubble-liquid {
   position: absolute;
   left: -14%;
   right: -14%;
   bottom: -11%;
   z-index: 1;
-  height: 62%;
+  height: 68%;
   overflow: hidden;
   border-radius: 50% 50% 0 0;
+  /* 水母色系渐变：粉→玫瑰→淡紫→淡蓝 */
   background:
     radial-gradient(circle at 74% 27%, rgba(255,255,255,.30), transparent 24%),
-    linear-gradient(135deg, #f2c3c7 0%, #e8a3a7 52%, #d995b0 100%);
-  transition: height .8s cubic-bezier(.4,0,.2,1);
+    linear-gradient(180deg, #f2c3c7 0%, #e8a3a7 35%, #d4a5cf 70%, #b8b8de 100%);
+  animation: liquid-bob 4.5s ease-in-out infinite;
 }
 
 .bubble-liquid::before,
@@ -243,20 +279,88 @@ h2, h3, p { margin-top: 0; }
   filter: blur(6px);
 }
 
+/* 三层波浪 — 明显流动 */
 .wave {
   position: absolute;
-  left: -18%;
+  left: -20%;
   top: -18px;
-  width: 136%;
+  width: 140%;
   height: 52px;
   border-radius: 50%;
-  background: rgba(255,255,255,.26);
+  background: rgba(255,255,255,.28);
+}
+
+.wave-one {
+  animation: wave-1 3.2s ease-in-out infinite;
 }
 
 .wave-two {
-  top: 12px;
-  background: rgba(255,236,238,.24);
-  transform: rotate(2deg);
+  top: 8px;
+  background: rgba(255,236,238,.22);
+  animation: wave-2 4.8s ease-in-out infinite;
+}
+
+.wave-three {
+  top: -8px;
+  background: rgba(212,165,207,.18);
+  animation: wave-3 6.5s ease-in-out infinite;
+}
+
+@keyframes wave-1 {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  50% { transform: translateX(-18px) rotate(-2.5deg); }
+}
+
+@keyframes wave-2 {
+  0%, 100% { transform: translateX(0) rotate(2deg); }
+  50% { transform: translateX(14px) rotate(-1.5deg); }
+}
+
+@keyframes wave-3 {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  33% { transform: translateX(-10px) rotate(1deg); }
+  66% { transform: translateX(8px) rotate(-1deg); }
+}
+
+@keyframes liquid-bob {
+  0%, 100% { height: 68%; }
+  50% { height: 72%; }
+}
+
+/* 液体内部流动光斑（水母生物荧光感） */
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,.45);
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.glow-one {
+  width: 34px;
+  height: 34px;
+  left: 28%;
+  bottom: 18%;
+  animation: glow-move-1 7s ease-in-out infinite;
+}
+
+.glow-two {
+  width: 22px;
+  height: 22px;
+  right: 22%;
+  bottom: 38%;
+  background: rgba(212,165,207,.35);
+  animation: glow-move-2 9s ease-in-out infinite;
+}
+
+@keyframes glow-move-1 {
+  0%, 100% { transform: translate(0, 0); opacity: .35; }
+  50% { transform: translate(14px, -12px); opacity: .65; }
+}
+
+@keyframes glow-move-2 {
+  0%, 100% { transform: translate(0, 0); opacity: .25; }
+  50% { transform: translate(-10px, 8px); opacity: .5; }
 }
 
 .bubble-light {
@@ -271,29 +375,30 @@ h2, h3, p { margin-top: 0; }
   transform: rotate(-7deg);
 }
 
+/* ====== 泡泡文字 — 去掉背景，加文字阴影 ====== */
 .bubble-text {
   position: relative;
   z-index: 5;
   display: grid;
   place-items: center;
-  min-width: 110px;
-  padding: 10px 16px;
-  border-radius: 999px;
-  background: rgba(255,253,251,.34);
-  backdrop-filter: blur(14px);
+  text-align: center;
+  /* 无背景、无模糊 */
 }
 
 .bubble-text strong {
-  font-size: 21px;
+  font-size: 22px;
   font-weight: 900;
   line-height: 1.1;
+  color: #fff;
+  text-shadow: 0 2px 14px rgba(82,63,74,.45), 0 0 6px rgba(82,63,74,.3);
 }
 
 .bubble-text span {
   margin-top: 4px;
-  color: var(--muted);
   font-size: 12px;
   font-weight: 800;
+  color: rgba(255,255,255,.92);
+  text-shadow: 0 1px 10px rgba(82,63,74,.4);
 }
 
 /* P2: 泡泡图例 */
@@ -378,6 +483,17 @@ h2, h3, p { margin-top: 0; }
   color: var(--coral);
 }
 
+.link-row { margin-top: 10px !important; }
+
+.link-row a {
+  color: var(--coral);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.link-row a:hover { text-decoration: underline; }
+
 /* P1: 个人线索微卡 */
 .clue-card {
   border-color: rgba(232,115,106,.25);
@@ -386,7 +502,7 @@ h2, h3, p { margin-top: 0; }
 
 .clue-card .label { color: var(--coral); }
 
-/* P0: AI 出处标注 */
+/* AI 出处标注 */
 .ai-source {
   margin: 8px 0 0 !important;
   font-size: 12px !important;
@@ -394,19 +510,10 @@ h2, h3, p { margin-top: 0; }
   font-weight: 700;
 }
 
-.ai-source a {
-  color: var(--coral);
-  text-decoration: none;
-  font-weight: 800;
-}
-
-.ai-source a:hover { text-decoration: underline; }
-
 /* ====== 按钮 ====== */
 .action-stack {
   display: grid;
   gap: 8px;
-  margin-top: auto;
   padding-top: 8px;
   flex: none;
 }
@@ -420,7 +527,6 @@ h2, h3, p { margin-top: 0; }
   transition: transform .15s, box-shadow .15s;
 }
 
-/* P2: 主色统一为珊瑚 */
 .primary-action {
   border: 0;
   color: #fffdfb;
@@ -441,42 +547,7 @@ h2, h3, p { margin-top: 0; }
   background: var(--surface);
 }
 
-.secondary-action:hover {
-  background: var(--coral-soft);
-}
-
-/* ====== Tab 栏 ====== */
-.tabbar {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
-  margin-top: 10px;
-  padding: 6px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--surface);
-  flex: none;
-}
-
-.tabbar span {
-  padding: 8px 4px;
-  border-radius: 10px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 900;
-  text-align: center;
-  cursor: pointer;
-  transition: color .2s, background .2s;
-  user-select: none;
-}
-
-.tabbar span:hover { color: var(--coral); }
-
-/* P2: Tab 激活色统一珊瑚 */
-.tabbar .active {
-  color: var(--coral);
-  background: var(--coral-soft);
-}
+.secondary-action:hover { background: var(--coral-soft); }
 
 /* ====== 记录页 ====== */
 .note-field {
@@ -495,7 +566,7 @@ h2, h3, p { margin-top: 0; }
 
 textarea {
   width: 100%;
-  min-height: 120px;
+  min-height: 110px;
   resize: none;
   border: 0;
   outline: 0;
@@ -532,7 +603,7 @@ textarea::placeholder { color: var(--subtle); }
   background: var(--coral-soft);
 }
 
-/* P0: AI 过程态 */
+/* AI 过程态 */
 .ai-processing {
   display: flex;
   align-items: center;
@@ -563,7 +634,7 @@ textarea::placeholder { color: var(--subtle); }
 
 @keyframes ai-spin { to { transform: rotate(360deg); } }
 
-/* P0: AI 结果卡 */
+/* AI 结果卡 */
 .ai-result {
   padding: 14px;
   margin-bottom: 10px;
@@ -698,14 +769,10 @@ textarea:focus-visible {
   line-height: 1.6;
 }
 
-/* ====== 动画 ====== */
+/* ====== 呼吸动画 ====== */
 @media (prefers-reduced-motion: no-preference) {
   .breathing-bubble {
     animation: bubble-breathe 6.5s ease-in-out infinite;
-  }
-  .bubble-liquid,
-  .wave {
-    animation: liquid-drift 8s ease-in-out infinite;
   }
   .bubble-light {
     animation: light-drift 9s ease-in-out infinite;
@@ -716,10 +783,6 @@ textarea:focus-visible {
   50% { transform: translateY(-4px) scale(1.025); }
 }
 
-@keyframes liquid-drift {
-  50% { transform: translateX(7px) translateY(-6px) rotate(.7deg) scaleX(1.03); }
-}
-
 @keyframes light-drift {
   50% { transform: translateX(12px) translateY(-4px) rotate(-4deg); }
 }
@@ -727,7 +790,7 @@ textarea:focus-visible {
 /* ====== 响应式 ====== */
 @media (max-width: 420px) {
   .demo-stage { padding: 20px 12px 40px; }
-  .phone-screen { height: 720px; padding: 14px; border-radius: 28px; }
+  .phone-screen { height: 720px; padding: 12px; border-radius: 28px; }
   .stage-header h1 { font-size: 22px; }
   .breathing-bubble { width: 180px; }
   .screen-head h2 { font-size: 21px; }
