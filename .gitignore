@@ -1,2 +1,24 @@
-.uploads/
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Dependencies / build outputs
+node_modules/
+dist/
+build/
+.cache/
+
+# Temporary and generated archives
+*.zip
+*.tmp
+*.log
+
+# Academic papers should not be pushed
 cyclebubble_literature/papers/
+*.pdf
+
+# Uploaded or transient files
+.uploads/
