@@ -559,71 +559,42 @@ button:focus-visible, textarea:focus-visible {
     linear-gradient(180deg, #f2c3c7 0%, #e8a3a7 35%, #d4a5cf 70%, #b8b8de 100%);
 }
 
-.bubble-liquid::before,
-.bubble-liquid::after {
-  content: "";
-  position: absolute;
-  left: -18%;
-  top: -26px;
-  width: 136%;
-  height: 60px;
-  border-radius: 50%;
-  background:
-    radial-gradient(ellipse at 62% 34%, rgba(255,255,255,.26), transparent 34%),
-    rgba(255, 236, 238, .68);
-}
-
-.bubble-liquid::after {
-  top: 8px;
-  height: 46px;
-  background:
-    radial-gradient(ellipse at 24% 50%, rgba(255,255,255,.22), transparent 26%),
-    radial-gradient(ellipse at 68% 50%, rgba(255,255,255,.18), transparent 30%),
-    rgba(255,255,255,.12);
-  filter: blur(5px);
-}
-
-/* SVG 波浪 — 真实曲线流动 */
+/* SVG 波浪 — 填充色块，真实流动 */
 .wave-svg {
   position: absolute;
   left: -100%;
   width: 300%;
-  height: 40px;
+  height: 50px;
   z-index: 2;
   pointer-events: none;
 }
 
 .wave-svg path {
-  fill: none;
-  stroke-width: 2;
-  stroke-linecap: round;
+  stroke: none;
 }
 
 .wave-svg-back {
-  top: -16px;
-  opacity: .60;
+  top: 0px;
+  opacity: .45;
 }
 .wave-svg-back path {
-  stroke: rgba(255, 255, 255, .48);
-  fill: rgba(255, 236, 238, .22);
+  fill: rgba(255, 236, 238, .55);
 }
 
 .wave-svg-mid {
-  top: 4px;
-  opacity: .70;
+  top: 8px;
+  opacity: .50;
 }
 .wave-svg-mid path {
-  stroke: rgba(255, 255, 255, .34);
-  fill: transparent;
+  fill: rgba(242, 195, 199, .50);
 }
 
 .wave-svg-front {
-  top: -8px;
-  opacity: .55;
+  top: 16px;
+  opacity: .40;
 }
 .wave-svg-front path {
-  stroke: rgba(212, 165, 207, .40);
-  fill: transparent;
+  fill: rgba(255, 255, 255, .35);
 }
 
 /* 内部流线 — 曲线流动 */
@@ -667,14 +638,6 @@ button:focus-visible, textarea:focus-visible {
 
   .bubble-liquid {
     animation: liquid-sway 7.8s ease-in-out infinite;
-  }
-
-  .bubble-liquid::before {
-    animation: water-surface 8.8s ease-in-out infinite;
-  }
-
-  .bubble-liquid::after {
-    animation: water-surface 11s ease-in-out infinite reverse;
   }
 
   /* SVG 波浪 — 沿曲线持续流动 */
