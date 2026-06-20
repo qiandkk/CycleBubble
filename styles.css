@@ -334,30 +334,149 @@ textarea::placeholder { color: var(--subtle); }
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 8px 0 12px;
+  padding: 8px 0 11px;
   flex: none;
   border-top: 1px solid var(--line);
-  background: var(--surface);
+  background:
+    linear-gradient(180deg, rgba(255,253,251,.92), rgba(255,253,251,.98)),
+    var(--surface);
+  box-shadow: 0 -14px 36px rgba(82,63,74,.06);
 }
 
 .tab-item {
+  --tab-color: var(--subtle);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   cursor: pointer;
-  color: var(--subtle);
+  color: var(--tab-color);
   font-size: 11px;
   font-weight: 600;
-  transition: color .2s;
+  transition: color .2s, transform .2s;
   user-select: none;
-  padding: 4px 16px;
+  padding: 4px 18px;
+  border-radius: 18px;
 }
 
-.tab-item:hover { color: var(--coral); }
-.tab-item.active { color: var(--coral); }
+.tab-item:hover {
+  --tab-color: var(--lavender);
+  transform: translateY(-1px);
+}
 
-.tab-icon { width: 22px; height: 22px; }
+.tab-item.active {
+  --tab-color: var(--lavender);
+  color: var(--lavender);
+}
+
+.tab-icon {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 28px;
+  color: var(--tab-color);
+}
+
+.tab-icon::before,
+.tab-icon::after,
+.tab-icon i,
+.tab-icon i::before,
+.tab-icon i::after {
+  content: "";
+  position: absolute;
+  display: block;
+}
+
+.icon-today::before {
+  inset: 4px;
+  border: 3px solid currentColor;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 25%, rgba(255,255,255,.62), transparent 28%),
+    rgba(255,255,255,.18);
+}
+
+.icon-today i {
+  left: 9px;
+  right: 9px;
+  bottom: 8px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 0 0 999px 999px;
+  background: currentColor;
+  opacity: .20;
+}
+
+.tab-item.active .icon-today i {
+  opacity: .34;
+}
+
+.icon-record {
+  transform: rotate(-2deg);
+}
+
+.icon-record::before {
+  left: 7px;
+  top: 5px;
+  width: 15px;
+  height: 19px;
+  border: 3px solid currentColor;
+  border-radius: 7px 7px 8px 8px;
+  background: rgba(255,255,255,.16);
+  transform: rotate(45deg) skew(-4deg);
+}
+
+.icon-record i {
+  left: 10px;
+  top: 16px;
+  width: 13px;
+  height: 3px;
+  border-radius: 99px;
+  background: currentColor;
+  opacity: .28;
+  transform: rotate(-3deg);
+}
+
+.icon-record i::after {
+  left: 2px;
+  top: 5px;
+  width: 9px;
+  height: 3px;
+  border-radius: 99px;
+  background: currentColor;
+  opacity: .72;
+}
+
+.icon-resonance::before {
+  left: 4px;
+  top: 7px;
+  width: 15px;
+  height: 15px;
+  border: 3px solid currentColor;
+  border-radius: 50%;
+  background: rgba(255,255,255,.16);
+}
+
+.icon-resonance::after {
+  right: 3px;
+  top: 4px;
+  width: 15px;
+  height: 15px;
+  border: 3px solid currentColor;
+  border-radius: 50%;
+  background: rgba(255,253,251,.84);
+}
+
+.icon-resonance i {
+  left: 9px;
+  bottom: 4px;
+  width: 8px;
+  height: 7px;
+  border-left: 3px solid currentColor;
+  border-bottom: 3px solid currentColor;
+  border-radius: 0 0 0 8px;
+  transform: rotate(-16deg);
+}
 
 /* ====== 焦点 ====== */
 button:focus-visible, textarea:focus-visible {
@@ -599,6 +718,22 @@ button:focus-visible, textarea:focus-visible {
   .glow-two {
     animation: glow-2 10s ease-in-out infinite;
   }
+
+  .tab-item.active .tab-icon {
+    animation: tab-breathe 4.8s ease-in-out infinite;
+  }
+
+  .tab-item.active .icon-today i {
+    animation: tab-liquid 5.6s ease-in-out infinite;
+  }
+
+  .tab-item.active .icon-record {
+    animation: tab-note-float 5.4s ease-in-out infinite;
+  }
+
+  .tab-item.active .icon-resonance::after {
+    animation: tab-bubble-drift 5.8s ease-in-out infinite;
+  }
 }
 
 @keyframes bubble-breathe {
@@ -672,6 +807,50 @@ button:focus-visible, textarea:focus-visible {
 
 @keyframes glow-1 { 0%,100%{transform:translate(0,0) scale(.9);opacity:.30;} 50%{transform:translate(18px,-13px) scale(1.18);opacity:.68;} }
 @keyframes glow-2 { 0%,100%{transform:translate(0,0) scale(.9);opacity:.22;} 50%{transform:translate(-13px,10px) scale(1.15);opacity:.54;} }
+
+@keyframes tab-breathe {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 0 0 rgba(181,169,207,0));
+  }
+
+  50% {
+    transform: translateY(-1px) scale(1.08);
+    filter: drop-shadow(0 6px 12px rgba(181,169,207,.24));
+  }
+}
+
+@keyframes tab-liquid {
+  0%, 100% {
+    height: 7px;
+    transform: translateX(-1px) rotate(-3deg);
+  }
+
+  50% {
+    height: 10px;
+    transform: translateX(1px) rotate(3deg);
+  }
+}
+
+@keyframes tab-note-float {
+  0%, 100% {
+    transform: rotate(-2deg) translateY(0);
+  }
+
+  50% {
+    transform: rotate(1deg) translateY(-1px);
+  }
+}
+
+@keyframes tab-bubble-drift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(1px, -1px) scale(1.04);
+  }
+}
 
 /* ====== 响应式 ====== */
 @media (max-width: 420px) {
