@@ -34,7 +34,7 @@ const mobile = await browser.newPage({
   isMobile: true
 });
 await mobile.goto(`file://${path.join(root, "index.html").replaceAll("\\", "/")}`);
-await mobile.locator(".home-phone").screenshot({
+await mobile.locator(".phone-screen").screenshot({
   path: path.join(out, "cyclebubble-home-mobile.png")
 });
 
