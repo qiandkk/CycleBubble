@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CycleBubble</title>
   <meta name="description" content="CycleBubble — 帮助你理解身体与情绪之间的关系。">
-  <link rel="stylesheet" href="./styles.css?v=20260705b">
+  <link rel="stylesheet" href="./styles.css?v=20260705c">
 </head>
 <body>
   <main class="phone-frame" aria-label="CycleBubble">
@@ -14,12 +14,10 @@
       <!-- ====== 首页 ====== -->
       <div class="screen screen-home active" data-screen="home">
         <div class="screen-body">
-          <!-- 第一区：周期状态（第二视觉权重） -->
-          <p class="cycle-status">黄体期 · 今天可能比平时更容易感受到情绪</p>
+          <p class="cycle-status">黄体期｜今天身体可能比平时更容易放大情绪感受</p>
 
-          <!-- 第二区：Bubble（最高视觉权重，绝对中心） -->
           <section class="bubble-wrap" aria-label="你的泡泡">
-            <div class="breathing-bubble">
+            <div class="breathing-bubble" id="mainBubble">
               <div class="bubble-glass"></div>
               <div class="bubble-liquid" id="bubbleLiquid">
                 <svg class="wave-svg wave-svg-back" viewBox="0 0 600 40" preserveAspectRatio="none">
@@ -33,6 +31,8 @@
                 </svg>
                 <span class="glow glow-one"></span>
                 <span class="glow glow-two"></span>
+                <!-- 共鸣光点容器：互动反馈沉淀到这里 -->
+                <span class="light-points" id="lightPoints"></span>
               </div>
               <div class="bubble-light"></div>
               <div class="bubble-text">
@@ -42,11 +42,8 @@
             </div>
           </section>
 
-          <!-- 关于链接（极弱，不抢视觉） -->
           <button class="about-link" type="button" id="aboutLink">关于 CycleBubble</button>
         </div>
-
-        <!-- 第三区：唯一行动按钮（第三视觉权重） -->
         <div class="action-stack">
           <button class="primary-action" type="button" data-goto="record">记录今天发生了什么</button>
         </div>
@@ -87,21 +84,25 @@
           <section class="insight-card">
             <div class="insight-step">
               <h3>你写下了</h3>
-              <p class="insight-event" id="insightEvent">"今天会议里有一句评价，我一直反复想起。"</p>
+              <p class="insight-event" id="insightEvent">"今天开会时领导说了一句话，我反复想了一整天。"</p>
             </div>
             <div class="insight-divider"></div>
             <div class="insight-step">
-              <h3>CycleBubble 注意到</h3>
-              <p>你提到了「被评价」和「反复回想」——这些是黄体期常见的感受模式。</p>
+              <h3>真正触动的，可能是</h3>
+              <p>不是那句话本身，而是你在意自己有没有被认可。被评价时反复回想，是很多女性在黄体期常见的感受。</p>
             </div>
             <div class="insight-divider"></div>
             <div class="insight-step">
-              <h3>身体背景</h3>
-              <p>黄体期，孕激素水平升高会让身体对变化更敏感。这几天感受被放大，不代表你太脆弱，而是身体正在经历较大的内部变化。</p>
+              <h3>身体节律</h3>
+              <p>黄体期，身体内部变化幅度较大。部分女性在这个阶段更容易放大情绪感受。这不代表你太敏感，而是身体正在经历自然的节律波动。</p>
+            </div>
+            <div class="insight-divider"></div>
+            <div class="insight-step insight-companion">
+              <p class="companion-text">"你不需要对每一种感受都找到理由。有时候，身体只是需要你允许它这样。"</p>
             </div>
           </section>
           <section class="resonance-lead">
-            <p>今天还有 <strong>42 位</strong>处于黄体期的女性提到了类似感受。</p>
+            <p>今天还有 <strong>42 位</strong>处于相似阶段的女性提到了类似感受。</p>
           </section>
           <div class="action-stack" style="padding:0; margin-top:24px;">
             <button class="primary-action" type="button" data-goto="resonance">看看她们怎么说</button>
@@ -193,6 +194,6 @@
     </div>
   </div>
 
-  <script src="./script.js?v=20260705b"></script>
+  <script src="./script.js?v=20260705c"></script>
 </body>
 </html>
