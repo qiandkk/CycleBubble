@@ -68,13 +68,14 @@
       saveBtn.style.display = "none";
       aiProcessing.hidden = false;
 
-      // 2 秒后跳转到共鸣页
+      // 2 秒后跳转到 AI 理解结果页
       setTimeout(function () {
-        switchTo("resonance");
+        switchTo("insight");
         // 重置记录页，方便再次体验
         setTimeout(function () {
           saveBtn.style.display = "";
           aiProcessing.hidden = true;
+          if (recordInput) recordInput.value = "";
         }, 500);
       }, 2000);
     });
