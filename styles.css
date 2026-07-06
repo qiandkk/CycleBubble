@@ -144,6 +144,7 @@ button { cursor: pointer; }
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, .92);
   border-radius: 50%;
+  transition: filter 1s cubic-bezier(.4, 0, .2, 1), box-shadow 1s cubic-bezier(.4, 0, .2, 1);
   background:
     radial-gradient(circle at 32% 24%, rgba(255,255,255,.96), rgba(255,255,255,.26) 24%, transparent 36%),
     linear-gradient(145deg, rgba(255,255,255,.75), rgba(245,217,216,.34));
@@ -197,6 +198,7 @@ button { cursor: pointer; }
   height: 66%;
   overflow: hidden;
   border-radius: 50% 50% 0 0;
+  transition: height 1s cubic-bezier(.4, 0, .2, 1), background 1.2s ease;
   background:
     radial-gradient(ellipse at 64% 22%, rgba(255,255,255,.34), transparent 24%),
     radial-gradient(ellipse at 24% 78%, rgba(255,255,255,.16), transparent 30%),
@@ -257,6 +259,81 @@ button { cursor: pointer; }
 @keyframes light-point-appear {
   from { opacity: 0; transform: scale(0); }
   to { opacity: 1; transform: scale(1); }
+}
+
+/* ====== 漂浮粒子 ====== */
+.floating-particles {
+  position: absolute;
+  inset: 10% 15%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .35);
+  animation: particle-float linear infinite;
+}
+
+@keyframes particle-float {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(-60px) translateX(10px); opacity: 0; }
+}
+
+/* ====== 洞察页：发现模式 ====== */
+.insight-highlight {
+  padding: 24px 20px;
+  text-align: center;
+  animation: card-in .5s cubic-bezier(.4, 0, .2, 1);
+}
+
+.highlight-text {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.insight-detail {
+  padding: 16px 20px;
+  animation: card-in .5s cubic-bezier(.4, 0, .2, 1) .15s both;
+}
+
+.insight-detail h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--lavender);
+}
+
+.insight-detail p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+
+.insight-detail p:last-child {
+  margin-bottom: 0;
+}
+
+.insight-companion-section {
+  padding: 0 20px 8px;
+  animation: card-in .5s cubic-bezier(.4, 0, .2, 1) .3s both;
+}
+
+.insight-companion-section .companion-text {
+  margin: 0;
+  font-size: 15px;
+  font-style: italic;
+  line-height: 1.8;
+  color: var(--subtle);
+  border-left: 2px solid var(--mist-pink);
+  padding-left: 14px;
 }
 
 .bubble-light {
@@ -366,42 +443,9 @@ textarea::placeholder { color: var(--subtle); }
 @keyframes ai-spin { to { transform: rotate(360deg); } }
 
 /* ====== AI 理解结果页 ====== */
-.insight-card {
-  padding: 0 0 4px;
-  animation: card-in .4s cubic-bezier(.4, 0, .2, 1);
-}
-
 @keyframes card-in {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-.insight-step { padding: 16px 0; }
-
-.insight-step h3 {
-  margin: 0 0 8px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--lavender);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.insight-step p {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.8;
-  color: var(--ink);
-}
-
-.insight-event {
-  font-style: italic;
-  color: var(--muted) !important;
-}
-
-.insight-divider {
-  height: 1px;
-  background: var(--line);
 }
 
 .resonance-lead {
@@ -427,10 +471,6 @@ textarea::placeholder { color: var(--subtle); }
 }
 
 /* 陪伴语 */
-.insight-companion {
-  padding-top: 12px;
-}
-
 .companion-text {
   margin: 0;
   font-size: 15px;
