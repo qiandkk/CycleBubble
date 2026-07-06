@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CycleBubble</title>
   <meta name="description" content="CycleBubble — 帮助你理解身体与情绪之间的关系。">
-  <link rel="stylesheet" href="./styles.css?v=20260705c">
+  <link rel="stylesheet" href="./styles.css?v=20260706">
 </head>
 <body>
   <main class="phone-frame" aria-label="CycleBubble">
@@ -32,6 +32,7 @@
                 <span class="glow glow-one"></span>
                 <span class="glow glow-two"></span>
                 <!-- 共鸣光点容器：互动反馈沉淀到这里 -->
+                <span class="floating-particles" id="floatingParticles"></span>
                 <span class="light-points" id="lightPoints"></span>
               </div>
               <div class="bubble-light"></div>
@@ -45,7 +46,7 @@
           <button class="about-link" type="button" id="aboutLink">关于 CycleBubble</button>
         </div>
         <div class="action-stack">
-          <button class="primary-action" type="button" data-goto="record">记录今天发生了什么</button>
+          <button class="primary-action" type="button" data-goto="record">把今天留在这里</button>
         </div>
       </div>
 
@@ -77,30 +78,28 @@
       <div class="screen screen-insight" data-screen="insight">
         <div class="nav-bar">
           <button class="back-btn" type="button" data-back="home">‹</button>
-          <span class="nav-title">理解</span>
+          <span class="nav-title">发现</span>
           <span class="nav-spacer"></span>
         </div>
         <div class="screen-body">
-          <section class="insight-card">
-            <div class="insight-step">
-              <h3>你写下了</h3>
-              <p class="insight-event" id="insightEvent">"今天开会时领导说了一句话，我反复想了一整天。"</p>
-            </div>
-            <div class="insight-divider"></div>
-            <div class="insight-step">
-              <h3>真正触动的，可能是</h3>
-              <p>不是那句话本身，而是你在意自己有没有被认可。被评价时反复回想，是很多女性在黄体期常见的感受。</p>
-            </div>
-            <div class="insight-divider"></div>
-            <div class="insight-step">
-              <h3>身体节律</h3>
-              <p>黄体期，身体内部变化幅度较大。部分女性在这个阶段更容易放大情绪感受。这不代表你太敏感，而是身体正在经历自然的节律波动。</p>
-            </div>
-            <div class="insight-divider"></div>
-            <div class="insight-step insight-companion">
-              <p class="companion-text">"你不需要对每一种感受都找到理由。有时候，身体只是需要你允许它这样。"</p>
-            </div>
+          <!-- 核心洞察：第一屏 3 秒内可读完 -->
+          <section class="insight-highlight">
+            <p class="highlight-text">你并不是太敏感，而是一直在默默消化别人随口说出的话。</p>
           </section>
+
+          <!-- 解释：为什么得到这个判断 -->
+          <section class="insight-detail">
+            <h3>为什么这样说</h3>
+            <p>今天你反复想起领导的一句话。真正触动的不是那句话本身，而是你对"有没有被认可"这件事长期的在意。</p>
+            <p>被评价时反复回想，是很多女性在黄体期常见的感受——不是因为脆弱，而是身体在这个阶段对变化更敏锐。</p>
+          </section>
+
+          <!-- 陪伴 -->
+          <section class="insight-companion-section">
+            <p class="companion-text">"你不需要对每一种感受都找到理由。有时候，身体只是需要你允许它这样。"</p>
+          </section>
+
+          <!-- 共鸣过渡 -->
           <section class="resonance-lead">
             <p>今天还有 <strong>42 位</strong>处于相似阶段的女性提到了类似感受。</p>
           </section>
@@ -194,6 +193,6 @@
     </div>
   </div>
 
-  <script src="./script.js?v=20260705c"></script>
+  <script src="./script.js?v=20260706"></script>
 </body>
 </html>
