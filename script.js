@@ -1,19 +1,20 @@
 /**
- * CycleBubble v3 — Bubble Constitution
- * AI 永远隐藏在 Bubble 身后，Bubble 才是真正的主角。
+ * CycleBubble v4 — Emotional OS
+ * 不只是记录情绪，而是持续理解一个人。
+ * 每一次表达，都会成为未来理解自己的线索。
  */
 (function () {
   "use strict";
 
   // ====== Bubble DNA（成长模型，不可逆） ======
   var bubbleDNA = {
-    stability: 0,
-    depth: 0,
-    openness: 0,
-    vitality: 0,
+    stability: 35,
+    depth: 28,
+    openness: 18,
+    vitality: 22,
     memoryLayers: [],
-    evolution: "reflect",
-    totalRecords: 0
+    evolution: "remember",
+    totalRecords: 6
   };
 
   try {
@@ -37,7 +38,46 @@
     else bubbleDNA.evolution = "reflect";
   }
 
-  // ====== 由 DNA 计算 Bubble 状态（不展示给用户） ======
+  // ====== 预置记忆（模拟过去三个月的成长轨迹） ======
+  var seedMemories = [
+    { timeLabel: "三个月前", snippet: "今天又因为领导的一句话纠结了一整天。我是不是太敏感了？", theme: "自我怀疑" },
+    { timeLabel: "两个月前", snippet: "和朋友聊了之后好多了。原来不只是我一个人这样。", theme: "连接" },
+    { timeLabel: "六周前", snippet: "开会时又想反驳但没说出口。下次想试着表达出来。", theme: "渴望表达" },
+    { timeLabel: "一个月前", snippet: "今天终于主动说出了自己的想法，虽然说出口时手在抖。", theme: "突破" },
+    { timeLabel: "两周前", snippet: "这个阶段又到了，提前做好了心理准备。没有像上次那样陷入很久。", theme: "觉察" }
+  ];
+
+  // ====== 成长故事（AI 长期观察结果） ======
+  var growthStories = [
+    { text: "你发现了吗？最近三个月，你从「我是不是太敏感」变成了「我可以试着表达出来」。", tag: "表达方式" },
+    { text: "每一次和朋友交流之后，你的恢复速度都在加快。", tag: "恢复能力" },
+    { text: "你已经找到了属于自己的恢复方式——先离开一下，再回到问题里。", tag: "自我照顾" },
+    { text: "这个阶段又来了，但你比上次更早察觉到了它。", tag: "周期觉察" }
+  ];
+
+  // ====== 成长旁白系统 ======
+  function getGrowthNarration() {
+    var s = bubbleDNA.stability + bubbleDNA.depth + bubbleDNA.openness + bubbleDNA.vitality;
+    if (s >= 240) return "Bubble 越来越懂你了";
+    if (s >= 120) return "Bubble 开始记住你的节奏了";
+    return "Bubble 还在慢慢认识你";
+  }
+
+  function getGrowthHeadline() {
+    var s = bubbleDNA.stability + bubbleDNA.depth + bubbleDNA.openness + bubbleDNA.vitality;
+    if (s >= 240) return "你已经不是三个月前的自己了";
+    if (s >= 120) return "你已经在悄悄变化了";
+    return "Bubble 正在认识你";
+  }
+
+  function getGrowthSub() {
+    var s = bubbleDNA.stability + bubbleDNA.depth + bubbleDNA.openness + bubbleDNA.vitality;
+    if (s >= 240) return "每一次表达，都在塑造更完整的你。";
+    if (s >= 120) return "你已经留下了痕迹，它们正在慢慢长出形状。";
+    return "每一次表达，都是 Bubble 理解你的一步。";
+  }
+
+  // ====== 由 DNA 计算 Bubble 状态 ======
   function computeBubbleState() {
     var d = bubbleDNA;
     return {
@@ -55,6 +95,7 @@
     var bubble = document.getElementById("mainBubble");
     var liquid = document.getElementById("bubbleLiquid");
     var texture = document.getElementById("bubbleTexture");
+    var narration = document.getElementById("growthNarration");
 
     if (bubble) {
       bubble.style.filter = "brightness(" + st.brightness.toFixed(3) + ") saturate(" + st.saturation.toFixed(3) + ")";
@@ -74,9 +115,55 @@
       }
       if (st.textureLayers > 0) texture.classList.add("visible");
     }
+    if (narration) {
+      narration.textContent = getGrowthNarration();
+    }
   }
 
   applyBubbleState();
+
+  // ====== 成长页渲染 ======
+  function renderGrowthPage() {
+    var headline = document.getElementById("growthHeadline");
+    if (headline) headline.textContent = getGrowthHeadline();
+
+    var sub = document.getElementById("growthSub");
+    if (sub) sub.textContent = getGrowthSub();
+
+    // 记忆时间线
+    var timeline = document.getElementById("memoryTimeline");
+    if (timeline) {
+      var allMemories = seedMemories.concat(bubbleDNA.memoryLayers);
+      var html = "";
+      for (var i = allMemories.length - 1; i >= 0; i--) {
+        var m = allMemories[i];
+        var isLatest = (i === allMemories.length - 1);
+        html += '<div class="memory-entry' + (isLatest ? ' memory-entry--latest' : '') + '">';
+        html += '<span class="memory-dot"></span>';
+        html += '<div class="memory-content">';
+        html += '<span class="memory-time">' + m.timeLabel + '</span>';
+        html += '<p class="memory-snippet">' + m.snippet + '</p>';
+        html += '<span class="memory-theme">' + m.theme + '</span>';
+        html += '</div>';
+        html += '</div>';
+        if (i > 0) html += '<span class="memory-line"></span>';
+      }
+      timeline.innerHTML = html;
+    }
+
+    // 成长故事
+    var storiesEl = document.getElementById("growthStories");
+    if (storiesEl) {
+      var sHtml = "";
+      for (var j = 0; j < growthStories.length; j++) {
+        sHtml += '<div class="growth-story-card">';
+        sHtml += '<p class="growth-story-text">' + growthStories[j].text + '</p>';
+        sHtml += '<span class="growth-story-tag">' + growthStories[j].tag + '</span>';
+        sHtml += '</div>';
+      }
+      storiesEl.innerHTML = sHtml;
+    }
+  }
 
   // ====== 页面切换 ======
   function switchTo(name) {
@@ -92,7 +179,9 @@
     for (var j = 0; j < tabs.length; j++) tabs[j].classList.remove("active");
     var at = document.querySelector('.tab-item[data-goto="' + name + '"]');
     if (at) at.classList.add("active");
+
     if (name === "home") applyBubbleState();
+    if (name === "growth") renderGrowthPage();
   }
 
   var tabItems = document.querySelectorAll(".tab-item");
@@ -118,7 +207,7 @@
     });
   }
 
-  // ====== 记录页：放进泡泡 → Bubble 收下今天 → 发现 ======
+  // ====== 记录页：放进泡泡 → Bubble 收下今天 → 理解 ======
   var saveBtn = document.getElementById("saveBtn");
   var bubbleSettling = document.getElementById("bubbleSettling");
   var settlingLiquid = document.getElementById("settlingLiquid");
@@ -128,16 +217,19 @@
   var recordHead = document.getElementById("recordHead");
 
   var settlingMessages = [
-    "Bubble 正在轻轻回应今天……",
+    "Bubble 正在把今天收进记忆……",
     "今天正在慢慢沉淀……",
-    "Bubble 正在收下今天……",
-    "今天正在成为 Bubble 的一部分……"
+    "Bubble 正在记住这个瞬间……",
+    "今天正在成为理解你的一部分……"
   ];
 
   if (saveBtn) {
     saveBtn.addEventListener("click", function () {
-      if (recordInput && !recordInput.value.trim()) {
-        recordInput.value = "今天开会时领导说了一句话，我反复想了一整天。好像在意的是自己有没有被认可。";
+      var userInput = "";
+      if (recordInput && recordInput.value.trim()) {
+        userInput = recordInput.value.trim();
+      } else {
+        userInput = "今天开会时领导说了一句话，我反复想了一整天。好像在意的是自己有没有被认可。";
       }
 
       saveBtn.style.display = "none";
@@ -154,9 +246,17 @@
 
       if (settlingLiquid) settlingLiquid.classList.add("rising");
 
-      // 3 秒后：DNA 成长（不可逆）→ 跳转发现页
+      // 3 秒后：存入记忆层 → DNA 成长 → 跳转理解页
       setTimeout(function () {
         clearInterval(msgInterval);
+
+        // 存入记忆层（用户真实的表达）
+        var snippet = userInput.length > 50 ? userInput.substring(0, 50) + "……" : userInput;
+        bubbleDNA.memoryLayers.push({
+          timeLabel: "今天",
+          snippet: snippet,
+          theme: "今天的表达"
+        });
 
         bubbleDNA.totalRecords++;
         bubbleDNA.stability = Math.min(100, bubbleDNA.stability + 5);
@@ -252,7 +352,7 @@
     if (e.target === aboutModal) aboutModal.hidden = true;
   });
 
-  // ====== 漂浮粒子 — 让 Bubble 持续"活着" ======
+  // ====== 漂浮粒子 ======
   var floatingParticles = document.getElementById("floatingParticles");
   var settlingParticles = document.getElementById("settlingParticles");
 
