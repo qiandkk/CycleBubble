@@ -720,32 +720,100 @@ textarea::placeholder { color: var(--subtle); }
   margin-bottom: 8px;
 }
 
-.growth-story-quotes {
-  margin-top: 10px;
+/* 小泡泡引用——每条原话是一个小生命体 */
+.story-bubbles {
+  margin-top: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: stretch;
+  gap: 0;
 }
 
-.story-quote {
-  padding: 10px 12px;
-  border-left: 2px solid rgba(181,169,207,.35);
-  background: rgba(240,237,247,.35);
-  border-radius: 0 8px 8px 0;
+.story-bubble {
+  position: relative;
+  padding: 14px 16px 14px 18px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(240,237,247,.55), rgba(245,217,216,.25));
+  overflow: hidden;
+  animation: bubble-rise .5s cubic-bezier(.4, 0, .2, 1);
 }
 
-.quote-time {
+@keyframes bubble-rise {
+  from { opacity: 0; transform: translateY(8px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 泡泡内部的液体光感 */
+.story-bubble-liquid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(181,169,207,.4), transparent);
+  border-radius: 18px 18px 0 0;
+}
+
+.story-bubble-liquid::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(232,163,167,.25), transparent);
+}
+
+.story-bubble-time {
   font-size: 11px;
-  color: var(--subtle);
-  margin-bottom: 4px;
+  color: var(--lavender);
+  font-weight: 600;
+  margin-bottom: 6px;
   display: block;
+  letter-spacing: 0.3px;
 }
 
-.quote-text {
+.story-bubble-text {
   margin: 0;
   font-size: 13px;
-  line-height: 1.65;
+  line-height: 1.7;
   color: var(--muted);
+  position: relative;
+  z-index: 1;
+}
+
+/* 两个小泡泡之间的流动连接 */
+.story-bubble-link {
+  display: flex;
+  justify-content: center;
+  padding: 3px 0;
+}
+
+.story-bubble-link span {
+  display: block;
+  width: 2px;
+  height: 16px;
+  background: linear-gradient(180deg, rgba(181,169,207,.3), rgba(232,163,167,.2));
+  border-radius: 2px;
+  position: relative;
+}
+
+.story-bubble-link span::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(181,169,207,.25);
+  transform: translateY(-50%);
+  animation: link-pulse 3s ease-in-out infinite;
+}
+
+@keyframes link-pulse {
+  0%, 100% { opacity: .3; transform: translateY(-50%) scale(.8); }
+  50% { opacity: .6; transform: translateY(-50%) scale(1.1); }
 }
 
 /* "还有一个发现" — 像翻书一样轻轻提示 */

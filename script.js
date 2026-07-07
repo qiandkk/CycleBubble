@@ -693,14 +693,18 @@
     html += '<div class="growth-story-card growth-story-card--single">';
     html += '<span class="growth-story-tag">' + s.tag + '</span>';
     html += '<p class="growth-story-text">' + s.text + '</p>';
-    // 展示用户原话引用
+    // 展示用户原话引用——以小泡泡形态呈现
     if (s.quotes && s.quotes.length > 0) {
-      html += '<div class="growth-story-quotes">';
+      html += '<div class="story-bubbles">';
       for (var q = 0; q < s.quotes.length; q++) {
-        html += '<div class="story-quote">';
-        html += '<span class="quote-time">' + s.quotes[q].time + '</span>';
-        html += '<p class="quote-text">' + s.quotes[q].text + '</p>';
+        html += '<div class="story-bubble">';
+        html += '<div class="story-bubble-liquid"></div>';
+        html += '<span class="story-bubble-time">' + s.quotes[q].time + '</span>';
+        html += '<p class="story-bubble-text">' + s.quotes[q].text + '</p>';
         html += '</div>';
+        if (q < s.quotes.length - 1) {
+          html += '<div class="story-bubble-link"><span></span></div>';
+        }
       }
       html += '</div>';
     }
