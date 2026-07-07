@@ -316,8 +316,8 @@
     if (allExpress.length >= 2) {
       var first = allExpress[0];
       var last = allExpress[allExpress.length - 1];
-      // 确保最早和最近不是同一条
-      if (first.id !== last.id) {
+      // 确保最早和最近不是同一条，且文本内容不同
+      if (first.id !== last.id && first.snippet !== last.snippet) {
         var quotes = [];
         quotes.push({ time: first.timeLabel, text: first.snippet });
         quotes.push({ time: last.timeLabel, text: last.snippet });
@@ -330,18 +330,23 @@
       }
     }
 
-    // 恢复方式：至少 2 条才展示
+    // 恢复方式：至少 2 条不同内容才展示
     var recoveryMemories = dedupeMemories(findMemoriesByRecovery());
     if (recoveryMemories.length >= 2) {
-      var recoveryQuotes = recoveryMemories.slice(-2).map(function(m) {
-        return { time: m.timeLabel, text: m.snippet };
-      });
-      stories.push({
-        text: "这些记录里，都提到了让自己好起来的方式。",
-        tag: "恢复方式",
-        evidence: recoveryMemories,
-        quotes: recoveryQuotes
-      });
+      var rFirst = recoveryMemories[0];
+      var rLast = recoveryMemories[recoveryMemories.length - 1];
+      if (rFirst.snippet !== rLast.snippet) {
+        var recoveryQuotes = [
+          { time: rFirst.timeLabel, text: rFirst.snippet },
+          { time: rLast.timeLabel, text: rLast.snippet }
+        ];
+        stories.push({
+          text: "这些记录里，都提到了让自己好起来的方式。",
+          tag: "恢复方式",
+          evidence: recoveryMemories,
+          quotes: recoveryQuotes
+        });
+      }
     }
 
     // 与他人的连接：展示用户回应过的内容
@@ -354,18 +359,23 @@
       });
     }
 
-    // 周期觉察：至少 2 条才展示
+    // 周期觉察：至少 2 条不同内容才展示
     var cycleMemories = dedupeMemories(findMemoriesByTheme("身体"));
     if (cycleMemories.length >= 2) {
-      var cycleQuotes = cycleMemories.slice(-2).map(function(m) {
-        return { time: m.timeLabel, text: m.snippet };
-      });
-      stories.push({
-        text: "关于身体的变化，你留下了这些。",
-        tag: "身体的节奏",
-        evidence: cycleMemories,
-        quotes: cycleQuotes
-      });
+      var cFirst = cycleMemories[0];
+      var cLast = cycleMemories[cycleMemories.length - 1];
+      if (cFirst.snippet !== cLast.snippet) {
+        var cycleQuotes = [
+          { time: cFirst.timeLabel, text: cFirst.snippet },
+          { time: cLast.timeLabel, text: cLast.snippet }
+        ];
+        stories.push({
+          text: "关于身体的变化，你留下了这些。",
+          tag: "身体的节奏",
+          evidence: cycleMemories,
+          quotes: cycleQuotes
+        });
+      }
     }
 
     return stories;
