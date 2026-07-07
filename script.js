@@ -156,8 +156,8 @@
   }
 
   // ====== 预置 Memory（模拟过去三个月的沉积） ======
-  // 仅用于 demo 展示效果。用户点击"重新开始"后，isSeeded 标记清除，
-  // 变成真正的空状态，体验首次使用流程。
+  // 仅用于 demo 展示效果。用户点击"重新开始"后，设置 bubbleReset 标记，
+  // 之后永不注入种子记忆，变成真正的空状态。
   var seedMemories = [
     extractMemory("今天又因为领导的一句话纠结了一整天。我是不是太敏感了？", "三个月前"),
     extractMemory("和朋友聊了之后好多了。原来不只是我一个人这样。", "两个月前"),
@@ -166,19 +166,16 @@
     extractMemory("这个阶段又到了，提前做好了心理准备。没有像上次那样陷入很久。", "两周前")
   ];
 
-  // 首次访问（无任何存储）：注入种子记忆用于 demo 展示
-  // isSeeded 标记区分"demo 种子"和"用户真实记录"
-  var isSeeded = false;
+  // 用户是否主动重置过
+  var hasReset = false;
   try {
-    isSeeded = localStorage.getItem("bubbleSeeded_v6") === "true";
+    hasReset = localStorage.getItem("bubbleReset_v6") === "true";
   } catch (e) {}
 
-  if (bubbleDNA.memories.length === 0 && !isSeeded) {
-    // 全新设备首次打开：注入种子记忆
+  // 仅当：没有记忆 + 用户没重置过 → 注入种子记忆（demo 展示用）
+  if (bubbleDNA.memories.length === 0 && !hasReset) {
     bubbleDNA.memories = seedMemories.slice();
     bubbleDNA.totalRecords = seedMemories.length;
-    isSeeded = true;
-    try { localStorage.setItem("bubbleSeeded_v6", "true"); } catch (e) {}
   }
 
   // ====== Pattern 聚合层 ======
@@ -956,13 +953,14 @@
     if (e.target === aboutModal) aboutModal.hidden = true;
   });
 
-  // 重新开始：清除所有数据（含种子标记），变成真正的空状态
+  // 重新开始：清除所有数据，设置重置标记，变成真正的空状态
   var aboutReset = document.getElementById("aboutReset");
   if (aboutReset) {
     aboutReset.addEventListener("click", function () {
       try {
         localStorage.removeItem("bubbleDNA_v6");
         localStorage.removeItem("bubbleSeeded_v6");
+        localStorage.setItem("bubbleReset_v6", "true");
       } catch (e) {}
       aboutModal.hidden = true;
       setTimeout(function () {
