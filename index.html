@@ -1,246 +1,206 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>CycleBubble</title>
-  <meta name="description" content="CycleBubble — 一个持续理解你的情绪空间。">
-  <link rel="stylesheet" href="./frontend/styles.css?v=20260709e">
+  <meta name="theme-color" content="#fbf7f3">
+  <title>CycleBubble — 一个持续理解你的情绪空间</title>
+  <meta name="description" content="CycleBubble 不是经期预测工具，也不是冥想或治疗产品。它帮助你理解情绪可能从哪里来。">
+  <link rel="stylesheet" href="./styles.css?v=20260709r">
 </head>
 <body>
   <main class="phone-frame" aria-label="CycleBubble">
     <div class="phone-screen" id="phone">
 
-      <!-- ====== 登录页 ====== -->
-      <div class="screen screen-auth active" data-screen="auth">
-        <div class="auth-body">
-          <div class="auth-bubble-preview">
-            <div class="breathing-bubble breathing-bubble--small" id="authBubble"></div>
-          </div>
-          <h1 class="auth-title">CycleBubble</h1>
-          <p class="auth-sub">一个持续理解你的情绪空间</p>
-          <div class="auth-form" id="authForm">
-            <input class="auth-input" type="email" id="authEmail" placeholder="邮箱" autocomplete="email">
-            <input class="auth-input" type="password" id="authPassword" placeholder="密码" autocomplete="current-password">
-            <input class="auth-input" type="text" id="authNickname" placeholder="昵称（选填）" style="display:none">
-            <button class="auth-submit" type="button" id="authSubmit">登录</button>
-            <button class="auth-toggle" type="button" id="authToggle">还没有账号？注册</button>
-          </div>
-          <p class="auth-error" id="authError"></p>
-        </div>
-      </div>
-
-      <!-- ====== 经期 Onboarding ====== -->
-      <div class="screen screen-onboard" data-screen="onboard">
-        <div class="onboard-body">
-          <h1 class="onboard-title">你的周期</h1>
-          <p class="onboard-sub">为了更好地理解你的情绪与身体的关系，请告诉我你最近几次经期的开始日期。<br>至少填 1 次，填 3 次以上更准确。</p>
-          <div class="onboard-dates" id="onboardDates">
-            <div class="onboard-date-row">
-              <label>最近一次</label>
-              <input type="date" class="onboard-date-input" data-idx="0">
+      <!-- ============== 登录 ============== -->
+      <section class="screen screen-auth active" data-screen="auth" aria-label="登录或注册">
+        <div class="auth-stage">
+          <!-- signature: 登录页的"婴儿期"泡泡，体积小 + 慢呼吸 -->
+          <div class="bubble bubble--seed" aria-hidden="true">
+            <div class="bubble-glass"></div>
+            <div class="bubble-liquid">
+              <svg class="wave wave-back" viewBox="0 0 600 40" preserveAspectRatio="none"><path d="M0,20 Q37.5,8 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z"/></svg>
+              <svg class="wave wave-mid" viewBox="0 0 600 40" preserveAspectRatio="none"><path d="M0,20 Q37.5,32 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z"/></svg>
+              <svg class="wave wave-front" viewBox="0 0 600 40" preserveAspectRatio="none"><path d="M0,20 Q37.5,12 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z"/></svg>
             </div>
           </div>
-          <button class="onboard-add" type="button" id="onboardAdd">+ 再加一次</button>
-          <button class="onboard-skip" type="button" id="onboardSkip">先跳过</button>
-          <button class="onboard-submit" type="button" id="onboardSubmit">完成</button>
-          <p class="onboard-error" id="onboardError"></p>
-        </div>
-      </div>
 
-      <!-- ====== 首页（今日） ====== -->
-      <div class="screen screen-home active" data-screen="home">
-        <div class="screen-body">
+          <header class="auth-head">
+            <h1 class="auth-title">CycleBubble</h1>
+            <p class="auth-sub">一个持续理解你的情绪空间</p>
+          </header>
+
+          <form class="auth-form" id="authForm" autocomplete="on" novalidate>
+            <label class="auth-field">
+              <span class="auth-label">账号</span>
+              <input class="auth-input" type="text" id="authEmail" placeholder="邮箱或任意昵称" autocomplete="username" inputmode="text" required>
+            </label>
+            <label class="auth-field">
+              <span class="auth-label">密码</span>
+              <input class="auth-input" type="password" id="authPassword" placeholder="至少 4 位" autocomplete="current-password" minlength="4" required>
+            </label>
+            <label class="auth-field auth-field--nick" id="authNicknameField" hidden>
+              <span class="auth-label">昵称（选填）</span>
+              <input class="auth-input" type="text" id="authNickname" placeholder="想被怎么称呼" maxlength="20">
+            </label>
+            <button class="auth-submit" type="submit" id="authSubmit">登录</button>
+            <button class="auth-quick" type="button" id="authQuick">
+              <span class="auth-quick-icon" aria-hidden="true">✦</span>
+              快速体验（demo / demo）
+            </button>
+            <button class="auth-toggle" type="button" id="authToggle">还没有账号？注册</button>
+          </form>
+
+          <p class="auth-error" id="authError" role="alert" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <!-- ============== 经期引导（首次注册） ============== -->
+      <section class="screen screen-onboard" data-screen="onboard" aria-label="记录经期">
+        <div class="onboard-stage">
+          <header class="onboard-head">
+            <p class="eyebrow">第 1 步 / 共 1 步</p>
+            <h2 class="onboard-title">你的周期</h2>
+            <p class="onboard-sub">告诉我你最近几次经期的开始日期，至少 1 次，3 次以上更准确。<br>你也可以先跳过。</p>
+          </header>
+          <div class="onboard-dates" id="onboardDates"></div>
+          <div class="onboard-actions">
+            <button class="btn-ghost" type="button" id="onboardAdd">＋ 再加一次</button>
+            <button class="btn-primary" type="button" id="onboardSubmit">完成</button>
+            <button class="btn-link"   type="button" id="onboardSkip">先跳过</button>
+          </div>
+          <p class="onboard-error" id="onboardError" role="alert"></p>
+        </div>
+      </section>
+
+      <!-- ============== 今日 ============== -->
+      <section class="screen screen-home" data-screen="home" aria-label="今日">
+        <div class="home-stage">
           <p class="cycle-status" id="cycleStatus"></p>
 
-          <section class="bubble-wrap" aria-label="你的泡泡" id="bubbleWrap">
-            <!-- 空状态：无记录时显示 -->
+          <div class="bubble-wrap" id="bubbleWrap" aria-label="你的泡泡">
+            <!-- 空态 -->
             <div class="bubble-empty" id="bubbleEmpty" hidden>
-              <div class="bubble-empty-icon"></div>
+              <div class="bubble-empty-ring" aria-hidden="true"></div>
               <p class="bubble-empty-text">完成第一条记录后，<br>你的第一个 Bubble 将开始形成。</p>
+              <p class="bubble-empty-hint" id="bubbleEmptyHint"></p>
             </div>
-            <!-- Bubble 视觉 -->
-            <div class="breathing-bubble" id="mainBubble" hidden>
+            <!-- 主泡泡：根据 memories 实时染色 -->
+            <div class="bubble bubble--main" id="mainBubble" hidden>
               <div class="bubble-glass"></div>
               <div class="bubble-liquid" id="bubbleLiquid">
-                <svg class="wave-svg wave-svg-back" viewBox="0 0 600 40" preserveAspectRatio="none">
-                  <path id="waveBack" d="M0,20 Q37.5,8 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z" />
-                </svg>
-                <svg class="wave-svg wave-svg-mid" viewBox="0 0 600 40" preserveAspectRatio="none">
-                  <path id="waveMid" d="M0,20 Q37.5,32 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z" />
-                </svg>
-                <svg class="wave-svg wave-svg-front" viewBox="0 0 600 40" preserveAspectRatio="none">
-                  <path id="waveFront" d="M0,20 Q37.5,12 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z" />
-                </svg>
-                <span class="bubble-texture" id="bubbleTexture"></span>
-                <span class="floating-particles" id="floatingParticles"></span>
-                <span class="light-points" id="lightPoints"></span>
-                <span class="glow glow-one"></span>
-                <span class="glow glow-two"></span>
+                <svg class="wave wave-back" viewBox="0 0 600 40" preserveAspectRatio="none"><path id="waveBack"  d="M0,20 Q37.5,8 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z"/></svg>
+                <svg class="wave wave-mid"  viewBox="0 0 600 40" preserveAspectRatio="none"><path id="waveMid"   d="M0,20 Q37.5,32 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z"/></svg>
+                <svg class="wave wave-front" viewBox="0 0 600 40" preserveAspectRatio="none"><path id="waveFront" d="M0,20 Q37.5,12 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z"/></svg>
+                <span class="bubble-texture" id="bubbleTexture" aria-hidden="true"></span>
+                <span class="particles"      id="floatingParticles" aria-hidden="true"></span>
               </div>
-              <div class="bubble-light"></div>
-              <div class="bubble-text">
-                <strong id="bubblePhase"></strong>
-                <span id="bubbleHint"></span>
+              <div class="bubble-meta">
+                <strong class="bubble-phase" id="bubblePhase"></strong>
+                <span  class="bubble-hint"  id="bubbleHint"></span>
               </div>
             </div>
-          </section>
+          </div>
 
           <p class="growth-narration" id="growthNarration"></p>
 
-          <button class="about-link" type="button" id="aboutLink">关于 CycleBubble</button>
+          <div class="home-actions">
+            <button class="btn-link" type="button" id="aboutLink">关于 CycleBubble</button>
+          </div>
+          <button class="btn-primary btn-block" type="button" data-goto="record">把今天留在这里</button>
         </div>
-        <div class="action-stack">
-          <button class="primary-action" type="button" data-goto="record">把今天留在这里</button>
-        </div>
-      </div>
+      </section>
 
-      <!-- ====== 记录页 ====== -->
-      <div class="screen screen-record" data-screen="record">
-        <div class="nav-bar">
-          <button class="back-btn" type="button" data-back="home">‹</button>
+      <!-- ============== 记录 ============== -->
+      <section class="screen screen-record" data-screen="record" aria-label="记录今天的情绪">
+        <header class="nav-bar">
+          <button class="back-btn" type="button" data-back="home" aria-label="返回">‹</button>
           <span class="nav-title">记录</span>
           <span class="nav-spacer"></span>
-        </div>
+        </header>
         <div class="screen-body">
-          <header class="screen-head" id="recordHead">
-            <h2>今天发生了什么？</h2>
-          </header>
-          <label class="note-field" id="noteField">
-            <textarea id="recordInput" placeholder="写下具体场景和你的感受……"></textarea>
+          <h2 class="record-prompt">今天发生了什么？</h2>
+          <p class="record-hint" id="recordHint">写下具体场景和你的感受，Bubble 会自己消化。</p>
+          <label class="record-field">
+            <textarea id="recordInput" placeholder="例如：今天被领导在会上没点名表扬，有点失落……" maxlength="800"></textarea>
+            <span class="record-count" id="recordCount">0 / 800</span>
           </label>
-          <div class="bubble-settling" id="bubbleSettling" hidden>
-            <div class="settling-bubble" id="settlingBubble">
+
+          <!-- 静置态：保存时显示 -->
+          <div class="settling" id="bubbleSettling" hidden>
+            <div class="bubble bubble--settling">
               <div class="bubble-glass"></div>
-              <div class="bubble-liquid settling-liquid" id="settlingLiquid">
-                <svg class="wave-svg wave-svg-back" viewBox="0 0 600 40" preserveAspectRatio="none">
-                  <path d="M0,20 Q37.5,8 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z" />
-                </svg>
-                <svg class="wave-svg wave-svg-mid" viewBox="0 0 600 40" preserveAspectRatio="none">
-                  <path d="M0,20 Q37.5,32 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z" />
-                </svg>
-                <span class="floating-particles" id="settlingParticles"></span>
+              <div class="bubble-liquid settling-liquid">
+                <svg class="wave wave-back" viewBox="0 0 600 40" preserveAspectRatio="none"><path d="M0,20 Q37.5,8 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z"/></svg>
+                <svg class="wave wave-mid"  viewBox="0 0 600 40" preserveAspectRatio="none"><path d="M0,20 Q37.5,32 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z"/></svg>
               </div>
             </div>
             <p class="settling-text" id="settlingText">Bubble 正在把今天收进记忆……</p>
           </div>
         </div>
         <div class="action-stack">
-          <button class="primary-action" type="button" id="saveBtn">放进泡泡</button>
+          <button class="btn-primary btn-block" type="button" id="saveBtn">放进泡泡</button>
         </div>
-      </div>
+      </section>
 
-      <!-- ====== 理解页 ====== -->
-      <div class="screen screen-insight" data-screen="insight">
-        <div class="nav-bar">
-          <button class="back-btn" type="button" data-back="home">‹</button>
-          <span class="nav-title">理解</span>
-          <span class="nav-spacer"></span>
-        </div>
-        <div class="screen-body" id="insightBody">
-          <!-- JS 动态渲染 -->
-        </div>
-      </div>
-
-      <!-- ====== 成长页 ====== -->
-      <div class="screen screen-growth" data-screen="growth">
-        <div class="nav-bar">
-          <button class="back-btn" type="button" data-back="home">‹</button>
+      <!-- ============== 成长 ============== -->
+      <section class="screen screen-growth" data-screen="growth" aria-label="成长">
+        <header class="nav-bar">
+          <button class="back-btn" type="button" data-back="home" aria-label="返回">‹</button>
           <span class="nav-title">成长</span>
           <span class="nav-spacer"></span>
-        </div>
+        </header>
         <div class="screen-body">
-          <section class="growth-headline">
+          <div class="growth-head">
             <h2 id="growthHeadline"></h2>
             <p class="growth-sub" id="growthSub"></p>
-          </section>
-
-          <section class="memory-section" id="memorySection">
-            <h3 class="section-label">Bubble 的记忆</h3>
-            <div class="memory-timeline" id="memoryTimeline">
-              <!-- JS 渲染 -->
-            </div>
-          </section>
-
-          <section class="growth-stories-section" id="growthStoriesSection">
-            <h3 class="section-label">Bubble 发现的变化</h3>
-            <div class="growth-stories" id="growthStories">
-              <!-- JS 渲染 -->
-            </div>
-          </section>
-
-          <section class="impact-section" id="impactSection" hidden>
-            <!-- JS 动态渲染 -->
-          </section>
-
-          <section class="resonance-lead" id="resonanceLead" hidden>
-            <!-- JS 动态渲染 -->
-          </section>
-
-          <div class="action-stack" style="padding:0; margin-top:24px;">
-            <button class="primary-action" type="button" data-goto="resonance">去看看她们的故事</button>
           </div>
-        </div>
-      </div>
 
-      <!-- ====== 回应页（原共鸣页） ====== -->
-      <div class="screen screen-resonance" data-screen="resonance">
-        <div class="nav-bar">
-          <button class="back-btn" type="button" data-back="growth">‹</button>
+          <section class="growth-section" id="memorySection">
+            <h3 class="section-label">Bubble 的记忆</h3>
+            <div class="timeline" id="memoryTimeline"></div>
+          </section>
+
+          <section class="growth-section" id="patternSection">
+            <h3 class="section-label">Bubble 发现的变化</h3>
+            <div class="patterns" id="patternsList"></div>
+          </section>
+        </div>
+      </section>
+
+      <!-- ============== 回应（共鸣） ============== -->
+      <section class="screen screen-resonance" data-screen="resonance" aria-label="匿名共鸣">
+        <header class="nav-bar">
+          <button class="back-btn" type="button" data-back="home" aria-label="返回">‹</button>
           <span class="nav-title">回应</span>
           <span class="nav-spacer"></span>
-        </div>
+        </header>
         <div class="screen-body">
-          <header class="screen-head">
-            <h2>这里的故事</h2>
-            <p class="resonance-intro">以下来自同样在路上的女性。如果你想回应，可以选择一种方式。</p>
-          </header>
-          <div class="resonance-stack" id="resonanceStack">
-            <!-- 故事卡片由 JS 动态渲染 -->
-          </div>
-          <div class="resonance-pager">
-            <span class="page-dots" id="pageDots">
-              <!-- JS 动态生成 -->
-            </span>
-          </div>
-          <section class="understanding-card">
-            <h3>你的回应也在陪伴别人</h3>
-            <p>每一次回应，都会成为别人低谷时的一点光。不需要完美，只需要真实。</p>
-          </section>
-        </div>
-      </div>
+          <h2 class="resonance-title">这里的故事</h2>
+          <p class="resonance-sub">以下来自同样在路上的女性。如果你想回应，可以选择一种方式。</p>
+          <div class="resonance-feed" id="resonanceFeed"></div>
+          <p class="resonance-hint" id="resonanceHint">等你写下的感受被更多人看到，这里会出现共鸣。</p>
 
-      <!-- ====== 底部 Tab ====== -->
-      <nav class="tabbar" aria-label="App sections">
-        <span class="tab-item active" data-goto="home">
-          <span class="tab-icon icon-today" aria-hidden="true"><i></i></span>
-          <span>今日</span>
-        </span>
-        <span class="tab-item" data-goto="growth">
-          <span class="tab-icon icon-growth" aria-hidden="true"><i></i></span>
-          <span>成长</span>
-        </span>
-        <span class="tab-item" data-goto="resonance">
-          <span class="tab-icon icon-resonance" aria-hidden="true"><i></i></span>
-          <span>回应</span>
-        </span>
+          <h3 class="section-label section-label--quiet">你的回应也在陪伴别人</h3>
+          <p class="resonance-cta">每一次回应，都会成为别人低谷时的一点光。不需要完美，只需要真实。</p>
+          <button class="btn-primary btn-block" type="button" data-goto="record">写下今天的你</button>
+        </div>
+      </section>
+
+      <!-- ============== 底部 tab ============== -->
+      <nav class="tabbar" id="tabbar" aria-label="页面导航" hidden>
+        <button class="tab active" type="button" data-goto="home">      <span class="tab-dot" aria-hidden="true"></span><span class="tab-label">今日</span></button>
+        <button class="tab"        type="button" data-goto="growth">    <span class="tab-dot" aria-hidden="true"></span><span class="tab-label">成长</span></button>
+        <button class="tab"        type="button" data-goto="resonance"> <span class="tab-dot" aria-hidden="true"></span><span class="tab-label">回应</span></button>
       </nav>
 
     </div>
   </main>
 
-  <!-- ====== 关于弹层 ====== -->
-  <div class="about-modal" id="aboutModal" hidden>
-    <div class="about-modal-card">
-      <h3>关于 CycleBubble</h3>
-      <p>你在这里写下的每一刻，都会慢慢沉到 Bubble 里。</p>
-      <p>有些你自己都会忘记的瞬间，Bubble 会替你记着。等到某一天回望，也许你会发现，自己已经悄悄走了一段路。</p>
-      <p>如果情绪长期困扰你，记得也找专业人士聊聊。</p>
-      <button class="about-close" type="button" id="aboutClose">嗯</button>
-    </div>
-  </div>
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="./frontend/api.js?v=20260709e"></script>
-  <script src="./frontend/script.js?v=20260709e"></script>
+  <script src="./api.js?v=20260709r" defer></script>
+  <script src="./script.js?v=20260709r" defer></script>
 </body>
 </html>

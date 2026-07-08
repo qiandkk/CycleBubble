@@ -3,12 +3,12 @@
  * 负责所有后端交互，替代 localStorage
  */
 var CB_API = (function () {
-  // 自动适配：本地开发用 localhost，线上用 Render 后端
+  // 自动适配：本地开发用 localhost:8765（dev.ps1 端口约定），线上用 Render 后端。
   var BASE;
   if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-    BASE = "http://localhost:8000";
+    BASE = "http://localhost:8765";
   } else {
-    // 线上后端地址（Render 部署后替换）
+    // 线上后端地址（Render 部署）
     BASE = "https://cyclebubble-api.onrender.com";
   }
   var TOKEN_KEY = "cb_token";
