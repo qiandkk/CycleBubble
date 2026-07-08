@@ -131,3 +131,18 @@ python -m uvicorn main:app ...
 ```
 
 未设置 `CB_USE_ALEMBIC` 时，`init_db()` 仍会 `create_all`，适合本地 demo 与朋友试用。
+
+## 测试
+
+```bash
+cd backend
+CB_JWT_SECRET=test-secret pytest -q
+```
+
+当前测试覆盖：
+- cycle_engine 的周期阶段边界值
+- auth 的注册/登录/token
+- resonance 的存在性 + is_public 权限校验（Phase 1 修复）
+- memories 的 accompanied_count 方向（Phase 1 修复）
+
+不依赖真实数据库,默认走临时 sqlite。
