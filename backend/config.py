@@ -10,10 +10,31 @@
 - CB_DATABASE_URL      可选，默认 SQLite，生产化阶段可换 Postgres
 """
 import os
-from typing import List, Union
+from typing import List
 
 from pydantic import field_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+# CORS 默认白名单（与 Render / GH Pages 对齐）。
+# 注意：pydantic-settings 2.4 解析 List[str] 字段时若 env 传 CSV
+# 会报 JSONDecodeError（"a,b" 不是合法 JSON）。所以 cors_origins
+# 不放在 Settings 字段里，而是手动从 os.environ 读。
+_DEFAULT_CORS_ORIGINS: List[str] = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:3000",
+    "http://localhost:8080",
+    "https://cyclebubble-api.onrender.com",
+    "https://qiandkk.github.io",
+]
+
+
+def _parse_cors_origins() -> List[str]:
+    raw = os.environ.get("CB_CORS_ORIGINS")
+    if not raw:
+        return list(_DEFAULT_CORS_ORIGINS)
+    return [o.strip() for o in raw.split(",") if o.strip()]
 
 
 class Settings(BaseSettings):
@@ -31,28 +52,7 @@ class Settings(BaseSettings):
     deepseek_base_url: str = "https://api.deepseek.com/v1"
     deepseek_model: str = "deepseek-chat"
 
-    # CORS —— CSV 形式的 origin 白名单
-    # 默认覆盖本地常用端口 + Render 前端域名 + GitHub Pages，
-    # 通过 CB_CORS_ORIGINS 环境变量即可整体覆盖。
-    cors_origins: List[str] = [
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-        "http://localhost:3000",
-        "http://localhost:8080",
-        "https://cyclebubble-api.onrender.com",
-        "https://qiandkk.github.io",
-    ]
-
-    class Config:
-        env_prefix = "CB_"
-
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def _split_cors(cls, v: Union[str, List[str]]) -> List[str]:
-        """支持 CSV 字符串或已经是列表两种注入方式。"""
-        if isinstance(v, str):
-            return [o.strip() for o in v.split(",") if o.strip()]
-        return v
+    model_config = SettingsConfigDict(env_prefix="CB_")
 
     @field_validator("jwt_secret")
     @classmethod
@@ -79,3 +79,9 @@ def _settings_factory() -> Settings:
 
 
 settings = _settings_factory()
+# CORS 单独挂载（pydantic-settings 不支持 CSV-list 字段）
+# 用 SimpleNamespace 既不引入 dataclass import 也能挂载任意属性。
+from types import SimpleNamespace
+_settings_cors = SimpleNamespace(cors_origins=_parse_cors_origins())
+# 挂到 settings 上保持向后兼容（main.py 用 settings.cors_origins 访问）
+object.__setattr__(settings, "cors_origins", _settings_cors.cors_origins)
