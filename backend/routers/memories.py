@@ -215,9 +215,11 @@ def get_growth(
     # 成长故事（需要 >= 2 条不同内容的记忆）
     stories = _generate_stories(memories, patterns)
 
-    # 影响统计
+    # 影响统计 —— 统计"我的 Memory 被多少人回应"，而不是"我回应了多少人"
+    # 修复前 responder_id==user.id 方向反了，把回应者数量记成了作者陪伴别人数
+    my_memory_ids = select(Memory.id).where(Memory.user_id == user.id)
     response_count = session.exec(
-        select(ResponseModel).where(ResponseModel.responder_id == user.id)
+        select(ResponseModel).where(ResponseModel.memory_id.in_(my_memory_ids))
     ).all()
     impact = {"accompanied_count": len(response_count)}  # 只统计真实回应
 

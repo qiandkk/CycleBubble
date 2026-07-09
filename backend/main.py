@@ -8,11 +8,12 @@ from routers import auth, memories, resonance, cycle
 
 app = FastAPI(title="CycleBubble API", version="1.0.0")
 
-# CORS
+# CORS —— 显式白名单，且不依赖浏览器凭证传递 token（前端用
+# Authorization: Bearer 头），因此关闭 allow_credentials 进一步收窄攻击面。
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

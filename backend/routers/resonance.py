@@ -74,9 +74,17 @@ def create_response(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    """回应一条故事"""
+    """回应一条故事
+
+    安全：必须校验目标 Memory 存在且 ``is_public``，避免对私密 Memory 或
+    不存在的 ID 写入回应（深度防御，即使 UUID4 不可枚举仍需在应用层兜底）。
+    """
     if req.response_type not in ("empathy", "thanks", "hug", "share"):
         raise HTTPException(status_code=400, detail="无效的回应类型")
+
+    memory = session.get(Memory, memory_id)
+    if not memory or not memory.is_public:
+        raise HTTPException(status_code=404, detail="Memory 不存在或不可回应")
 
     resp = ResponseModel(
         responder_id=user.id,

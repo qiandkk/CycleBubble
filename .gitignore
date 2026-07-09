@@ -1,6 +1,22 @@
-﻿__pycache__/
+__pycache__/
 *.pyc
 *.db
 .env
 node_modules/
 *.log
+
+# pytest
+.pytest_cache/
+
+# 设计稿截图脚本的输出产物 (tools/render-screenshots.mjs)
+# 当前目录下已有历史快照可参考,后续 render 输出忽略入库
+/design/renders/*/
+
+# 文献 PDF (见 README 学术论文一节)
+# evidence/literature-curated.json 仅保留清单,不下发 PDF 全文
+/evidence/papers/
+
+# 设计稿早期原型 V1 字体/JS
+/design/prototype-archive/v1-html/_shared/
+/design/prototype-archive/v1-html/assets/feature_*.jpg
+/design/prototype-archive/v1-html/assets/hero_*.jpg

@@ -63,7 +63,8 @@ class Response(SQLModel, table=True):
     """回应 = 社区有限表达"""
     id: str = Field(default_factory=gen_id, primary_key=True)
     responder_id: str = Field(index=True)
-    memory_id: str = Field(index=True)  # 回应的是哪条公开 Memory
+    # 数据库层外键兜底，禁止写入指向不存在 memory 的脏数据
+    memory_id: str = Field(index=True, foreign_key="memory.id")
     response_type: str  # empathy / thanks / hug / share
     content: Optional[str] = None  # 仅 share 类型有内容
     created_at: datetime = Field(default_factory=utcnow)
