@@ -1,12 +1,31 @@
 # CycleBubble 项目文件索引
 
 > **入口原则**：
-> - 新人先看 `README.md`（项目入口 + 本地开发 + PR 路线图）
-> - 设计原则最高权威：[`docs/CONSTITUTION.md`](CONSTITUTION.md)
-> - 演变历史：[`docs/PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md)
-> - 视觉备忘早期：[`docs/DESIGN_NOTES.md`](DESIGN_NOTES.md)（英文）
-> - 单页详细规范：[`docs/page_manual.html`](page_manual.html)
+> - 新人先看 [`../README.md`](../README.md)（项目入口 + 本地开发 + PR 路线图）
+> - 设计原则最高权威：[`CONSTITUTION.md`](CONSTITUTION.md)
+> - 演变历史：[`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md)
+> - 视觉备忘早期：[`DESIGN_NOTES.md`](DESIGN_NOTES.md)（英文）
+> - 单页详细规范：[`page_manual.html`](page_manual.html)
 > - 文件索引（本文件）
+
+---
+
+## 按任务找
+
+| 我想…… | 看哪里 |
+|---|---|
+| 跑起来 + demo 体验 | [README 快速开始](../README.md#快速开始) |
+| 改前端 | `frontend/` |
+| 改后端 API | `backend/routers/` |
+| 改后端业务（情绪 / 周期 / Pattern） | `backend/cycle_engine.py` / `patterns.py` / `ai_agent.py` |
+| 改数据库 schema | `backend/models.py` + `backend/alembic/versions/` |
+| 改环境变量 | `.env.example`（复制为 `backend/.env`）+ `backend/config.py` |
+| 改 CI 行为 | `.github/workflows/ci.yml` |
+| 改部署（Render） | `render.yaml` + `backend/main.py` CORS |
+| 改 GH Pages 源 | `frontend/` 目录（必须）+ Settings → Pages → Folder=`/frontend` |
+| 写产品文档 | `docs/`（根目录不接新 markdown） |
+| 看产品宪法 / 历史 | `docs/CONSTITUTION.md` / `docs/PROJECT_SUMMARY.md` |
+| 找某个文件干啥 | 本文件 |
 
 ---
 
@@ -123,4 +142,4 @@
 | #2 | iOS 适配 | `viewport-fit=cover` + safe-area + tap-highlight |
 | #3 | 整合前端 + dev.bat | frontend/ 目录化 + 本地一键启停（中文化） |
 | #4 | 前端重设计 + Bubble 染色 | frontend-design 流程 + 签名元素 + 健壮性打磨 |
-| #5 | 修 CI cache-bust | strip `?v=xxx` 后再 stat |
+| #5 | 前端迁 frontend/ + dev 直进 + CORS + 文档归类 | 4 文档进 docs/、`:8766/` 直进前端、CI 路径适配、cors 解析修 |
