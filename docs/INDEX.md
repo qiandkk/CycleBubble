@@ -2,10 +2,10 @@
 
 > **入口原则**：
 > - 新人先看 `README.md`（项目入口 + 本地开发 + PR 路线图）
-> - 设计原则最高权威：`CONSTITUTION.md`
-> - 演变历史：`PROJECT_SUMMARY.md`
-> - 视觉备忘早期：`DESIGN_NOTES.md`（英文）
-> - 单页详细规范：`docs/page_manual.html`
+> - 设计原则最高权威：[`docs/CONSTITUTION.md`](CONSTITUTION.md)
+> - 演变历史：[`docs/PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md)
+> - 视觉备忘早期：[`docs/DESIGN_NOTES.md`](DESIGN_NOTES.md)（英文）
+> - 单页详细规范：[`docs/page_manual.html`](page_manual.html)
 > - 文件索引（本文件）
 
 ---
@@ -14,14 +14,17 @@
 
 | 文件 | 角色 |
 |---|---|
-| `README.md` | 项目入口 |
-| `INDEX.md` | 本文件 |
-| `CONSTITUTION.md` | 产品宪法 V2（最高设计原则） |
-| `PROJECT_SUMMARY.md` | V1→V5 演变与修正记录 |
-| `DESIGN_NOTES.md` | 视觉与产品原则备忘（英文） |
+| `README.md` | 项目入口（唯一的根 markdown） |
+| `dev.bat` / `dev.ps1` | 本地一键启停（start / stop / restart / status） |
 | `render.yaml` | Render 服务定义 |
 | `.env.example` | 后端环境变量模板 |
 | `.gitignore` | git 忽略规则 |
+| `frontend/` | 前端入口子目录（GH Pages 发布源） |
+| `backend/` | FastAPI 后端 |
+| `docs/` | 全部产品文档集中地 |
+| `design/` | 设计资产 |
+| `evidence/` | 文献证据 |
+| `.github/workflows/ci.yml` | CI 配置 |
 
 ## 前端 — `frontend/`（GH Pages 发布源）
 
@@ -77,10 +80,14 @@
 | `feature-evidence-map.json` | 同样映射的结构化版本 |
 | `papers/` | 已下载 PDF（`.gitignore`，不入仓） |
 
-## 产品说明 — `docs/`
+## 产品文档 — `docs/`
 
 | 文件 | 内容 |
 |---|---|
+| `INDEX.md` | 本文件 |
+| `CONSTITUTION.md` | 产品宪法 V2（最高设计原则） |
+| `PROJECT_SUMMARY.md` | V1→V5 演变与修正记录 |
+| `DESIGN_NOTES.md` | 视觉与产品原则备忘（英文） |
 | `page_manual.html` | 4 个核心页面的目标、元素、情绪、流程与建议 |
 
 ## 本地开发
