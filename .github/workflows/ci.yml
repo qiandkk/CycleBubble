@@ -123,7 +123,7 @@ jobs:
             echo "node not installed on this runner — skipping JS syntax"
             exit 0
           fi
-          for f in frontend/script.js frontend/api.js; do
+          for f in frontend/script.js frontend/api.js script.js api.js; do
             if [ -f "$f" ]; then
               node --check "$f" && echo "$f OK"
             fi
@@ -150,12 +150,15 @@ jobs:
           exit $bad
 
       - name: Index/README references real paths only
-        # Quick sanity: every ./frontend/* path in index.html must exist.
+        # Quick sanity: every `./xxx` path in index.html must exist on disk.
+        # Cache-bust query strings (`?v=20260710a`) are stripped before stat
+        # so front-end version bumps don't produce false negatives.
         run: |
           python3 - <<'PYEOF'
           import re, sys, pathlib
           index = pathlib.Path('index.html').read_text(encoding='utf-8')
-          refs = set(re.findall(r'\"\./([^"]+)\"', index))
+          raw = set(re.findall(r'"\./([^"]+)"', index))
+          refs = {r.split('?', 1)[0] for r in raw}
           missing = [r for r in refs if not pathlib.Path(r).exists()]
           if missing:
               print('missing referenced files:', missing)
