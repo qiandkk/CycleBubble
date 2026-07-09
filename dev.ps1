@@ -309,8 +309,30 @@ function Stop-One {
     Write-Host ("✓ {0} 已停止  端口 {1}，结束 {2} 个进程" -f $labelText, $Port, $targets.Count) -ForegroundColor Green
 }
 
+# --- 依赖检测 -------------------------------------------------------------
+# 启动后端前检查 uvicorn 是否存在；缺失则自动 pip install -r requirements.txt
+function Ensure-BackendDeps {
+    $check = python -c "import uvicorn" 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ''
+        Write-Host '⚠ 后端依赖缺失，自动安装 ...' -ForegroundColor Yellow
+        Write-Host ("  pip install -r {0}" -f (Join-Path $BackendDir 'requirements.txt')) -ForegroundColor Gray
+        python -m pip install -r (Join-Path $BackendDir 'requirements.txt') -q 2>&1 | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host '  ✗ 依赖安装失败，请手动执行 pip install -r backend\requirements.txt' -ForegroundColor Red
+            return $false
+        }
+        Write-Host '  ✓ 依赖安装完成' -ForegroundColor Green
+        Write-Host ''
+    }
+    return $true
+}
+
 # --- Actions -------------------------------------------------------------
 function Action-Start {
+    # 启动前先检测后端依赖
+    if (-not (Ensure-BackendDeps)) { return }
+
     Start-One -Label 'backend'  -WorkingDir $BackendDir  -CommandArgs @('-m','uvicorn','main:app','--host',$BackendHost,'--port',[string]$BackendPort) `
               -PidFile $BackendPidFile  -OutFile $BackendOutFile  -ErrFile $BackendErrFile `
               -ExtraEnv @{ Port=$BackendPort; CB_JWT_SECRET=$CbJwtSecret; CB_CORS_ORIGINS=$CbCorsOrigins }
