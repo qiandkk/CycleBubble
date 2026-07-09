@@ -160,6 +160,61 @@ API 文档（后端自带）：`http://127.0.0.1:8765/docs`
 
 merge 到 master 后前端自动发布。后续前端改动只改 `frontend/`，根目录不再有副本。
 
+> **⚠️ GH Pages 只能发静态前端，没有后端 = 登录会失败。**
+> 完整公网可登入站点的部署 = **前端 GH Pages + 后端 Render**。
+> 下方教程 5-10 分钟搞定。
+
+---
+
+## Render 后端部署（让 GH Pages 真正能登录）
+
+GH Pages 只发静态前端。要让 `https://qiandkk.github.io/CycleBubble/` 真的能登入，必须有一个公网后端。我们用 Render（免费 plan）。
+
+### 一键 Blueprint 部署（推荐）
+
+仓库自带 `render.yaml`，Render 可以一键识别。
+
+1. 打开 https://render.com 用 GitHub 登录
+2. 顶部点 **`New +`** → **`Blueprint`**
+3. 选仓库 **`qiandkk/CycleBubble`** → 点 **`Connect`**
+4. Render 读 `render.yaml` 自动识别 1 个 web service：
+   - name: `cyclebubble-api`
+   - root: `backend/`
+   - start: `uvicorn main:app --host 0.0.0.0 --port $PORT --app-dir backend`
+5. 等 2-5 分钟 build + deploy
+6. 完成后 Render 给你一个 URL，类似 `https://cyclebubble-api-xxxx.onrender.com`
+7. **打开这个 URL**，应该看到 `{"status":"ok","service":"CycleBubble API"}`
+
+### 环境变量（Render 已自动设）
+
+| 变量 | 来源 | 说明 |
+|---|---|---|
+| `CB_JWT_SECRET` | Render 自动生成 | 强随机密钥，无需手动填 |
+| `DEEPSEEK_API_KEY` | 手动填（可选） | 没填走回退抽取 |
+| `CB_CORS_ORIGINS` | 写死 | 已包含 `qiandkk.github.io` + Render URL + 本地端口 |
+| `CB_DEMO_USER` | 写死为 `1` | Render 也注入 demo 账号 |
+
+### 改前端 API 指向真后端
+
+部署完拿到 Render URL 后，改 `frontend/api.js` 第 11 行：
+
+```js
+// 把
+BASE = "https://cyclebubble-api.onrender.com";
+```
+
+提交 push → 等 GH Pages 重新部署（通常 1-2 分钟）→ 打开站点用 `demo / demo` 登录。
+
+### 已知限制（重要）
+
+- **数据库是临时 SQLite**：Render 免费 plan 实例空闲 15 分钟后 sleep，唤醒时**清空内存** → 数据库重置（demo 账号会重新注入，但用户的记录会丢）。生产化请切 PostgreSQL。
+- **冷启动 30-50 秒**：第一次访问 / 闲置后再访问要等（Render free plan 限制）。
+- **WebSocket 没用**：本项目纯 HTTP，无影响。
+
+### 不想用 Render？
+
+切任何支持 Python 的 PaaS 都行（Fly.io / Railway / 自建 VPS），环境变量按 `.env.example` 配即可，业务代码零改动。
+
 ---
 
 ## 本地开发（细节）
