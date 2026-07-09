@@ -101,7 +101,7 @@ jobs:
                   self.errors.append(message)
 
           p = StrictParser()
-          with open('index.html', encoding='utf-8') as f:
+          with open('frontend/index.html', encoding='utf-8') as f:
               p.feed(f.read())
           if p.errors:
               print('HTML errors:')
@@ -169,10 +169,11 @@ jobs:
         run: |
           python3 - <<'PYEOF'
           import re, sys, pathlib
-          index = pathlib.Path('index.html').read_text(encoding='utf-8')
+          index = pathlib.Path('frontend/index.html').read_text(encoding='utf-8')
           raw = set(re.findall(r'"\./([^"]+)"', index))
           refs = {r.split('?', 1)[0] for r in raw}
-          missing = [r for r in refs if not pathlib.Path(r).exists()]
+          # 前端入口在 frontend/ 下，refs 也要在同目录查找
+          missing = [r for r in refs if not pathlib.Path('frontend/' + r).exists()]
           if missing:
               print('missing referenced files:', missing)
               sys.exit(1)
