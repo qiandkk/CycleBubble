@@ -47,7 +47,9 @@ function Rotate-Log {
 $ScriptDir         = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectRoot       = $ScriptDir
 $BackendDir        = Join-Path $ProjectRoot 'backend'
-$FrontendDir       = $ProjectRoot
+# 前端静态服务的根目录：frontend/ 子目录。
+# 这样 http://127.0.0.1:8766/ 直接进 CycleBubble 前端，不需要 /frontend/ 前缀。
+$FrontendDir       = Join-Path $ProjectRoot 'frontend'
 $BackendHost       = '127.0.0.1'
 $BackendPort       = 8765
 $FrontendHost      = '127.0.0.1'
@@ -74,7 +76,7 @@ function Write-Banner {
     Write-Host '       CycleBubble  本地开发服务' -ForegroundColor Cyan
     Write-Host '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' -ForegroundColor Cyan
     Write-Host ("   后端地址 ：http://{0}:{1}  (uvicorn)"   -f $BackendHost,  $BackendPort)
-    Write-Host ("   前端地址 ：http://{0}:{1}  (python -m http.server)" -f $FrontendHost, $FrontendPort)
+    Write-Host ("   前端地址 ：http://{0}:{1}             ← 直接进 CycleBubble" -f $FrontendHost, $FrontendPort) -ForegroundColor Green
     Write-Host ("   接口文档 ：http://{0}:{1}/docs"          -f $BackendHost,  $BackendPort)
     Write-Host ("   日志目录 ：{0}"                            -f $LogDir)
     Write-Host '──────────────────────────────────────────────────────' -ForegroundColor Cyan

@@ -26,7 +26,10 @@
 | `evidence/` | 文献证据 |
 | `.github/workflows/ci.yml` | CI 配置 |
 
-## 前端 — `frontend/`（GH Pages 发布源）
+## 前端 — `frontend/`（GH Pages 发布源 + 本地 dev 根）
+
+> 本地 `dev.bat start` 启的 `http.server` 工作目录就是这个 `frontend/`，
+> 所以 `http://127.0.0.1:8766/` 直接进前端，不需要 `/frontend/` 前缀。
 
 | 文件 | 角色 |
 |---|---|
