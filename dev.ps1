@@ -252,6 +252,17 @@ function Start-One {
     $labelText = if ($Label -eq 'backend') { '后端服务' } else { '前端服务' }
     Write-Host ("▶ 启动 {0}  ...  日志：{1}" -f $labelText, $OutFile) -ForegroundColor Cyan
     try {
+        # 先把 ExtraEnv 里的非 Port 变量 set 到当前 PowerShell 进程环境，
+        # Start-Process 派生的子进程会继承这些变量。
+        # 注意：必须放在 Start-Process 之前才有效。
+        foreach ($k in $ExtraEnv.Keys) {
+            if ($k -eq 'Port') { continue }
+            $v = $ExtraEnv[$k]
+            if ($null -ne $v -and "$v" -ne '') {
+                try { [Environment]::SetEnvironmentVariable($k, $v, 'Process') } catch { }
+            }
+        }
+
         $proc = Start-Process -FilePath 'python.exe' `
                               -ArgumentList $CommandArgs `
                               -WorkingDirectory $WorkingDir `
@@ -263,11 +274,6 @@ function Start-One {
     } catch {
         Write-Host ("   ✗ 启动失败：{0}" -f $_.Exception.Message) -ForegroundColor Red
         return
-    }
-
-    foreach ($k in $ExtraEnv.Keys) {
-        if ($k -eq 'Port') { continue }
-        try { [Environment]::SetEnvironmentVariable($k, $ExtraEnv[$k], 'Process') } catch { }
     }
 
     # 写 PID 文件放最后，避免半启动状态留下脏记录

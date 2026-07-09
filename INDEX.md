@@ -23,14 +23,17 @@
 | `.env.example` | 后端环境变量模板 |
 | `.gitignore` | git 忽略规则 |
 
-## 前端 — GH Pages 发布源（仓库根）
+## 前端 — `frontend/`（GH Pages 发布源）
 
 | 文件 | 角色 |
 |---|---|
-| `index.html` | 5 屏 SPA 渲染入口（auth / onboard / home / record / growth / resonance）+ About modal |
-| `styles.css` | Token 系统 + 5 屏样式 + iOS 安全区 + skeleton + modal |
-| `script.js` | 状态机 + Bubble 实时染色 signature + 全屏编排 + About + 登出 |
-| `api.js` | 后端 HTTP 客户端（`/api/auth/*` `/api/memories` `/api/patterns` `/api/bubble-state` `/api/growth` `/api/resonance/*` `/api/cycle/*`） |
+| `frontend/index.html` | 5 屏 SPA 渲染入口（auth / onboard / home / record / growth / resonance）+ About modal |
+| `frontend/styles.css` | Token 系统 + 5 屏样式 + iOS 安全区 + skeleton + modal |
+| `frontend/script.js` | 状态机 + Bubble 实时染色 signature + 全屏编排 + About + 登出 |
+| `frontend/api.js` | 后端 HTTP 客户端（`/api/auth/*` `/api/memories` `/api/patterns` `/api/bubble-state` `/api/growth` `/api/resonance/*` `/api/cycle/*`） |
+
+> GH Pages 配置：Settings → Pages → Branch `master` · Folder `/frontend`。
+> 后续前端改动只改 `frontend/`，根目录不再有副本，CI 会自动校验这个不变量。
 
 ## 后端 — `backend/`
 

@@ -123,7 +123,7 @@ jobs:
             echo "node not installed on this runner — skipping JS syntax"
             exit 0
           fi
-          for f in frontend/script.js frontend/api.js script.js api.js; do
+          for f in frontend/script.js frontend/api.js; do
             if [ -f "$f" ]; then
               node --check "$f" && echo "$f OK"
             fi
@@ -139,11 +139,24 @@ jobs:
       - name: No accidental top-level scratch files
         # The temp_body.json dev-residue and stray docs/ duplicates were
         # cleaned up in chore/frontend-folderize.  If either reappears, fail.
+        # Also: GH Pages deploys from /frontend/, so the four entry files
+        # MUST exist there and MUST NOT exist at the repo root.
         run: |
           bad=0
           for path in temp_body.json docs/index.html docs/script.js docs/styles.css docs/api.js; do
             if [ -e "$path" ]; then
               echo "expected-absent path still exists: $path"
+              bad=1
+            fi
+          done
+          # Frontend entry files must live in frontend/ (not at repo root)
+          for f in index.html api.js script.js styles.css; do
+            if [ ! -f "frontend/$f" ]; then
+              echo "missing required frontend entry: frontend/$f"
+              bad=1
+            fi
+            if [ -f "$f" ]; then
+              echo "frontend entry leaked to root: $f (move it under frontend/)"
               bad=1
             fi
           done
