@@ -106,6 +106,7 @@ def _init_test_db():
 def _clean_tables():
     """每个测试前清空所有表，保证测试隔离。"""
     with Session(engine) as session:
+        # 清表时按依赖反向：先清 Report / Response / Memory / Cycle，最后清 User
         for table in reversed(SQLModel.metadata.sorted_tables):
             session.exec(table.delete())
         session.commit()

@@ -9,6 +9,7 @@ from auth import get_current_user
 from ai_agent import extract_memory
 from patterns import compute_patterns, compute_bubble_state
 from cycle_engine import compute_cycle_status, to_naive_utc
+from safety import scan as scan_crisis
 
 router = APIRouter(tags=["memories"])
 
@@ -129,6 +130,8 @@ async def create_memory(
     return {
         "memory": memory_to_dict(memory),
         "insight": insight,
+        # 危机信号检测（兜底，永远不阻断保存）
+        "crisis": scan_crisis(text),
     }
 
 

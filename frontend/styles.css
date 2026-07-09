@@ -754,6 +754,30 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; color: var(--in
 .modal-body p { font-size: 14px; color: var(--ink); margin: 0 0 12px; line-height: 1.7; }
 .modal-quiet { color: var(--subtle) !important; font-size: 12px !important; }
 
+/* ---------- 16b. 危机信号 modal（兜底）---------------------------------- */
+.modal--crisis { background: rgba(82, 63, 74, .55); }
+.modal-card--crisis {
+  border: 1px solid var(--petal);
+  background: linear-gradient(180deg, var(--cream) 0%, #fff5f3 100%);
+  max-width: 340px;
+}
+.modal-title--crisis { color: var(--plum); font-size: 20px; }
+.crisis-msg { font-size: 14px; color: var(--ink); line-height: 1.7; margin: 0 0 12px; }
+.crisis-h3 {
+  font-family: var(--font-display); font-size: 14px; font-weight: 500;
+  color: var(--plum); margin: 14px 0 8px;
+}
+.crisis-list { list-style: none; padding: 0; margin: 0 0 6px; display: flex; flex-direction: column; gap: 6px; }
+.crisis-list li {
+  font-size: 13px; color: var(--ink); padding: 6px 10px;
+  background: rgba(255, 255, 255, .6);
+  border-radius: 10px;
+  border: 1px solid rgba(232, 163, 167, .2);
+}
+.crisis-list a { color: var(--petal); text-decoration: none; font-weight: 500; }
+.crisis-list a:hover { text-decoration: underline; }
+.crisis-meta { color: var(--subtle); font-size: 11px; margin-left: 4px; }
+
 /* ---------- 17. Skeleton loader --------------------------------------- */
 .skeleton { display: flex; flex-direction: column; gap: 10px; padding: 4px 0; }
 .skel-line {

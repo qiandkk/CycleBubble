@@ -8,7 +8,7 @@ from database import init_db, engine
 from config import settings
 from models import User
 from auth import hash_password
-from routers import auth, memories, resonance, cycle
+from routers import auth, memories, resonance, cycle, reports
 
 app = FastAPI(title="CycleBubble API", version="1.0.0")
 
@@ -27,6 +27,7 @@ app.include_router(auth.router)
 app.include_router(memories.router)
 app.include_router(resonance.router)
 app.include_router(cycle.router)
+app.include_router(reports.router)
 
 
 # 本地演示账号 — 仅在显式启用时创建/刷新
