@@ -1509,7 +1509,33 @@ button:focus-visible, textarea:focus-visible {
 @media (max-width: 420px) {
   body { padding: 0; }
   .phone-frame { max-width: 100%; }
-  .phone-screen { height: 100vh; height: 100dvh; border-radius: 0; border: none; box-shadow: none; }
+  .phone-screen {
+    height: 100vh; height: 100dvh;
+    border-radius: 0; border: none; box-shadow: none;
+    /* iPhone X+ 刘海 / Home Indicator 安全区 */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  /* 底部 Tab 让出 Home Indicator 高度（11px 是现有 padding-bottom） */
+  .tabbar { padding-bottom: max(11px, env(safe-area-inset-bottom)); }
+  /* 顶部 nav-bar 顶部让出刘海 */
+  .nav-bar { padding-top: max(8px, env(safe-area-inset-top)); }
+  /* iOS 点击高亮清除（按钮、回退、Tab、回应 chip 等） */
+  button,
+  .tab-item,
+  .response-chip,
+  .back-btn,
+  .auth-submit,
+  .auth-toggle,
+  .onboard-add,
+  .onboard-submit,
+  .onboard-skip,
+  .about-link,
+  .about-close,
+  .about-reset,
+  .response-send {
+    -webkit-tap-highlight-color: transparent;
+  }
   .breathing-bubble { width: 200px; }
 }
 
