@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 REM ============================================================
 REM   CycleBubble 本地一键启停 (thin wrapper)
 REM   File encoding: UTF-8 with BOM
@@ -19,3 +19,4 @@ REM (optional — only matters when invoked from explorer)
 REM Forward EVERYTHING to dev.ps1.  PS1 is UTF-8 with BOM; powershell
 REM reads it as UTF-8 already, so CJK in args/echo flow naturally.
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0dev.ps1" %*
+pause
