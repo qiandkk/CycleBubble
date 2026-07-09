@@ -1,5 +1,6 @@
-"""共鸣路由 — 社区故事流 + 回应"""
+"""共鸣路由 — 社区故事流 + 回应 + 频控"""
 import random
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session, select
@@ -18,6 +19,10 @@ class ResponseRequest(BaseModel):
 
 ANON_NAMES = ["匿名泡泡", "一个路人", "路过的风", "某个人", "匿名"]
 ANON_IDS = list(range(15, 50))
+
+# 频控：每用户每小时最多 N 次回应（防骚扰/刷屏）
+RATE_LIMIT_PER_HOUR = 30
+RATE_LIMIT_WINDOW = timedelta(hours=1)
 
 
 @router.get("/api/resonance/feed")
@@ -78,6 +83,8 @@ def create_response(
 
     安全：必须校验目标 Memory 存在且 ``is_public``，避免对私密 Memory 或
     不存在的 ID 写入回应（深度防御，即使 UUID4 不可枚举仍需在应用层兜底）。
+
+    频控：单用户每 1 小时最多 RATE_LIMIT_PER_HOUR 次回应，防止骚扰/刷屏。
     """
     if req.response_type not in ("empathy", "thanks", "hug", "share"):
         raise HTTPException(status_code=400, detail="无效的回应类型")
@@ -85,6 +92,19 @@ def create_response(
     memory = session.get(Memory, memory_id)
     if not memory or not memory.is_public:
         raise HTTPException(status_code=404, detail="Memory 不存在或不可回应")
+
+    # 频控：最近 1 小时内的回应次数
+    window_start = datetime.utcnow() - RATE_LIMIT_WINDOW
+    recent_count = len(session.exec(
+        select(ResponseModel)
+        .where(ResponseModel.responder_id == user.id)
+        .where(ResponseModel.created_at >= window_start)
+    ).all())
+    if recent_count >= RATE_LIMIT_PER_HOUR:
+        raise HTTPException(
+            status_code=429,
+            detail=f"回应过于频繁，请稍后再试（每小时最多 {RATE_LIMIT_PER_HOUR} 次）",
+        )
 
     resp = ResponseModel(
         responder_id=user.id,

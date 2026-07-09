@@ -82,3 +82,22 @@ class Cycle(SQLModel, table=True):
     period_end: Optional[datetime] = None  # 经期结束日期（可选）
     cycle_length: Optional[int] = None  # 该周期长度（天），由相邻两次开始日期计算
     created_at: datetime = Field(default_factory=utcnow)
+
+
+class Report(SQLModel, table=True):
+    """用户对共鸣 Memory 的举报 — 用于最小化内容治理。
+
+    隐私设计：
+    - ``reason`` 由前端下拉选择（spam / harassment / self_harm_concern / other），
+      不存用户原话避免再次伤害
+    - ``status`` 由后续人工 / 自动审核流转，原型阶段保持 'open'
+    - 同一用户对同一 memory 只记一条（去重）
+    """
+    id: str = Field(default_factory=gen_id, primary_key=True)
+    reporter_id: str = Field(index=True)              # 举报人
+    memory_id: str = Field(index=True, foreign_key="memory.id")
+    reason: str  # spam / harassment / self_harm_concern / other
+    note: Optional[str] = Field(default=None, sa_column=Column(Text))  # 可选补充说明
+    status: str = Field(default="open")  # open / reviewed / dismissed
+    created_at: datetime = Field(default_factory=utcnow)
+

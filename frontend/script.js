@@ -432,6 +432,10 @@
         setTimeout(function () {
           settling.hidden = true;
           settlingActions.hidden = false;
+          // 危机信号检测 — 永远不阻断保存，资源 modal 主动弹出
+          if (res && res.crisis && res.crisis.risk_level && res.crisis.risk_level !== 'none') {
+            showCrisisModal(res.crisis);
+          }
         }, 1400);
       } catch (err) {
         var c = classifyError(err);
@@ -668,6 +672,51 @@
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !modal.hidden) closeM();
     });
+  }
+
+  // 危机信号兜底：永远不阻断保存，只在风险等级 non-none 时弹资源 modal
+  function showCrisisModal(crisis) {
+    var modal = $('crisisModal');
+    var body  = $('crisisBody');
+    var close = $('crisisClose');
+    if (!modal || !body || !close) return;
+    var r = crisis && crisis.resources ? crisis.resources : {};
+    var hotlines = r.hotline || [];
+    var textRes  = r.text || [];
+    var msg = r.message || '请记得——你不必一个人面对。';
+
+    var html = '<p class="crisis-msg">' + escapeHtml(msg) + '</p>';
+    if (hotlines.length) {
+      html += '<h3 class="crisis-h3">立即可拨打的热线</h3>';
+      html += '<ul class="crisis-list">';
+      for (var i = 0; i < hotlines.length; i++) {
+        var h = hotlines[i];
+        html += '<li><strong>' + escapeHtml(h.name) + '</strong>'
+              + ' — <a href="tel:' + escapeHtml(h.phone) + '">' + escapeHtml(h.phone) + '</a>'
+              + ' <span class="crisis-meta">' + escapeHtml(h.hours || '') + ' · ' + escapeHtml(h.region || '') + '</span></li>';
+      }
+      html += '</ul>';
+    }
+    if (textRes.length) {
+      html += '<h3 class="crisis-h3">也可以在线寻求帮助</h3>';
+      html += '<ul class="crisis-list">';
+      for (var j = 0; j < textRes.length; j++) {
+        var t = textRes[j];
+        html += '<li><a href="' + escapeHtml(t.url) + '" target="_blank" rel="noopener">'
+              + escapeHtml(t.name) + '</a> — <span class="crisis-meta">'
+              + escapeHtml(t.desc || '') + '</span></li>';
+      }
+      html += '</ul>';
+    }
+    body.innerHTML = html;
+    modal.hidden = false;
+
+    // ESC / 点背景 / 按钮都能关
+    function closeM() { modal.hidden = true; }
+    close.onclick = closeM;
+    modal.onclick = function (e) { if (e.target === modal) closeM(); };
+    function onKey(e) { if (e.key === 'Escape' && !modal.hidden) { closeM(); document.removeEventListener('keydown', onKey); } }
+    document.addEventListener('keydown', onKey);
   }
 
   function initLogout() {
