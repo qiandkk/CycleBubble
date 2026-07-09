@@ -1,6 +1,7 @@
 """认证路由 — 注册 / 登录 / 获取当前用户"""
+import re
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, field_validator
 from sqlmodel import Session, select
 from database import get_session
 from models import User
@@ -9,15 +10,35 @@ from auth import hash_password, verify_password, create_token, get_current_user
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
+# 故意不用 pydantic.EmailStr — 它会把 .local / .test 等保留 TLD 当成非法，
+# 而且我们的本地 demo 账号故意短到只要「demo」一个字也能用。
+# 宽松校验：非空 + 至少 2 字符，长度上限 120 防止滥用。
+def _check_email(v: str) -> str:
+    v = v.strip().lower()
+    if len(v) < 2 or len(v) > 120:
+        raise ValueError("账号长度需在 2~120 字符之间")
+    return v
+
+
 class RegisterRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str
     nickname: str | None = None
 
+    @field_validator("email")
+    @classmethod
+    def _v_email(cls, v: str) -> str:
+        return _check_email(v)
+
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str
+
+    @field_validator("email")
+    @classmethod
+    def _v_email(cls, v: str) -> str:
+        return _check_email(v)
 
 
 class UserResponse(BaseModel):

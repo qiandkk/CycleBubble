@@ -1,0 +1,164 @@
+name: CI
+
+on:
+  push:
+    branches: [master, fix/**, feat/**, chore/**, refactor/**]
+  pull_request:
+    branches: [master]
+
+# Cancel previous in-flight runs on the same branch / PR to save CI minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ===== Backend: import + tests =====
+  backend:
+    name: backend (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12']
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile-check all backend .py
+        # Catches syntax errors even if no tests exist yet.
+        run: |
+          python -m compileall -q routers cycle_engine.py ai_agent.py patterns.py 2>&1
+          # main.py needs config + CB_JWT_SECRET to be importable, compile-check is enough.
+          python -m py_compile main.py config.py database.py auth.py models.py
+
+      - name: Import smoke
+        # Importing main.py requires the settings object to be constructed.
+        # We set CB_JWT_SECRET so the env-var requirement is satisfied.
+        env:
+          CB_JWT_SECRET: ci-secret-only-for-import
+        run: |
+          python -c "import main; print('main imported OK,', len(main.app.routes), 'routes')"
+
+      - name: Run pytest (if tests exist)
+        # backend/tests/ ships in PR #1 (refactor/audit-remediation).  Until that
+        # merges, this step just reports 0 tests.  After merge, it runs the
+        # 50-case suite.  continue-on-error: true means we don't fail the run
+        # when the suite isn't present yet.
+        env:
+          CB_JWT_SECRET: ci-pytest-secret
+        run: |
+          if [ -d tests ]; then
+            python -m pytest -v --tb=short || exit 1
+          else
+            echo "no tests/ directory yet (lands in PR #1) — skipping"
+          fi
+
+  # ===== Frontend: HTML well-formedness + JS syntax =====
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: HTML parse
+        # Use Python stdlib to verify index.html parses without errors.
+        # Catches unbalanced tags, bad attributes, etc.
+        run: |
+          python3 - <<'PYEOF'
+          from html.parser import HTMLParser
+
+          class StrictParser(HTMLParser):
+              def __init__(self):
+                  super().__init__(convert_charrefs=False)
+                  self.errors = []
+                  self.stack = []
+              def handle_starttag(self, tag, attrs):
+                  if tag not in ('img', 'meta', 'link', 'br', 'hr', 'input'):
+                      self.stack.append(tag)
+              def handle_endtag(self, tag):
+                  if not self.stack:
+                      self.errors.append(f'closing </{tag}> with empty stack')
+                      return
+                  if self.stack[-1] != tag:
+                      self.errors.append(f'mismatched </{tag}> (top of stack is <{self.stack[-1]}>)')
+                  else:
+                      self.stack.pop()
+              def error(self, message):
+                  self.errors.append(message)
+
+          p = StrictParser()
+          with open('index.html', encoding='utf-8') as f:
+              p.feed(f.read())
+          if p.errors:
+              print('HTML errors:')
+              for e in p.errors:
+                  print(' ', e)
+              exit(1)
+          if p.stack:
+              print(f'HTML unclosed tags: {p.stack}')
+              exit(1)
+          print('HTML OK')
+          PYEOF
+
+      - name: JS syntax (node)
+        # node --check does no execution, just parse-checks.
+        # Skipped if node isn't available in the base image; backend smoke is
+        # still the primary health check.
+        run: |
+          if ! command -v node >/dev/null 2>&1; then
+            echo "node not installed on this runner — skipping JS syntax"
+            exit 0
+          fi
+          for f in frontend/script.js frontend/api.js; do
+            if [ -f "$f" ]; then
+              node --check "$f" && echo "$f OK"
+            fi
+          done
+
+  # ===== File-layout sanity =====
+  layout:
+    name: repo layout
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: No accidental top-level scratch files
+        # The temp_body.json dev-residue and stray docs/ duplicates were
+        # cleaned up in chore/frontend-folderize.  If either reappears, fail.
+        run: |
+          bad=0
+          for path in temp_body.json docs/index.html docs/script.js docs/styles.css docs/api.js; do
+            if [ -e "$path" ]; then
+              echo "expected-absent path still exists: $path"
+              bad=1
+            fi
+          done
+          exit $bad
+
+      - name: Index/README references real paths only
+        # Quick sanity: every ./frontend/* path in index.html must exist.
+        run: |
+          python3 - <<'PYEOF'
+          import re, sys, pathlib
+          index = pathlib.Path('index.html').read_text(encoding='utf-8')
+          refs = set(re.findall(r'\"\./([^"]+)\"', index))
+          missing = [r for r in refs if not pathlib.Path(r).exists()]
+          if missing:
+              print('missing referenced files:', missing)
+              sys.exit(1)
+          print('all', len(refs), 'index.html refs resolve OK')
+          PYEOF
