@@ -1593,29 +1593,6 @@ button:focus-visible, textarea:focus-visible {
 }
 .auth-error[hidden] { display: none; }
 
-.auth-quick {
-  margin-top: 24px;
-  padding: 8px 14px;
-  background: transparent;
-  border: 1px solid rgba(181, 169, 207, 0.3);
-  border-radius: 20px;
-  color: var(--subtle, #a49aa5);
-  font-family: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: border-color 0.15s, color 0.15s;
-}
-.auth-quick:hover {
-  border-color: var(--lavender, #b5a9cf);
-  color: var(--lavender, #b5a9cf);
-}
-.auth-quick-icon {
-  color: var(--lavender, #b5a9cf);
-}
-
 /* ===== 首页登录提示 ===== */
 .login-pill {
   display: flex;
