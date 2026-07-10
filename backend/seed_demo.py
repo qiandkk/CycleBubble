@@ -153,8 +153,14 @@ def get_or_create_demo_author(session: Session) -> User:
 
 
 def seed_memories(session: Session, demo_user: User) -> int:
+    """写入 demo 账号的主时间线记忆。按 raw_text 去重，重复执行不重复写入。"""
+    existing_texts = {
+        m.raw_text for m in session.exec(select(Memory).where(Memory.user_id == demo_user.id)).all()
+    }
     count = 0
     for spec in SEED_MEMORIES:
+        if spec["raw_text"] in existing_texts:
+            continue
         m = Memory(
             user_id=demo_user.id,
             raw_text=spec["raw_text"],
@@ -167,15 +173,25 @@ def seed_memories(session: Session, demo_user: User) -> int:
             created_at=datetime.utcnow() - timedelta(days=spec["days_ago"]),
         )
         session.add(m)
+        existing_texts.add(spec["raw_text"])
         count += 1
     session.commit()
     return count
 
 
 def seed_feed_stories(session: Session, author: User) -> int:
-    """创建共鸣 feed 的公开故事（由独立作者账号发布，供 demo 账号浏览）。"""
+    """创建共鸣 feed 的公开故事（由独立作者账号发布，供 demo 账号浏览）。
+
+    按 raw_text 去重：重复执行（不带 --reset）不会重复写入相同的公开故事，
+    以确保 seed_responses 拿到的 feed_index 始终对应同一组 memory。
+    """
+    existing_texts = {
+        m.raw_text for m in session.exec(select(Memory).where(Memory.user_id == author.id)).all()
+    }
     count = 0
     for spec in SEED_FEED_STORIES:
+        if spec["raw_text"] in existing_texts:
+            continue
         m = Memory(
             user_id=author.id,
             raw_text=spec["raw_text"],
@@ -188,18 +204,25 @@ def seed_feed_stories(session: Session, author: User) -> int:
             created_at=datetime.utcnow() - timedelta(days=spec["days_ago"]),
         )
         session.add(m)
+        existing_texts.add(spec["raw_text"])
         count += 1
     session.commit()
     return count
 
 
 def seed_cycle(session: Session, demo_user: User) -> int:
-    """写入示例周期：3 条经期（28 天间隔）"""
+    """写入示例周期：3 条经期（28 天间隔）。按 source='seed' + start_date 去重。"""
     today = date.today()
-    # 最近一次经期：14 天前开始，持续 5 天
     starts = [today - timedelta(days=14 + i * 28) for i in range(3)]
+    existing_dates = {
+        c.start_date for c in session.exec(
+            select(Cycle).where(Cycle.user_id == demo_user.id, Cycle.source == "seed")
+        ).all()
+    }
     count = 0
     for start in starts:
+        if start in existing_dates:
+            continue
         c = Cycle(
             user_id=demo_user.id,
             start_date=start,
@@ -209,8 +232,107 @@ def seed_cycle(session: Session, demo_user: User) -> int:
             created_at=datetime.utcnow(),
         )
         session.add(c)
+        existing_dates.add(start)
         count += 1
     session.commit()
+    return count
+
+
+# 演示回应样例：
+# 全部由 demo 账号发出（demo 是当前登录账号），目标是让 feed 故事看起来
+# 已经被回应过；这与真实用户无关——真实用户只读真实库，演示库的内容
+# 不会泄漏到真实数据库。
+SEED_RESPONSES = [
+    {
+        "feed_index": 0,
+        "type": "我也经历过",
+        "content": None,
+        "days_ago": 4,
+    },
+    {
+        "feed_index": 0,
+        "type": "抱抱",
+        "content": "你现在已经走到了这一步，已经很不容易了。",
+        "days_ago": 3,
+    },
+    {
+        "feed_index": 1,
+        "type": "谢谢你的分享",
+        "content": None,
+        "days_ago": 8,
+    },
+    {
+        "feed_index": 1,
+        "type": "分享我的经历",
+        "content": "我也试过写下来，第一周很难，后来发现真的能慢下来一点。",
+        "days_ago": 6,
+    },
+    {
+        "feed_index": 2,
+        "type": "我也经历过",
+        "content": None,
+        "days_ago": 2,
+    },
+]
+
+
+def seed_responses(session: Session, demo_user: User, author: User, *, reset: bool = False) -> int:
+    """给共鸣 feed 的公开故事补几条 demo 账号的回应。
+
+    - 仅作用于演示库 (demo_engine)，不会触碰真实库。
+    - reset 模式：写入前清空 demo 账号对作者故事的回应，全量写入。
+    - 非 reset 模式：按 (feed_index, type) 语义去重，重复执行不会重复写入。
+    - demo 账号不能回应自己的记忆，所以这里回应作者账号的公开故事。
+    """
+    feed_memories = session.exec(
+        select(Memory)
+        .where(Memory.user_id == author.id, Memory.is_public == True)
+        .order_by(Memory.created_at)
+    ).all()
+    if not feed_memories:
+        return 0
+
+    if reset:
+        feed_ids = [m.id for m in feed_memories]
+        session.exec(
+            delete(Response).where(
+                Response.user_id == demo_user.id,
+                Response.memory_id.in_(feed_ids),
+            )
+        )
+        session.commit()
+
+    index_to_memory = {i: mem for i, mem in enumerate(feed_memories)}
+    existing_pairs = set()
+    if not reset:
+        feed_ids = {m.id for m in feed_memories}
+        index_by_id = {mem.id: i for i, mem in index_to_memory.items()}
+        for r in session.exec(select(Response)).all():
+            if r.user_id != demo_user.id or r.memory_id not in feed_ids:
+                continue
+            existing_pairs.add((index_by_id[r.memory_id], r.type))
+
+    count = 0
+    for spec in SEED_RESPONSES:
+        idx = spec.get("feed_index", 0)
+        if idx not in index_to_memory:
+            continue
+        key = (idx, spec["type"])
+        if key in existing_pairs:
+            continue
+        memory = index_to_memory[idx]
+        resp = Response(
+            memory_id=memory.id,
+            user_id=demo_user.id,
+            type=spec["type"],
+            content=spec.get("content"),
+            created_at=datetime.utcnow() - timedelta(days=spec.get("days_ago", 0)),
+        )
+        session.add(resp)
+        existing_pairs.add(key)
+        count += 1
+    if count:
+        session.commit()
     return count
 
 
@@ -250,6 +372,11 @@ def main():
         n_cycle = seed_cycle(session, demo_user)
         print(f"       共鸣故事: {n_feed} 条")
         print(f"       经期数据: {n_cycle} 条")
+
+        # 5. 写 demo 账号对共鸣故事的回应（让 feed 更真实）
+        print("\n[5/5] 写入 demo 回应 ...")
+        n_resp = seed_responses(session, demo_user, author, reset=args.reset)
+        print(f"       演示回应: {n_resp} 条")
 
     print("\n" + "=" * 60)
     print(" 演示数据初始化完成")
