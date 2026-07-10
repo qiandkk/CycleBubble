@@ -9,17 +9,17 @@
   <script src="./api.js?v=20260710a"></script>
 </head>
 <body>
-  <!-- ====== 演示模式 bar ====== -->
-  <div class="demo-bar" id="demoBar" hidden>
-    <span class="demo-bar-text">
-      <span class="demo-bar-icon" aria-hidden="true">✦</span>
-      这是演示版本 · 登录后使用完整功能
-    </span>
-    <button class="demo-bar-btn" type="button" id="demoBarLoginBtn">登录 / 注册</button>
-  </div>
-
   <main class="phone-frame" aria-label="CycleBubble">
     <div class="phone-screen" id="phone">
+
+      <!-- ====== 演示模式 bar ====== -->
+      <div class="demo-bar" id="demoBar" hidden>
+        <span class="demo-bar-text">
+          <span class="demo-bar-icon" aria-hidden="true">✦</span>
+          这是演示版本 · 登录后使用完整功能
+        </span>
+        <button class="demo-bar-btn" type="button" id="demoBarLoginBtn">登录 / 注册</button>
+      </div>
 
       <!-- ====== 首页（今日） ====== -->
       <div class="screen screen-home active" data-screen="home">
@@ -351,6 +351,10 @@
 
             <button class="btn-primary btn-block" type="submit" id="authSubmit">登录</button>
             <button class="btn-link" type="button" id="authToggle">还没有账号？注册</button>
+            <button class="btn-link auth-demo-link" type="button" id="authDemoBtn">
+              <span aria-hidden="true">✦</span>
+              先看看是什么样的（演示模式）
+            </button>
             <p class="auth-error" id="authError" hidden></p>
           </form>
 

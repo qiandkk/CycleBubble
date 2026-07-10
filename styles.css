@@ -1781,21 +1781,22 @@ button:focus-visible, textarea:focus-visible {
   text-decoration: underline;
 }
 
-/* ===== 演示模式 bar ===== */
+/* ===== 演示模式 bar（手机屏幕内顶部） ===== */
 .demo-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 16px;
+  padding: 12px 16px;
   background: linear-gradient(135deg, rgba(200, 168, 216, 0.16), rgba(240, 168, 184, 0.16));
   border-bottom: 1px solid rgba(181, 169, 207, 0.25);
   font-size: 12px;
   color: var(--ink, #523f4a);
   backdrop-filter: blur(8px);
+  flex-shrink: 0;
+  border-radius: 0;
 }
 .demo-bar[hidden] { display: none; }
-
 .demo-bar-text {
   display: flex;
   align-items: center;
@@ -1803,12 +1804,10 @@ button:focus-visible, textarea:focus-visible {
   flex: 1;
   min-width: 0;
 }
-
 .demo-bar-icon {
   color: var(--lavender, #b5a9cf);
   font-size: 14px;
 }
-
 .demo-bar-btn {
   padding: 5px 12px;
   background: rgba(255, 253, 251, 0.8);
@@ -1825,6 +1824,19 @@ button:focus-visible, textarea:focus-visible {
 .demo-bar-btn:hover {
   background: rgba(255, 253, 251, 1);
   transform: translateY(-1px);
+}
+
+/* 登录页 demo 入口 */
+.auth-demo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--lavender, #b5a9cf) !important;
+  font-size: 13px;
+  margin-top: 4px;
+}
+.auth-demo-link:hover {
+  color: var(--ink, #523f4a) !important;
 }
 
 /* ===== 演示模式 toast ===== */
@@ -1848,4 +1860,13 @@ button:focus-visible, textarea:focus-visible {
 .demo-toast--show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* demo 模式下齿轮按钮下移，避免被 demo-bar 覆盖 */
+.phone-screen:has(.demo-bar:not([hidden])) .icon-btn {
+  top: 52px;
+}
+.demo-bar:not([hidden]) + .screen .icon-btn,
+.demo-bar:not([hidden]) ~ .screen .icon-btn {
+  top: 52px;
 }

@@ -1964,4 +1964,19 @@
     });
   }
 
+  // 登录页"先看看 demo"按钮
+  var authDemoBtn = document.getElementById('authDemoBtn');
+  if (authDemoBtn) {
+    authDemoBtn.addEventListener('click', function () {
+      // 切到演示模式 + 显示 demo-bar + 回到首页
+      isDemoMode = true;
+      refreshDemoBar();
+      if (typeof switchTo === 'function') switchTo('home');
+      if (typeof loadCycleStatus === 'function') loadCycleStatus();
+      // 隐藏登录提示 pill
+      var pill = document.getElementById('loginPill');
+      if (pill) pill.hidden = true;
+    });
+  }
+
 })();
