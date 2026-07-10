@@ -90,3 +90,12 @@ def get_current_user(
     session.add(user)
     session.commit()
     return user
+
+
+def require_real_user(request: Request) -> None:
+    """拒绝演示模式访问仅面向真实账号的数据操作。"""
+    if request.headers.get("X-Demo-Mode", "").strip() == "1":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="演示模式仅供浏览，请登录后使用此功能。",
+        )
