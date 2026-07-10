@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from collections import defaultdict
 from time import time
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlmodel import Session, select
 from ..database import get_session
@@ -10,6 +10,17 @@ from ..models import Memory, Response, User
 from ..auth import get_current_user
 
 router = APIRouter()
+
+
+def _is_demo_mode(request: Request) -> bool:
+    return request.headers.get("X-Demo-Mode", "").strip() == "1"
+
+
+def _demo_mode_block():
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="演示模式只读，无法回应。请登录后使用完整功能。",
+    )
 
 VALID_RESPONSE_TYPES = {"我也经历过", "谢谢", "抱抱", "继续说", "分享我的经历"}
 
@@ -83,10 +94,13 @@ def get_resonance_feed(
 def respond_to_memory(
     memory_id: int,
     req: RespondRequest,
+    request: Request,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     """对一条公开记忆发送回应"""
+    if _is_demo_mode(request):
+        _demo_mode_block()
     # 频控：每用户每小时最多 30 次回应（防骚扰 / 刷屏）
     if not _check_rate_limit(current_user.id):
         raise HTTPException(

@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlmodel import Session, select
 from ..database import get_session
@@ -9,6 +9,19 @@ from ..auth import get_current_user
 from ..cycle_engine import compute_cycle_status
 
 router = APIRouter()
+
+
+def _is_demo_mode(request: Request) -> bool:
+    """判断请求是否来自演示模式（前端 X-Demo-Mode: 1 header）"""
+    return request.headers.get("X-Demo-Mode", "").strip() == "1"
+
+
+def _demo_mode_block():
+    """演示模式下写入操作的拒绝响应"""
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="演示模式只读，无法保存数据。请登录后使用完整功能。",
+    )
 
 class PeriodCreate(BaseModel):
     start_date: date
@@ -36,10 +49,13 @@ class CycleStatusResponse(BaseModel):
 @router.post("/periods")
 def create_period(
     req: PeriodCreate,
+    request: Request,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     """添加一次经期记录"""
+    if _is_demo_mode(request):
+        _demo_mode_block()
     cycle = Cycle(
         user_id=current_user.id,
         start_date=req.start_date,
@@ -62,10 +78,13 @@ def create_period(
 @router.post("/import/manyou")
 def import_manyou(
     req: ManyouImport,
+    request: Request,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     """导入美柚格式的经期数据"""
+    if _is_demo_mode(request):
+        _demo_mode_block()
     imported = []
     for p in req.periods:
         start = p.get("start_date") or p.get("start")
@@ -95,10 +114,13 @@ def import_manyou(
 @router.post("/import/apple-health")
 def import_apple_health(
     req: AppleHealthImport,
+    request: Request,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     """导入 Apple Health 格式的经期数据"""
+    if _is_demo_mode(request):
+        _demo_mode_block()
     imported = []
     for r in req.records:
         start = r.get("startDate") or r.get("start_date")
@@ -167,6 +189,7 @@ class PeriodUpdate(BaseModel):
 def update_period(
     period_id: int,
     req: PeriodUpdate,
+    request: Request,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
@@ -176,6 +199,8 @@ def update_period(
     - 仅修改提供的字段
     - end_date 必须 >= start_date（否则 400）
     """
+    if _is_demo_mode(request):
+        _demo_mode_block()
     cycle = session.get(Cycle, period_id)
     if not cycle or cycle.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="记录不存在")
@@ -204,6 +229,7 @@ def update_period(
 @router.delete("/periods/{period_id}")
 def delete_period(
     period_id: int,
+    request: Request,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
@@ -211,6 +237,8 @@ def delete_period(
 
     - 跨用户隔离：操作别的用户的 period_id 直接 404
     """
+    if _is_demo_mode(request):
+        _demo_mode_block()
     cycle = session.get(Cycle, period_id)
     if not cycle or cycle.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="记录不存在")

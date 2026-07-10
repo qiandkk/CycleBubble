@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
@@ -6,6 +6,9 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     app_name: str = "CycleBubble API"
     database_url: str = "sqlite:///./cyclebubble.db"
+    # 演示库 URL：未设置时从 database_url 自动推导（在路径末尾插入 _demo）
+    # 例如 sqlite:///./cyclebubble.db → sqlite:///./cyclebubble_demo.db
+    demo_database_url: Optional[str] = None
     # 用户数据敏感（情绪记录、经期、健康），不能使用默认密钥上线
     # 不给默认值 → 必须显式设置 CB_JWT_SECRET；空白字符串会被拒绝
     jwt_secret: str

@@ -155,28 +155,10 @@
     };
   }
 
-  // ====== 预置 Memory（模拟过去三个月的沉积） ======
-  // 仅用于 demo 展示效果。用户点击"重新开始"后，设置 bubbleReset 标记，
-  // 之后永不注入种子记忆，变成真正的空状态。
-  var seedMemories = [
-    extractMemory("今天又因为领导的一句话纠结了一整天。我是不是太敏感了？", "三个月前"),
-    extractMemory("和朋友聊了之后好多了。原来不只是我一个人这样。", "两个月前"),
-    extractMemory("开会时又想反驳但没说出口。下次想试着表达出来。", "六周前"),
-    extractMemory("今天终于主动说出了自己的想法，虽然说出口时手在抖。", "一个月前"),
-    extractMemory("这个阶段又到了，提前做好了心理准备。没有像上次那样陷入很久。", "两周前")
-  ];
-
-  // 用户是否主动重置过
-  var hasReset = false;
-  try {
-    hasReset = localStorage.getItem("bubbleReset_v6") === "true";
-  } catch (e) {}
-
-  // 仅当：没有记忆 + 用户没重置过 → 注入种子记忆（demo 展示用）
-  if (bubbleDNA.memories.length === 0 && !hasReset) {
-    bubbleDNA.memories = seedMemories.slice();
-    bubbleDNA.totalRecords = seedMemories.length;
-  }
+  // ====== 不再注入前端硬编码种子记忆 ======
+  // 双数据库架构下，demo 模式的种子数据从 cyclebubble_demo.db 读取（后端 seed_demo.py 预置）。
+  // 前端 bubbleDNA.memories 始终是真实数据（或空状态），与 demo/真实模式无关。
+  // 保留 bubbleReset 标记语义（点击"重新开始"后清空本地缓存）。
 
   // ====== 模式管理：演示 / 正常 ======
   // 通过 URL 参数可强制：?demo=1 强制演示，?mode=app 强制正常
@@ -214,52 +196,17 @@
     }, 2500);
   }
 
-  // ====== 演示模式种子数据 ======
-  var demoStories = [
-    {
-      id: 'demo-1',
-      anonymous_name: '一位相似经历的人',
-      text_excerpt: '这个月我又开始反复想那件事了，好像每个月都会有一周是这样……',
-      themes: ['自我'],
-      mood: '难过',
-      days_ago: 2
-    },
-    {
-      id: 'demo-2',
-      anonymous_name: '一位相似经历的人',
-      text_excerpt: '今天朋友说她也是这样，她找到的方法是写下来，我也想试试……',
-      themes: ['关系'],
-      mood: '平静',
-      days_ago: 5
-    },
-    {
-      id: 'demo-3',
-      anonymous_name: '一位相似经历的人',
-      text_excerpt: '以前会觉得自己太敏感了，现在开始觉得也许只是这个阶段的正常反应……',
-      themes: ['自我'],
-      mood: '平静',
-      days_ago: 9
-    }
-  ];
-
-  var demoGrowthStories = [
-    {
-      text: '这两段话是不同时期留下的。',
-      tag: '表达方式',
-      quotes: [
-        { text: '我是不是太敏感了？', time: '三个月前' },
-        { text: '好像在意的是自己有没有被认可。', time: '两周前' }
-      ]
-    },
-    {
-      text: '最近你提到了两次"朋友"。',
-      tag: '关系',
-      quotes: [
-        { text: '和朋友聊了之后好多了。', time: '两个月前' },
-        { text: '今天主动说出了自己的想法。', time: '一周前' }
-      ]
-    }
-  ];
+  // ====== 演示模式标记同步 ======
+  // 后端双数据库架构：演示模式请求会带 X-Demo-Mode: 1 header，
+  // 后端从 cyclebubble_demo.db 读种子数据并跳过 token 校验。
+  // 前端不再需要硬编码 demo 数据，所有展示都通过 API 拿。
+  function syncDemoFlag() {
+    try {
+      if (window.CB_API && CB_API.setDemoMode) {
+        CB_API.setDemoMode(isDemoMode);
+      }
+    } catch (e) {}
+  }
 
   // ====== 援助 modal 触发逻辑 ======
   function showCrisisModal(resources) {
@@ -768,12 +715,9 @@
   }
 
   async function loadCycleStatus() {
-    // 演示模式：使用硬编码
-    if (isDemoMode) {
-      var el = document.getElementById('cycleStatus');
-      if (el) el.textContent = '黄体期｜今天身体可能比平时更容易放大情绪感受';
-      return;
-    }
+    // 演示/真实模式都通过 API 拿，后端根据 X-Demo-Mode header 自动切库
+    // demo 模式：cyclebubble_demo.db 已有种子经期 → 返回 phase=排卵期等
+    // 真实模式：cyclebubble.db 没有经期 → confidence=none，文案空
     try {
       if (!window.CB_API || !window.CB_API.cycle || !window.CB_API.cycle.getStatus) return;
       const status = await window.CB_API.cycle.getStatus();
@@ -792,31 +736,11 @@
       if (phaseEl && status.phase_name) phaseEl.textContent = status.phase_name;
     } catch (e) {
       console.warn("加载周期状态失败:", e);
-      // 兜底：保留原有 HTML 文案
     }
   }
 
   async function loadGrowthData() {
-    // 演示模式：返回种子数据
-    if (isDemoMode) {
-      return {
-        total_records: 5,
-        empty_state: false,
-        timeline: [
-          { week: '2026-W28', count: 2, first_text: '这个阶段又到了...' },
-          { week: '2026-W26', count: 1, first_text: '今天又因为...' },
-          { week: '2026-W24', count: 2, first_text: '和朋友聊了之后...' }
-        ],
-        discoveries: [
-          { type: 'mood', title: '最近的主导情绪', content: '难过', evidence_count: 2 },
-          { type: 'theme', title: '最常出现的感受主题', content: '自我', evidence_count: 3 }
-        ],
-        impact: { accompanied_count: 5, response_count: 2 },
-        isDemo: true,
-        demoStories: demoGrowthStories
-      };
-    }
-    // 正常模式：从 API 获取
+    // 演示/真实模式都通过 API 拿，后端根据 X-Demo-Mode header 自动切库
     try {
       if (!window.CB_API || !window.CB_API.growth || !window.CB_API.growth.get) return null;
       const data = await window.CB_API.growth.get();
@@ -828,11 +752,7 @@
   }
 
   async function loadResonanceFeed() {
-    // 演示模式：返回种子共鸣故事
-    if (isDemoMode) {
-      return demoStories;
-    }
-    // 正常模式：从 API 获取
+    // 演示/真实模式都通过 API 拿，后端根据 X-Demo-Mode header 自动切库
     try {
       if (!window.CB_API || !window.CB_API.resonance || !window.CB_API.resonance.getFeed) return [];
       const data = await window.CB_API.resonance.getFeed(10);
@@ -1366,21 +1286,9 @@
       setTimeout(function () {
         clearInterval(msgInterval);
 
-        // demo 模式：只存 localStorage（已有种子记忆基础上的追加）
         if (isDemoMode) {
-          var newMemory = extractMemory(userInput, "今天");
-          bubbleDNA.memories.push(newMemory);
-          bubbleDNA.totalRecords++;
-
-          bubbleDNA.evolution.push({
-            type: "memory_added",
-            time: Date.now(),
-            memoryId: newMemory.id,
-            themes: newMemory.themes
-          });
-
-          saveDNA();
-
+          // 演示模式：后端会 403 拒绝。前端给个友好提示后直接跳到 insight。
+          showDemoToast('演示模式无法保存，登录后可以记录你的真实情绪');
           switchTo("insight");
           applyBubbleState();
         } else {
@@ -1389,7 +1297,7 @@
             switchTo("insight");
             applyBubbleState();
           }).catch(function (err) {
-            // 后端失败：仍写 localStorage 但提示
+            // 后端失败：兜底到 localStorage 但提示
             console.warn('保存到后端失败:', err);
             showDemoToast('保存失败，请检查网络');
             var newMemory = extractMemory(userInput, "今天");
@@ -2010,6 +1918,7 @@
 
         // 登录/注册成功：切换到正常模式
         isDemoMode = false;
+        syncDemoFlag();
         refreshDemoBar();
 
         // 登录/注册成功：清掉本地 demo 种子记忆 + 从后端拉真实数据
@@ -2075,10 +1984,9 @@
     // 已登录：验证 token 是否有效
     try {
       await CB_API.auth.me();
-      // 已登录：清掉本地 demo 种子 + 从后端加载真实 memories
-      // （登录用户不该看到"三个月前、两个月前"这种种子文案）
+      // 已登录：从真实库加载 memories
       try {
-        localStorage.removeItem('bubbleReset_v6'); // 解除种子注入限制
+        localStorage.removeItem('bubbleReset_v6');
         bubbleDNA.memories = [];
         bubbleDNA.totalRecords = 0;
         bubbleDNA.totalResponses = 0;
@@ -2106,6 +2014,7 @@
   })();
 
   // ====== 初始化：根据模式显示/隐藏 demo bar ======
+  syncDemoFlag();
   refreshDemoBar();
 
   // 演示模式 bar 的登录按钮：跳到登录页
@@ -2122,10 +2031,24 @@
     authDemoBtn.addEventListener('click', function () {
       // 进入演示模式
       isDemoMode = true;
+      syncDemoFlag(); // 通知 api.js 后续请求带 X-Demo-Mode header
       refreshDemoBar(); // 同时显示 demo-bar 和 loginPill
+      // 重新加载首页数据（demo 库的）
       if (typeof switchTo === 'function') switchTo('home');
       if (typeof loadCycleStatus === 'function') loadCycleStatus();
+      if (typeof loadAndApplyGrowthData === 'function') loadAndApplyGrowthData();
+      if (typeof renderResonanceFeed === 'function') renderResonanceFeed();
+      if (typeof loadMemoriesFromBackend === 'function') loadMemoriesFromBackend().then(function () {
+        if (typeof applyBubbleState === 'function') applyBubbleState();
+      });
     });
   }
+
+  // 退出演示模式（保留为预留入口，目前通过登录后自动切真实模式）
+  window.__cbExitDemo = function () {
+    isDemoMode = false;
+    syncDemoFlag();
+    refreshDemoBar();
+  };
 
 })();

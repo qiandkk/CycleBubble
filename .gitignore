@@ -36,3 +36,7 @@ __pycache__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Local verification screenshots (not part of repo)
+screenshot_*.jpeg
+screenshot_*.png

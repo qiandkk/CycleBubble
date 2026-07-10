@@ -25,11 +25,26 @@
     localStorage.removeItem(TOKEN_KEY);
   }
 
+  // ===== 演示模式标记 =====
+  function isDemoMode() {
+    try { return localStorage.getItem('cb_demo_mode') === '1'; }
+    catch (e) { return false; }
+  }
+  function setDemoMode(on) {
+    try {
+      if (on) localStorage.setItem('cb_demo_mode', '1');
+      else localStorage.removeItem('cb_demo_mode');
+    } catch (e) {}
+  }
+
   // ===== 通用请求封装 =====
   async function request(path, options = {}) {
     const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
     const token = getToken();
-    if (token) headers['Authorization'] = 'Bearer ' + token;
+    // 真实模式：附带 Bearer token
+    if (token && !isDemoMode()) headers['Authorization'] = 'Bearer ' + token;
+    // 演示模式：附带 X-Demo-Mode header（后端会跳过 token 校验，从 demo 库读种子）
+    if (isDemoMode()) headers['X-Demo-Mode'] = '1';
 
     let res;
     try {
@@ -184,6 +199,8 @@
     resonance: resonance,
     growth: growth,
     getToken: getToken,
-    clearToken: clearToken
+    clearToken: clearToken,
+    isDemoMode: isDemoMode,
+    setDemoMode: setDemoMode
   };
 })();

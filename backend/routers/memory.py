@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlmodel import Session, select
 from ..database import get_session
@@ -8,6 +8,17 @@ from ..models import Memory, User
 from ..auth import get_current_user
 
 router = APIRouter()
+
+
+def _is_demo_mode(request: Request) -> bool:
+    return request.headers.get("X-Demo-Mode", "").strip() == "1"
+
+
+def _demo_mode_block():
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="演示模式只读，无法保存数据。请登录后使用完整功能。",
+    )
 
 class MemoryCreate(BaseModel):
     raw_text: str
@@ -46,10 +57,13 @@ def parse_json_list(s: str, default=None):
 @router.post("")
 def create_memory(
     req: MemoryCreate,
+    request: Request,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
     """创建一条情绪记录"""
+    if _is_demo_mode(request):
+        _demo_mode_block()
     if not req.raw_text or len(req.raw_text.strip()) == 0:
         raise HTTPException(status_code=400, detail="记录内容不能为空")
 
