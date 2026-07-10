@@ -205,13 +205,15 @@ def update_period(
     if not cycle or cycle.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="记录不存在")
 
-    if req.start_date is not None:
+    provided_fields = req.model_fields_set
+
+    if "start_date" in provided_fields:
         cycle.start_date = req.start_date
-    if req.end_date is not None:
-        if req.end_date < cycle.start_date:
+    if "end_date" in provided_fields:
+        if req.end_date is not None and req.end_date < cycle.start_date:
             raise HTTPException(status_code=400, detail="结束日期必须晚于开始日期")
         cycle.end_date = req.end_date
-    if req.flow is not None:
+    if "flow" in provided_fields:
         cycle.flow = req.flow
 
     session.add(cycle)

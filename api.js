@@ -38,13 +38,18 @@
   }
 
   // ===== 通用请求封装 =====
-  async function request(path, options = {}) {
-    const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
+  function authHeaders(options) {
+    const headers = Object.assign({ 'Content-Type': 'application/json' }, (options && options.headers) || {});
     const token = getToken();
     // 真实模式：附带 Bearer token
     if (token && !isDemoMode()) headers['Authorization'] = 'Bearer ' + token;
     // 演示模式：附带 X-Demo-Mode header（后端会跳过 token 校验，从 demo 库读种子）
     if (isDemoMode()) headers['X-Demo-Mode'] = '1';
+    return headers;
+  }
+
+  async function request(path, options = {}) {
+    const headers = authHeaders(options);
 
     let res;
     try {
@@ -139,6 +144,71 @@
 
     async getStatus() {
       return await request('/api/cycle/status', { method: 'GET' });
+    },
+
+    async updatePeriod(periodId, fields) {
+      return await request('/api/cycle/periods/' + periodId, {
+        method: 'PATCH',
+        body: JSON.stringify(fields)
+      });
+    },
+
+    async deletePeriod(periodId) {
+      return await request('/api/cycle/periods/' + periodId, { method: 'DELETE' });
+    }
+  };
+
+  async function download(path) {
+    let res;
+    try {
+      res = await fetch(BASE + path, { method: 'GET', headers: authHeaders() });
+    } catch (e) {
+      throw new Error('网络错误，请检查后端服务');
+    }
+    if (res.status === 401) {
+      clearToken();
+      throw new Error('未登录或登录已过期');
+    }
+    if (!res.ok) {
+      let detail = '下载失败';
+      try {
+        const body = await res.json();
+        detail = body.detail || detail;
+      } catch (e) {}
+      throw new Error(detail);
+    }
+    const disposition = res.headers.get('Content-Disposition') || '';
+    const matched = disposition.match(/filename="?([^";]+)"?/i);
+    const filename = matched ? matched[1] : 'cyclebubble-data';
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+  }
+
+  const profile = {
+    async summary() {
+      return await request('/api/profile/summary', { method: 'GET' });
+    },
+
+    async exportJson() {
+      return await download('/api/profile/export/json');
+    },
+
+    async exportHtml() {
+      return await download('/api/profile/export/html');
+    },
+
+    async deleteAccount(password, acknowledged) {
+      return await request('/api/profile/account', {
+        method: 'DELETE',
+        body: JSON.stringify({ password: password, acknowledged: acknowledged })
+      });
     }
   };
 
@@ -198,6 +268,7 @@
     memory: memory,
     resonance: resonance,
     growth: growth,
+    profile: profile,
     getToken: getToken,
     clearToken: clearToken,
     isDemoMode: isDemoMode,

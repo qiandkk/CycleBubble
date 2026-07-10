@@ -1168,6 +1168,231 @@
     }
   }
 
+  // ====== 我的：资料、数据与经期管理 ======
+  function setProfileActionState(button, busy, label) {
+    if (!button) return;
+    button.disabled = busy;
+    button.setAttribute('aria-busy', busy ? 'true' : 'false');
+    // 带图标和说明的资料行保持原有结构，只标记进行中状态。
+    if (button.children.length) return;
+    if (!button.dataset.defaultLabel) button.dataset.defaultLabel = button.textContent;
+    button.textContent = busy ? label : button.dataset.defaultLabel;
+  }
+
+  function setProfileIdentity(name, email, state) {
+    var nameEl = document.getElementById('profileName');
+    var emailEl = document.getElementById('profileEmail');
+    var stateEl = document.getElementById('profileState');
+    if (nameEl) nameEl.textContent = name;
+    if (emailEl) emailEl.textContent = email || '';
+    if (stateEl) stateEl.textContent = state;
+  }
+
+  function setProfileManagementVisibility(isDemo) {
+    var privacy = document.getElementById('profilePrivacySection');
+    var demoNote = document.getElementById('profileDemoNote');
+    var logout = document.getElementById('profileLogoutBtn');
+    if (privacy) privacy.hidden = isDemo;
+    if (demoNote) demoNote.hidden = !isDemo;
+    if (logout) logout.hidden = isDemo;
+  }
+
+  async function renderProfilePage() {
+    var memoryCount = document.getElementById('profileMemoryCount');
+    var cycleCount = document.getElementById('profilePeriodCount');
+    if (isDemoMode) {
+      setProfileIdentity('演示用户', '演示模式', '演示数据不会保存、导出或修改');
+      if (memoryCount) memoryCount.textContent = bubbleDNA.totalRecords || '–';
+      if (cycleCount) cycleCount.textContent = '–';
+      setProfileManagementVisibility(true);
+      return;
+    }
+    setProfileManagementVisibility(false);
+    setProfileIdentity('正在加载', '', '这是只属于你的私密空间');
+    if (memoryCount) memoryCount.textContent = '–';
+    if (cycleCount) cycleCount.textContent = '–';
+    try {
+      var summary = await CB_API.profile.summary();
+      setProfileIdentity(summary.nickname || '还没有昵称', summary.email, '这是只属于你的私密空间');
+      if (memoryCount) memoryCount.textContent = String(summary.memory_count || 0);
+      if (cycleCount) cycleCount.textContent = String(summary.cycle_count || 0);
+    } catch (e) {
+      setProfileIdentity('暂时无法加载资料', '', e.message || '请稍后重试');
+    }
+  }
+
+  function showPeriodError(message) {
+    var error = document.getElementById('periodFormError');
+    if (!error) return;
+    error.textContent = message || '';
+    error.hidden = !message;
+  }
+
+  function resetPeriodForm() {
+    var form = document.getElementById('periodForm');
+    var id = document.getElementById('periodEditingId');
+    var button = document.getElementById('periodSaveBtn');
+    var cancel = document.getElementById('periodCancelBtn');
+    if (form) form.reset();
+    if (id) id.value = '';
+    if (button) {
+      button.textContent = '添加记录';
+      button.dataset.defaultLabel = '添加记录';
+    }
+    if (cancel) cancel.hidden = true;
+    showPeriodError('');
+  }
+
+  function flowLabel(flow) {
+    return ({ light: '量少', medium: '适中', heavy: '量多' })[flow] || '未记录流量';
+  }
+
+  function renderPeriodsList(periods) {
+    var list = document.getElementById('periodsList');
+    var empty = document.getElementById('periodsEmptyState');
+    if (!list || !empty) return;
+    list.textContent = '';
+    empty.hidden = periods.length !== 0;
+    for (var i = 0; i < periods.length; i++) {
+      (function (period) {
+        var row = document.createElement('div');
+        row.className = 'period-row';
+        var main = document.createElement('div');
+        main.className = 'period-row-main';
+        var date = document.createElement('span');
+        date.className = 'period-row-date';
+        date.textContent = period.start_date + (period.end_date ? ' 至 ' + period.end_date : ' 开始');
+        var meta = document.createElement('span');
+        meta.className = 'period-row-meta';
+        meta.textContent = flowLabel(period.flow) + ' · ' + (period.source === 'manual' ? '手动记录' : '已导入');
+        main.appendChild(date);
+        main.appendChild(meta);
+        var edit = document.createElement('button');
+        edit.type = 'button'; edit.className = 'period-row-action'; edit.textContent = '编辑';
+        edit.addEventListener('click', function () {
+          document.getElementById('periodEditingId').value = period.id;
+          document.getElementById('periodStartDate').value = period.start_date;
+          document.getElementById('periodEndDate').value = period.end_date || '';
+          document.getElementById('periodFlow').value = period.flow || '';
+          document.getElementById('periodSaveBtn').textContent = '保存修改';
+          document.getElementById('periodSaveBtn').dataset.defaultLabel = '保存修改';
+          document.getElementById('periodCancelBtn').hidden = false;
+          document.getElementById('periodStartDate').focus();
+        });
+        var remove = document.createElement('button');
+        remove.type = 'button'; remove.className = 'period-row-action period-row-action--delete'; remove.textContent = '删除';
+        remove.addEventListener('click', async function () {
+          if (!window.confirm('删除这条经期记录？')) return;
+          try {
+            await CB_API.cycle.deletePeriod(period.id);
+            await loadPeriods();
+            await loadCycleStatus();
+            renderProfilePage();
+          } catch (e) { showPeriodError(e.message || '删除失败'); }
+        });
+        row.appendChild(main); row.appendChild(edit); row.appendChild(remove);
+        list.appendChild(row);
+      })(periods[i]);
+    }
+  }
+
+  async function loadPeriods() {
+    if (isDemoMode) {
+      showDemoToast('演示模式只读，登录后可以管理经期记录');
+      switchTo('profile');
+      return;
+    }
+    try {
+      var result = await CB_API.cycle.listPeriods();
+      renderPeriodsList((result && result.periods) || []);
+    } catch (e) {
+      showPeriodError(e.message || '加载经期记录失败');
+    }
+  }
+
+  var periodForm = document.getElementById('periodForm');
+  if (periodForm) periodForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    var id = document.getElementById('periodEditingId').value;
+    var start = document.getElementById('periodStartDate').value;
+    var end = document.getElementById('periodEndDate').value;
+    var flow = document.getElementById('periodFlow').value;
+    var button = document.getElementById('periodSaveBtn');
+    if (end && end < start) { showPeriodError('结束日期必须晚于开始日期'); return; }
+    showPeriodError('');
+    setProfileActionState(button, true, '正在保存');
+    try {
+      if (id) await CB_API.cycle.updatePeriod(id, { start_date: start, end_date: end || null, flow: flow || null });
+      else await CB_API.cycle.addPeriod(start, end || null, flow || null);
+      resetPeriodForm();
+      await loadPeriods();
+      await loadCycleStatus();
+      renderProfilePage();
+    } catch (e) { showPeriodError(e.message || '保存失败'); }
+    finally { setProfileActionState(button, false); }
+  });
+
+  var periodCancel = document.getElementById('periodCancelBtn');
+  if (periodCancel) periodCancel.addEventListener('click', resetPeriodForm);
+
+  function bindProfileButton(id, handler) {
+    var button = document.getElementById(id);
+    if (button) button.addEventListener('click', handler);
+  }
+
+  bindProfileButton('periodsEntryBtn', function () {
+    if (isDemoMode) { showDemoToast('演示模式只读，登录后可以管理经期记录'); return; }
+    switchTo('periods');
+  });
+  bindProfileButton('profileImportBtn', function () {
+    if (isDemoMode) { showDemoToast('演示模式只读，登录后可以导入数据'); return; }
+    switchTo('import');
+  });
+  bindProfileButton('exportJsonBtn', async function () {
+    var button = this; setProfileActionState(button, true, '正在准备');
+    try { await CB_API.profile.exportJson(); } catch (e) { showDemoToast(e.message || '导出失败'); }
+    finally { setProfileActionState(button, false); }
+  });
+  bindProfileButton('exportHtmlBtn', async function () {
+    var button = this; setProfileActionState(button, true, '正在准备');
+    try { await CB_API.profile.exportHtml(); } catch (e) { showDemoToast(e.message || '导出失败'); }
+    finally { setProfileActionState(button, false); }
+  });
+  bindProfileButton('deleteAccountEntryBtn', function () { switchTo('delete-account'); });
+  bindProfileButton('profileLogoutBtn', function () {
+    CB_API.auth.logout();
+    isDemoMode = false;
+    syncDemoFlag();
+    refreshDemoBar();
+    switchTo('auth');
+  });
+
+  var deleteAccountForm = document.getElementById('deleteAccountForm');
+  if (deleteAccountForm) deleteAccountForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    var password = document.getElementById('deleteAccountPassword').value;
+    var acknowledged = document.getElementById('deleteAccountAcknowledged').checked;
+    var error = document.getElementById('deleteAccountError');
+    var button = document.getElementById('deleteAccountSubmit');
+    error.hidden = true;
+    if (!password || !acknowledged) {
+      error.textContent = '请输入当前密码并确认删除后无法恢复'; error.hidden = false; return;
+    }
+    setProfileActionState(button, true, '正在永久删除');
+    try {
+      await CB_API.profile.deleteAccount(password, acknowledged);
+      CB_API.auth.logout();
+      isDemoMode = false;
+      syncDemoFlag();
+      refreshDemoBar();
+      bubbleDNA = JSON.parse(JSON.stringify(defaultDNA));
+      saveDNA();
+      deleteAccountForm.reset();
+      switchTo('auth');
+    } catch (e) { error.textContent = e.message || '删除失败'; error.hidden = false; }
+    finally { setProfileActionState(button, false); }
+  });
+
   // ====== 登录/注册状态与 helper ======
   // 与后端 CB_API.auth.* 配合。仅添加事件处理，不触碰视觉/Bubble 状态逻辑。
   var isRegisterMode = false;
@@ -1212,6 +1437,8 @@
     if (name === "insight") renderInsightPage();
     if (name === "growth") renderGrowthPage();
     if (name === "resonance") renderResonanceFeed();
+    if (name === "profile") renderProfilePage();
+    if (name === "periods") loadPeriods();
   }
 
   var tabItems = document.querySelectorAll(".tab-item");

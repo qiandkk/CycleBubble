@@ -53,13 +53,14 @@ app.add_middleware(
 )
 
 # 路由挂载（其他 agent 正在创建这些文件，确保导入正确）
-from .routers import auth, cycle, memory, resonance, growth, reports
+from .routers import auth, cycle, memory, resonance, growth, reports, profile
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(cycle.router, prefix="/api/cycle", tags=["cycle"])
 app.include_router(memory.router, prefix="/api/memories", tags=["memories"])
 app.include_router(resonance.router, prefix="/api/resonance", tags=["resonance"])
 app.include_router(growth.router, prefix="/api/growth", tags=["growth"])
 app.include_router(reports.router)  # reports.router 自带 prefix="/api/reports"
+app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
 
 @app.get("/")
 def root():

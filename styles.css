@@ -1153,7 +1153,7 @@ textarea::placeholder { color: var(--subtle); }
 .icon-resonance i { left: 9px; bottom: 4px; width: 8px; height: 7px; border-left: 3px solid currentColor; border-bottom: 3px solid currentColor; border-radius: 0 0 0 8px; transform: rotate(-16deg); }
 
 /* ====== 焦点 ====== */
-button:focus-visible, textarea:focus-visible {
+button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible {
   outline: 3px solid rgba(138,125,184,.3);
   outline-offset: 3px;
 }
@@ -1847,3 +1847,76 @@ button:focus-visible, textarea:focus-visible {
 .demo-bar:not([hidden]) ~ .screen .icon-btn {
   top: 52px;
 }
+
+/* ====== 我的：私密资料与数据管理 ====== */
+.screen-profile .screen-body { padding: 8px 20px 30px; }
+.profile-nav { padding-bottom: 4px; }
+.profile-identity { display:flex; align-items:center; gap:14px; padding:18px 0 26px; }
+.profile-orb { position:relative; width:60px; height:60px; flex:none; overflow:hidden; border:1px solid rgba(255,255,255,.9); border-radius:50%; background:radial-gradient(circle at 32% 24%,rgba(255,255,255,.96),rgba(255,255,255,.22) 28%,transparent 38%),linear-gradient(155deg,#f3c6cc,#d7b0d3 58%,#b9bfdf); box-shadow:inset 6px 8px 16px rgba(255,255,255,.64),inset -6px -8px 18px rgba(138,125,184,.16),0 10px 24px rgba(232,163,167,.18); }
+.profile-orb span { position:absolute; left:-16%; right:-16%; bottom:-8%; height:44%; border-radius:50% 50% 0 0; background:rgba(255,255,255,.26); animation:profile-liquid 6s ease-in-out infinite; }
+@keyframes profile-liquid { 0%,100%{transform:translateX(-5px) rotate(-2deg)} 50%{transform:translateX(5px) translateY(-3px) rotate(2deg)} }
+.profile-identity-text { min-width:0; }
+.profile-name { margin:0 0 4px; font-size:18px; font-weight:700; color:var(--ink); overflow-wrap:anywhere; }
+.profile-email,.profile-state { margin:0; font-size:12px; line-height:1.55; color:var(--subtle); overflow-wrap:anywhere; }
+.profile-state { margin-top:3px; color:var(--lavender); }
+.profile-section { margin:0 0 26px; }
+.profile-data-summary { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+.profile-stat { min-height:76px; padding:12px; border:1px solid rgba(181,169,207,.23); border-radius:14px; background:rgba(255,253,251,.6); color:var(--ink); text-align:left; transition:transform .18s,border-color .18s; font-family:inherit; }
+.profile-stat:hover { transform:translateY(-1px); border-color:rgba(181,169,207,.55); }
+.profile-stat strong { display:block; margin-bottom:4px; font-size:22px; font-weight:700; color:var(--rose); }
+.profile-stat span { font-size:12px; color:var(--muted); }
+.profile-row { width:100%; display:flex; align-items:center; gap:11px; padding:13px 4px; border:0; border-top:1px solid rgba(233,223,220,.88); background:transparent; color:var(--ink); font-family:inherit; text-align:left; }
+.profile-row:last-child { border-bottom:1px solid rgba(233,223,220,.88); }
+.profile-row:hover .profile-row-arrow { color:var(--rose); transform:translateX(2px); }
+.profile-row-icon { width:28px; height:28px; display:grid; place-items:center; flex:none; border-radius:50%; background:rgba(240,237,247,.78); color:var(--lavender); font-size:17px; }
+.profile-row-copy { display:grid; flex:1; min-width:0; gap:2px; }
+.profile-row-copy strong { font-size:14px; font-weight:600; }
+.profile-row-copy small { font-size:12px; color:var(--subtle); line-height:1.45; }
+.profile-row-arrow { color:var(--subtle); font-size:21px; line-height:1; transition:transform .18s,color .18s; }
+.profile-row--danger .profile-row-icon { background:rgba(245,217,216,.58); color:#c87878; }
+.profile-row--danger .profile-row-copy strong { color:#b26670; }
+.profile-demo-note { padding:18px 0 8px; text-align:center; }
+.profile-demo-note p { margin:0 0 14px; color:var(--subtle); font-size:13px; line-height:1.6; }
+.profile-logout { display:block; width:100%; margin:6px 0 0; padding:13px; border:0; background:transparent; color:var(--subtle); font-family:inherit; font-size:13px; }
+.profile-logout:hover { color:var(--rose); }
+.profile-logout[hidden],.profile-demo-note[hidden],.profile-section[hidden] { display:none; }
+
+/* ====== 经期管理 ====== */
+.periods-intro { margin:4px 0 20px; color:var(--subtle); font-size:13px; line-height:1.65; }
+.period-form { padding:14px; margin-bottom:24px; border:1px solid rgba(181,169,207,.22); border-radius:14px; background:rgba(255,253,251,.56); }
+.period-form label { display:grid; grid-template-columns:94px 1fr; align-items:center; gap:8px; margin-bottom:10px; color:var(--muted); font-size:12px; }
+.period-form input,.period-form select { width:100%; min-width:0; padding:8px 9px; border:1px solid rgba(181,169,207,.3); border-radius:8px; background:#fffdfb; color:var(--ink); font:inherit; font-size:13px; }
+.period-form-actions { display:flex; align-items:center; gap:10px; margin-top:14px; }
+.period-form-actions .btn-primary { min-width:104px; padding:10px 14px; }
+.period-form-error { margin:10px 0 0; color:#c87878; font-size:12px; line-height:1.45; }
+.period-form-error[hidden] { display:none; }
+.periods-list-label { margin-top:0; }
+.periods-list { display:flex; flex-direction:column; }
+.period-row { display:flex; align-items:center; gap:10px; padding:13px 2px; border-top:1px solid rgba(233,223,220,.88); }
+.period-row:last-child { border-bottom:1px solid rgba(233,223,220,.88); }
+.period-row-main { flex:1; min-width:0; }
+.period-row-date { display:block; font-size:14px; font-weight:600; color:var(--ink); }
+.period-row-meta { display:block; margin-top:3px; font-size:12px; color:var(--subtle); }
+.period-row-action { width:30px; height:30px; padding:0; border:0; border-radius:50%; background:transparent; color:var(--lavender); font:inherit; font-size:12px; }
+.period-row-action:hover { background:var(--lavender-soft); }
+.period-row-action--delete { color:#c87878; }
+
+/* ====== 删除账户 ====== */
+.delete-account-content { max-width:310px; margin:10px auto 0; text-align:center; }
+.delete-account-mark { width:42px; height:42px; display:grid; place-items:center; margin:0 auto 16px; border-radius:50%; background:rgba(245,217,216,.58); color:#b26670; font-size:24px; }
+.delete-account-content h2 { margin:0 0 10px; font-size:20px; line-height:1.35; color:var(--ink); }
+.delete-account-content > p { margin:0 0 24px; color:var(--muted); font-size:13px; line-height:1.7; text-align:left; }
+.delete-account-form { display:grid; gap:14px; text-align:left; }
+.delete-account-check { display:flex; align-items:flex-start; gap:9px; color:var(--muted); font-size:13px; line-height:1.55; }
+.delete-account-check input { width:16px; height:16px; flex:none; margin:2px 0 0; accent-color:var(--rose); }
+.delete-account-submit { width:100%; padding:12px 18px; border:1px solid rgba(200,120,120,.45); border-radius:22px; background:rgba(245,217,216,.42); color:#a75562; font:inherit; font-size:14px; font-weight:600; }
+.delete-account-submit:hover { background:rgba(245,217,216,.7); }
+.delete-account-submit:disabled { opacity:.5; cursor:not-allowed; }
+
+/* ====== 第四个 Tab ====== */
+.tabbar { grid-template-columns:repeat(4,1fr); }
+.icon-profile { position:relative; width:20px; height:20px; border:1.5px solid currentColor; border-radius:50%; }
+.icon-profile::before { content:""; position:absolute; top:3px; left:6px; width:5px; height:5px; border-radius:50%; background:currentColor; }
+.icon-profile i { position:absolute; right:3px; bottom:3px; left:3px; height:7px; border-radius:8px 8px 4px 4px; background:currentColor; opacity:.75; }
+@media (max-width:420px) { body { padding:0; } .phone-frame { max-width:none; } .phone-screen { height:100dvh; min-height:640px; border:0; border-radius:0; } }
+@media (prefers-reduced-motion:reduce) { .profile-orb span { animation:none; } }

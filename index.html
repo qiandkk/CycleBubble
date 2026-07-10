@@ -285,6 +285,122 @@
         </div>
       </div>
 
+      <!-- ====== 我的页 ====== -->
+      <div class="screen screen-profile" data-screen="profile">
+        <div class="nav-bar profile-nav">
+          <span class="nav-spacer"></span>
+          <span class="nav-title">我的</span>
+          <span class="nav-spacer"></span>
+        </div>
+        <div class="screen-body">
+          <section class="profile-identity" id="profileIdentity">
+            <div class="profile-orb" aria-hidden="true"><span></span></div>
+            <div class="profile-identity-text">
+              <p class="profile-name" id="profileName">正在加载</p>
+              <p class="profile-email" id="profileEmail"></p>
+              <p class="profile-state" id="profileState">这是只属于你的私密空间</p>
+            </div>
+          </section>
+
+          <section class="profile-section">
+            <h3 class="section-label">我的数据</h3>
+            <div class="profile-data-summary">
+              <button class="profile-stat" type="button" data-goto="growth">
+                <strong id="profileMemoryCount">–</strong>
+                <span>情绪记录</span>
+              </button>
+              <button class="profile-stat" type="button" id="periodsEntryBtn">
+                <strong id="profilePeriodCount">–</strong>
+                <span>经期记录</span>
+              </button>
+            </div>
+            <button class="profile-row" type="button" id="profileImportBtn">
+              <span class="profile-row-icon" aria-hidden="true">⌁</span>
+              <span class="profile-row-copy"><strong>导入经期数据</strong><small>让 Bubble 更了解你的节奏</small></span>
+              <span class="profile-row-arrow" aria-hidden="true">›</span>
+            </button>
+          </section>
+
+          <section class="profile-section" id="profilePrivacySection">
+            <h3 class="section-label">数据与隐私</h3>
+            <button class="profile-row" type="button" id="exportJsonBtn">
+              <span class="profile-row-icon" aria-hidden="true">↓</span>
+              <span class="profile-row-copy"><strong>导出 JSON 数据包</strong><small>保存完整的个人数据副本</small></span>
+              <span class="profile-row-arrow" aria-hidden="true">›</span>
+            </button>
+            <button class="profile-row" type="button" id="exportHtmlBtn">
+              <span class="profile-row-icon" aria-hidden="true">⌇</span>
+              <span class="profile-row-copy"><strong>导出回顾报告</strong><small>下载可离线打开的整理报告</small></span>
+              <span class="profile-row-arrow" aria-hidden="true">›</span>
+            </button>
+            <button class="profile-row profile-row--danger" type="button" id="deleteAccountEntryBtn">
+              <span class="profile-row-icon" aria-hidden="true">−</span>
+              <span class="profile-row-copy"><strong>删除账户</strong><small>永久删除你的资料与记录</small></span>
+              <span class="profile-row-arrow" aria-hidden="true">›</span>
+            </button>
+          </section>
+
+          <section class="profile-demo-note" id="profileDemoNote" hidden>
+            <p>演示数据仅供体验，不会保存或导出。</p>
+            <button class="btn-primary btn-block" type="button" data-goto="auth">登录 / 注册</button>
+          </section>
+
+          <button class="profile-logout" type="button" id="profileLogoutBtn">退出登录</button>
+        </div>
+      </div>
+
+      <!-- ====== 经期管理页 ====== -->
+      <div class="screen screen-periods" data-screen="periods">
+        <div class="nav-bar">
+          <button class="back-btn" type="button" data-back="profile" aria-label="返回我的">‹</button>
+          <span class="nav-title">经期记录</span>
+          <span class="nav-spacer"></span>
+        </div>
+        <div class="screen-body">
+          <p class="periods-intro">这些日期帮助 Bubble 更好地理解你的节奏。</p>
+          <form class="period-form" id="periodForm">
+            <input type="hidden" id="periodEditingId">
+            <label><span>开始日期</span><input type="date" id="periodStartDate" required></label>
+            <label><span>结束日期（选填）</span><input type="date" id="periodEndDate"></label>
+            <label><span>流量（选填）</span><select id="periodFlow"><option value="">未记录</option><option value="light">量少</option><option value="medium">适中</option><option value="heavy">量多</option></select></label>
+            <div class="period-form-actions">
+              <button class="btn-primary" type="submit" id="periodSaveBtn">添加记录</button>
+              <button class="btn-link" type="button" id="periodCancelBtn" hidden>取消编辑</button>
+            </div>
+            <p class="period-form-error" id="periodFormError" hidden></p>
+          </form>
+          <h3 class="section-label periods-list-label">已记录的日期</h3>
+          <div class="periods-list" id="periodsList"></div>
+          <div class="empty-state" id="periodsEmptyState" hidden>
+            <div class="empty-state-icon" aria-hidden="true"></div>
+            <h3 class="empty-state-title">还没有经期记录</h3>
+            <p class="empty-state-desc">从最近一次开始，慢慢补全自己的节奏。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== 删除账户确认页 ====== -->
+      <div class="screen screen-delete-account" data-screen="delete-account">
+        <div class="nav-bar">
+          <button class="back-btn" type="button" data-back="profile" aria-label="返回我的">‹</button>
+          <span class="nav-title">删除账户</span>
+          <span class="nav-spacer"></span>
+        </div>
+        <div class="screen-body">
+          <section class="delete-account-content">
+            <div class="delete-account-mark" aria-hidden="true">−</div>
+            <h2>永久删除这个账户</h2>
+            <p>这会永久删除你的资料、情绪记录、经期记录和回应。删除后无法恢复。</p>
+            <form class="delete-account-form" id="deleteAccountForm">
+              <label class="auth-field"><span class="auth-label">输入当前密码以确认</span><input class="auth-input" type="password" id="deleteAccountPassword" autocomplete="current-password" required></label>
+              <label class="delete-account-check"><input type="checkbox" id="deleteAccountAcknowledged"><span>我理解删除后无法恢复</span></label>
+              <p class="auth-error" id="deleteAccountError" hidden></p>
+              <button class="delete-account-submit" type="submit" id="deleteAccountSubmit">永久删除账户</button>
+            </form>
+          </section>
+        </div>
+      </div>
+
       <!-- ====== 登录/注册页 ====== -->
       <div class="screen screen-auth" data-screen="auth">
         <div class="auth-body">
@@ -332,6 +448,10 @@
         <span class="tab-item" data-goto="resonance">
           <span class="tab-icon icon-resonance" aria-hidden="true"><i></i></span>
           <span>回应</span>
+        </span>
+        <span class="tab-item" data-goto="profile">
+          <span class="tab-icon icon-profile" aria-hidden="true"><i></i></span>
+          <span>我的</span>
         </span>
       </nav>
 
