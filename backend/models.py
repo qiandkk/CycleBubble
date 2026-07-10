@@ -45,8 +45,9 @@ class Memory(SQLModel, table=True):
 class Response(SQLModel, table=True):
     __tablename__ = "response"
     id: Optional[int] = Field(default=None, primary_key=True)
+    # 注意：FK 强约束依赖 database.py 里 PRAGMA foreign_keys=ON
     memory_id: int = Field(foreign_key="memory.id", index=True)
-    user_id: int = Field(foreign_key="user.id")
+    user_id: int = Field(foreign_key="user.id", index=True)
     type: str = Field(max_length=20)  # '我也经历过'|'谢谢'|'抱抱'|'继续说'|'分享我的经历'
     content: Optional[str] = Field(default=None, max_length=500)
     created_at: datetime = Field(default_factory=datetime.utcnow)

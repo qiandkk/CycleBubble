@@ -17,13 +17,15 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS 配置
+# CORS 配置：白名单模式 + 不带 credentials
+# 浏览器通过 Bearer Token 认证，不依赖 Cookie/credentials
+# allow_origins=["*"] + allow_credentials=True 在浏览器规范中是非法且危险的
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # 路由挂载（其他 agent 正在创建这些文件，确保导入正确）

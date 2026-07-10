@@ -104,6 +104,11 @@ def respond_to_memory(
     if not memory:
         raise HTTPException(status_code=404, detail="记忆不存在")
 
+    # 私密记忆不对外暴露，只有公开记忆才允许回应
+    # 防止通过 memory_id 枚举绕过私密性
+    if not memory.is_public:
+        raise HTTPException(status_code=404, detail="记忆不存在")
+
     if memory.user_id == current_user.id:
         raise HTTPException(status_code=400, detail="不能回应自己的记忆")
 
