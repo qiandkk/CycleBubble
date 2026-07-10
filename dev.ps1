@@ -77,6 +77,12 @@ Write-Host " 停止:  按 Ctrl+C"
 Write-Host "==================================="
 Write-Host ""
 
+# 本地 dev 默认注入仅供本地的 JWT 密钥，避免双击启动因缺密钥失败
+# 如需用真实密钥，覆盖 $env:CB_JWT_SECRET 即可
+if (-not $env:CB_JWT_SECRET) {
+    $env:CB_JWT_SECRET = "dev-only-local-secret-do-not-use-in-prod-2026"
+}
+
 python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port $PORT
 
 Read-Host "按 Enter 退出"

@@ -94,6 +94,15 @@ echo  停止:  按 Ctrl+C
 echo ===================================
 echo.
 
+REM ==========================================================
+REM  Step 4: 启动后端
+REM  - 本地 dev 默认注入一个仅供本地的 CB_JWT_SECRET
+REM  - 如需用真实密钥，覆盖 CB_JWT_SECRET 环境变量即可
+REM ==========================================================
+if not defined CB_JWT_SECRET (
+    set "CB_JWT_SECRET=dev-only-local-secret-do-not-use-in-prod-2026"
+)
+
 python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port %PORT%
 
 echo.

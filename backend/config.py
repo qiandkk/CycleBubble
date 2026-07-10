@@ -11,16 +11,23 @@ class Settings(BaseSettings):
     jwt_secret: str
     jwt_algorithm: str = "HS256"
     jwt_expire_hours: int = 168  # 7 days
-    # 默认 CORS 白名单：本地开发地址 + Render + GitHub Pages
-    # 生产环境可通过 CB_CORS_ORIGINS 覆盖为具体域名
+    # 默认 CORS 白名单：本地开发地址 + 自部署服务器 + GitHub Pages
+    # 生产环境可通过 CB_CORS_ORIGINS 覆盖为具体域名（CSV 形式）
     cors_origins: List[str] = [
         "http://localhost:8000",
         "http://localhost:3000",
         "http://localhost:8080",
+        "http://localhost:8766",
         "http://127.0.0.1:8000",
         "http://127.0.0.1:8080",
-        "https://cyclebubble-api.onrender.com",
+        "http://127.0.0.1:8766",
+        # 自部署服务器
+        "http://8.160.187.143",
+        "https://8.160.187.143",
+        # GitHub Pages
         "https://qiandkk.github.io",
+        # Render（如果将来回退到 Render）
+        "https://cyclebubble-api.onrender.com",
     ]
 
     @field_validator("jwt_secret")
