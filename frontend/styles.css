@@ -807,3 +807,224 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; color: var(--in
 @media (min-width: 720px) {
   body { padding: 32px 16px; }
 }
+
+/* ===================================================================
+   20. Bubble Genesis — 首次注册教育动画
+   =================================================================== */
+.genesis-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #fffdfb 0%, #f8f4f0 100%);
+  opacity: 0;
+  animation: genesis-fade-in 0.8s ease forwards;
+}
+.genesis-overlay.leaving {
+  animation: genesis-fade-out 0.6s ease forwards;
+}
+@keyframes genesis-fade-in { to { opacity: 1; } }
+@keyframes genesis-fade-out { to { opacity: 0; } }
+
+.genesis-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+  max-width: 340px;
+  padding: 40px 24px;
+}
+
+/* ---- Genesis Bubble ---- */
+.genesis-bubble {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.6);
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255,255,255,.90), rgba(255,255,255,.20) 24%, transparent 36%),
+    linear-gradient(145deg, hsla(340, 32%, 96%, .50), hsla(340, 32%, 88%, .20));
+  box-shadow:
+    inset 12px 16px 36px rgba(255,255,255,.60),
+    inset -10px -14px 36px rgba(181,169,207,.10),
+    0 16px 48px rgba(232,163,167,.12);
+  animation: genesis-breathe 6s ease-in-out infinite;
+  transition: box-shadow 1.2s ease, background 1.2s ease;
+}
+@keyframes genesis-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.02); }
+}
+
+/* Phase 2: 第一次记录 — Bubble 获得液体 */
+.genesis-overlay.phase-2 .genesis-bubble {
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255,255,255,.88), rgba(255,255,255,.20) 24%, transparent 36%),
+    linear-gradient(145deg, hsla(340, 30%, 94%, .55), hsla(340, 30%, 86%, .30));
+  box-shadow:
+    inset 12px 16px 36px rgba(255,255,255,.55),
+    inset -10px -14px 36px rgba(181,169,207,.14),
+    0 16px 48px rgba(232,163,167,.16);
+}
+
+/* Phase 3: Pattern 形成 — 纹理出现 */
+.genesis-overlay.phase-3 .genesis-bubble {
+  box-shadow:
+    inset 12px 16px 36px rgba(255,255,255,.50),
+    inset -10px -14px 36px rgba(181,169,207,.18),
+    0 16px 52px rgba(232,163,167,.22),
+    0 0 40px rgba(181,169,207,.12);
+}
+
+/* Phase 4: Bubble 完整形成 — 深度和光泽 */
+.genesis-overlay.phase-4 .genesis-bubble {
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255,255,255,.85), rgba(255,255,255,.22) 24%, transparent 38%),
+    linear-gradient(145deg, hsla(340, 28%, 92%, .60), hsla(318, 40%, 84%, .35));
+  box-shadow:
+    inset 14px 18px 40px rgba(255,255,255,.50),
+    inset -14px -18px 42px rgba(181,169,207,.22),
+    0 20px 60px rgba(232,163,167,.25),
+    0 0 50px rgba(181,169,207,.16);
+}
+
+/* ---- Genesis 玻璃层 ---- */
+.genesis-bubble-glass {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse at 32% 24%, rgba(255,255,255,.70) 0 10%, rgba(255,255,255,.20) 11% 20%, transparent 32%),
+    radial-gradient(ellipse at 70% 80%, rgba(255,255,255,.18), transparent 30%);
+  pointer-events: none;
+}
+
+/* ---- Genesis 液体层（初始无，Phase 2 出现） ---- */
+.genesis-bubble-liquid {
+  position: absolute;
+  left: -14%; right: -14%; bottom: -11%;
+  z-index: 1;
+  height: 0%;
+  overflow: hidden;
+  border-radius: 50% 50% 0 0;
+  background: linear-gradient(180deg,
+    hsla(318, 48%, 90%, .70) 0%,
+    hsla(318, 48%, 76%, .75) 40%,
+    hsla(340, 32%, 70%, .80) 100%);
+  transition: height 2s cubic-bezier(.4,0,.2,1), background 1.5s ease;
+}
+.genesis-overlay.phase-2 .genesis-bubble-liquid { height: 35%; }
+.genesis-overlay.phase-3 .genesis-bubble-liquid { height: 55%; }
+.genesis-overlay.phase-4 .genesis-bubble-liquid { height: 68%; }
+
+/* ---- Genesis 纹理层（Phase 3 出现） ---- */
+.genesis-texture {
+  position: absolute;
+  inset: 15%;
+  z-index: 2;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    repeating-linear-gradient(0deg,
+      transparent 0 11px,
+      rgba(255,255,255,.08) 12px 13px,
+      transparent 14px 27px);
+  mix-blend-mode: screen;
+  transform: rotate(-4deg);
+  transition: opacity 1.5s ease;
+}
+.genesis-overlay.phase-3 .genesis-texture { opacity: 0.35; }
+.genesis-overlay.phase-4 .genesis-texture { opacity: 0.50; }
+
+/* ---- Genesis 粒子 ---- */
+.genesis-particles {
+  position: absolute;
+  inset: 10% 14%;
+  z-index: 3;
+  pointer-events: none;
+}
+.genesis-particles .g-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.90), rgba(232,163,167,.40) 60%, transparent);
+  opacity: 0;
+  animation: genesis-particle-enter 1.5s ease forwards;
+}
+@keyframes genesis-particle-enter {
+  0%   { opacity: 0; transform: scale(0) translateY(20px); }
+  40%  { opacity: 0.9; transform: scale(1.2) translateY(0); }
+  100% { opacity: 0.7; transform: scale(1) translateY(0); }
+}
+
+/* ---- Genesis 连接线（Phase 3 出现） ---- */
+.genesis-connections {
+  position: absolute;
+  inset: 10% 14%;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.5s ease;
+}
+.genesis-overlay.phase-3 .genesis-connections { opacity: 0.4; }
+.genesis-overlay.phase-4 .genesis-connections { opacity: 0.5; }
+.genesis-connections .g-conn {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.50), transparent);
+  transform-origin: left center;
+}
+
+/* ---- Genesis 文案 ---- */
+.genesis-text {
+  margin: 32px 0 0;
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--muted);
+  text-align: center;
+  letter-spacing: 0.03em;
+  min-height: 50px;
+  max-width: 280px;
+  opacity: 0;
+  animation: genesis-text-in 0.8s ease forwards;
+}
+.genesis-text.changing {
+  animation: genesis-text-out 0.4s ease forwards;
+}
+@keyframes genesis-text-in {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes genesis-text-out {
+  to { opacity: 0; transform: translateY(-4px); }
+}
+
+/* ---- Genesis 跳过按钮 ---- */
+.genesis-skip {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10001;
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: var(--subtle);
+  opacity: 0.5;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+.genesis-skip:hover {
+  opacity: 0.8;
+  color: var(--lavender);
+}

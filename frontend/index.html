@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#fbf7f3">
   <title>CycleBubble — 一个持续理解你的情绪空间</title>
   <meta name="description" content="CycleBubble 不是经期预测工具，也不是冥想或治疗产品。它帮助你理解情绪可能从哪里来。">
-  <link rel="stylesheet" href="./styles.css?v=20260710a">
+  <link rel="stylesheet" href="./styles.css?v=20260711b">
 </head>
 <body>
   <main class="phone-frame" aria-label="CycleBubble">
@@ -238,10 +238,34 @@
     </div>
   </main>
 
+  <!-- ============== Bubble Genesis（首次注册教育动画） ============== -->
+  <div class="genesis-overlay" id="genesisOverlay" hidden role="dialog" aria-modal="true" aria-label="Bubble 诞生体验">
+    <div class="genesis-stage">
+      <!-- Bubble 容器 -->
+      <div class="genesis-bubble" id="genesisBubble">
+        <div class="genesis-bubble-glass"></div>
+        <div class="genesis-bubble-liquid" id="genesisLiquid">
+          <svg class="wave wave-back" viewBox="0 0 600 40" preserveAspectRatio="none"><path d="M0,20 Q37.5,8 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z"/></svg>
+          <svg class="wave wave-mid"  viewBox="0 0 600 40" preserveAspectRatio="none"><path d="M0,20 Q37.5,32 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z"/></svg>
+          <svg class="wave wave-front" viewBox="0 0 600 40" preserveAspectRatio="none"><path d="M0,20 Q37.5,12 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z"/></svg>
+        </div>
+        <div class="genesis-texture" id="genesisTexture"></div>
+        <div class="genesis-particles" id="genesisParticles"></div>
+        <div class="genesis-connections" id="genesisConnections"></div>
+      </div>
+
+      <!-- 文案 -->
+      <p class="genesis-text" id="genesisText"></p>
+    </div>
+
+    <!-- 跳过 -->
+    <button class="genesis-skip" type="button" id="genesisSkip" aria-label="跳过引导">跳过 ›</button>
+  </div>
+
   <!-- Toast -->
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="./api.js?v=20260710a" defer></script>
-  <script src="./script.js?v=20260710a" defer></script>
+  <script src="./api.js?v=20260711b" defer></script>
+  <script src="./script.js?v=20260711b" defer></script>
 </body>
 </html>

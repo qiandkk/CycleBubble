@@ -240,12 +240,142 @@
   }
 
   async function enterApp() {
+    // 首次注册用户：播放 Bubble Genesis
+    var hasSeenGenesis = false;
+    try { hasSeenGenesis = localStorage.getItem('cb_genesis_seen') === '1'; } catch (e) {}
+
+    if (!hasSeenGenesis) {
+      await playGenesis();
+      try { localStorage.setItem('cb_genesis_seen', '1'); } catch (e) {}
+    }
+
     showScreen('home');
     await Promise.all([
       loadHomeData(),
       loadGrowthData(),
       loadResonanceData()
     ]);
+  }
+
+  // ===========================================================================
+  // 4b. Bubble Genesis — 首次注册教育动画
+  // ===========================================================================
+  function playGenesis() {
+    return new Promise(function (resolve) {
+      var overlay = $('genesisOverlay');
+      var bubble = $('genesisBubble');
+      var textEl = $('genesisText');
+      var particlesEl = $('genesisParticles');
+      var connectionsEl = $('genesisConnections');
+      var skipBtn = $('genesisSkip');
+
+      if (!overlay) { resolve(); return; }
+
+      // 清空粒子/连接
+      particlesEl.innerHTML = '';
+      connectionsEl.innerHTML = '';
+
+      // 跳过逻辑
+      var skipped = false;
+      function finish() {
+        if (skipped) return;
+        skipped = true;
+        overlay.classList.add('leaving');
+        setTimeout(function () {
+          overlay.hidden = true;
+          overlay.classList.remove('leaving', 'phase-2', 'phase-3', 'phase-4');
+          resolve();
+        }, 600);
+      }
+      skipBtn.onclick = finish;
+
+      // 文案切换
+      function setText(t) {
+        textEl.classList.add('changing');
+        setTimeout(function () {
+          textEl.textContent = t;
+          textEl.classList.remove('changing');
+        }, 400);
+      }
+
+      // 生成粒子
+      function spawnParticle(x, y) {
+        var p = document.createElement('span');
+        p.className = 'g-particle';
+        p.style.left = x + '%';
+        p.style.top = y + '%';
+        particlesEl.appendChild(p);
+      }
+
+      // 生成连接线
+      function spawnConnection(x1, y1, x2, y2) {
+        var dx = x2 - x1;
+        var dy = y2 - y1;
+        var len = Math.sqrt(dx * dx + dy * dy);
+        var angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        var c = document.createElement('span');
+        c.className = 'g-conn';
+        c.style.left = x1 + '%';
+        c.style.top = y1 + '%';
+        c.style.width = len + '%';
+        c.style.transform = 'rotate(' + angle + 'deg)';
+        connectionsEl.appendChild(c);
+      }
+
+      // ---- 动画时间线 ----
+      // Phase 1: 初始状态（0-2.5s）
+      overlay.hidden = false;
+      setText('每一次记录，都是了解自己的一个线索。');
+
+      // Phase 2: 第一次记录进入（2.5s）
+      setTimeout(function () {
+        if (skipped) return;
+        overlay.classList.add('phase-2');
+        spawnParticle(50, 70);
+        setText('一次体验被保存。');
+      }, 2500);
+
+      // Phase 3: 多次记录形成 Pattern（4.5s）
+      setTimeout(function () {
+        if (skipped) return;
+        overlay.classList.add('phase-3');
+        // 生成更多粒子
+        var positions = [
+          { x: 30, y: 40 },
+          { x: 65, y: 35 },
+          { x: 50, y: 55 },
+          { x: 25, y: 60 },
+          { x: 70, y: 60 }
+        ];
+        for (var i = 0; i < positions.length; i++) {
+          spawnParticle(positions[i].x, positions[i].y);
+        }
+        // 生成连接线
+        spawnConnection(30, 40, 65, 35);
+        spawnConnection(65, 35, 50, 55);
+        spawnConnection(50, 55, 25, 60);
+        spawnConnection(25, 60, 70, 60);
+        setText('相似的体验逐渐形成 Pattern。');
+      }, 4500);
+
+      // Phase 4: Bubble 形成（7s）
+      setTimeout(function () {
+        if (skipped) return;
+        overlay.classList.add('phase-4');
+        setText('你的 Bubble 会随着理解慢慢形成。');
+      }, 7000);
+
+      // 结束（9.5s）
+      setTimeout(function () {
+        if (skipped) return;
+        // 加结束文案
+        setText('开始记录，让 Bubble 慢慢认识你。');
+      }, 9000);
+
+      setTimeout(function () {
+        finish();
+      }, 10000);
+    });
   }
 
   // ===========================================================================
@@ -353,7 +483,7 @@
       emptyEl.hidden = false;
       phaseEl.textContent = '';
       hintEl.textContent = '';
-      narrationEl.textContent = '';
+      narrationEl.textContent = '你的记录正在慢慢形成属于你的 Pattern。';
     } else {
       bubbleEl.hidden = false;
       emptyEl.hidden = true;

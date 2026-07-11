@@ -10,7 +10,7 @@
 
   var BASE;
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    BASE = 'http://localhost:8765';
+    BASE = 'http://localhost:8000';
   } else {
     BASE = 'https://cyclebubble-api.onrender.com';
   }
