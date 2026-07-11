@@ -1944,3 +1944,45 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
 .icon-profile i { position:absolute; right:3px; bottom:3px; left:3px; height:7px; border-radius:8px 8px 4px 4px; background:currentColor; opacity:.75; }
 @media (max-width:420px) { body { padding:0; } .phone-frame { max-width:none; } .phone-screen { height:100dvh; min-height:640px; border:0; border-radius:0; } }
 @media (prefers-reduced-motion:reduce) { .profile-orb span { animation:none; } }
+
+/* ====== 管理员后台 ====== */
+.admin-body { background: linear-gradient(180deg, #fffdfb, #fbf8f5); }
+.admin-frame { max-width: 480px; }
+.admin-auth-body { padding-top: 48px; }
+.admin-screen-body { padding: 12px 18px 40px; }
+.admin-signed-in { font-size: 12px; color: var(--muted); margin: 0 0 14px; }
+.admin-signed-in strong { color: var(--ink); }
+.admin-logout { background: transparent; border: 0; color: var(--lavender); font: inherit; font-size: 12px; cursor: pointer; padding: 0; }
+.admin-logout:hover { color: var(--rose); }
+.admin-section { margin: 0 0 22px; padding: 16px; border: 1px solid rgba(181,169,207,.22); border-radius: 14px; background: rgba(255,253,251,.6); }
+.admin-note { margin: 0 0 12px; font-size: 12px; line-height: 1.55; color: var(--subtle); }
+.admin-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 8px; }
+.admin-stat-card { padding: 10px; border: 1px solid rgba(181,169,207,.2); border-radius: 10px; background: #fffdfb; text-align: left; }
+.admin-stat-card strong { display: block; font-size: 20px; color: var(--rose); }
+.admin-stat-card span { font-size: 12px; color: var(--muted); }
+.admin-report-list { display: flex; flex-direction: column; gap: 8px; }
+.admin-report-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid rgba(181,169,207,.2); border-radius: 10px; background: #fffdfb; font-size: 12px; }
+.admin-report-meta { color: var(--muted); flex: 1; }
+.admin-empty { color: var(--subtle); font-size: 12px; padding: 12px 0; }
+.admin-report-detail { padding: 12px; border: 1px solid rgba(181,169,207,.2); border-radius: 10px; background: #fffdfb; }
+.admin-detail-row { display: grid; grid-template-columns: 90px 1fr; gap: 8px; margin: 0 0 6px; font-size: 12px; }
+.admin-detail-row span:first-child { color: var(--subtle); }
+.admin-detail-row span:last-child { color: var(--ink); word-break: break-word; }
+.admin-actions { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.admin-danger { color: #b26670; }
+.admin-access-form { display: grid; gap: 8px; }
+.admin-access-result { margin-top: 10px; padding: 10px; border: 1px solid rgba(181,169,207,.22); border-radius: 10px; background: rgba(245,217,216,.12); }
+.admin-access-info { margin: 0 0 6px; font-size: 12px; color: var(--subtle); }
+.admin-access-token { font-size: 11px; background: #fffdfb; padding: 8px; border-radius: 8px; border: 1px solid var(--line); word-break: break-all; white-space: pre-wrap; }
+.admin-access-content { font-size: 11px; background: #fffdfb; padding: 8px; border-radius: 8px; border: 1px solid var(--line); white-space: pre-wrap; max-height: 240px; overflow: auto; }
+.admin-ai-form { display: grid; gap: 8px; }
+.admin-ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.admin-ai-toggle { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink); }
+.admin-ai-toggle input { width: 16px; height: 16px; accent-color: var(--rose); }
+.admin-ai-status { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.admin-audit { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow: auto; }
+.admin-audit-row { margin: 0; font-size: 11px; color: var(--muted); padding: 6px 8px; border-left: 2px solid rgba(181,169,207,.3); border-radius: 4px; background: #fffdfb; word-break: break-word; }
+.screen-admin-login { display: none; }
+.screen-admin-login.active { display: flex; flex-direction: column; }
+.screen-admin-app { display: none; }
+.screen-admin-app.active { display: flex; flex-direction: column; }

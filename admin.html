@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CycleBubble Admin</title>
+  <meta name="description" content="CycleBubble 管理员后台">
+  <link rel="stylesheet" href="./styles.css?v=20260711r">
+</head>
+<body class="admin-body">
+  <main class="phone-frame admin-frame">
+    <div class="phone-screen" id="adminPhone">
+
+      <!-- 登录态 -->
+      <div class="screen screen-admin-login active" data-screen="admin-login">
+        <div class="auth-body admin-auth-body">
+          <div class="auth-bubble" aria-hidden="true"></div>
+          <h1 class="auth-title">CycleBubble Admin</h1>
+          <p class="auth-sub">独立密钥登录，与普通账号隔离</p>
+
+          <form class="auth-form" id="adminLoginForm" autocomplete="off" novalidate>
+            <label class="auth-field">
+              <span class="auth-label">账号</span>
+              <input class="auth-input" type="text" id="adminUsername" autocomplete="username" required>
+            </label>
+            <label class="auth-field">
+              <span class="auth-label">密码</span>
+              <input class="auth-input" type="password" id="adminPassword" autocomplete="current-password" required>
+            </label>
+            <button class="btn-primary btn-block" type="submit" id="adminLoginBtn">登录</button>
+            <p class="auth-error" id="adminLoginError" hidden></p>
+          </form>
+        </div>
+      </div>
+
+      <!-- 后台主体（登录后） -->
+      <div class="screen screen-admin-app" data-screen="admin-app">
+        <div class="nav-bar profile-nav">
+          <span class="nav-spacer"></span>
+          <span class="nav-title">CycleBubble Admin</span>
+          <span class="nav-spacer"></span>
+        </div>
+        <div class="screen-body admin-screen-body">
+          <p class="admin-signed-in">已登录为 <strong id="adminSignedName">admin</strong> · <button class="admin-logout" type="button" id="adminLogoutBtn">退出</button></p>
+
+          <!-- 概览 -->
+          <section class="admin-section">
+            <h3 class="section-label">数据概览</h3>
+            <div class="admin-stats" id="adminStats">
+              <div class="admin-stat-card"><strong id="statUsers">–</strong><span>用户</span></div>
+              <div class="admin-stat-card"><strong id="statActive7d">–</strong><span>7 日活跃</span></div>
+              <div class="admin-stat-card"><strong id="statMemories">–</strong><span>记忆</span></div>
+              <div class="admin-stat-card"><strong id="statPublic">–</strong><span>公开</span></div>
+              <div class="admin-stat-card"><strong id="statSensitive">–</strong><span>敏感</span></div>
+              <div class="admin-stat-card"><strong id="statCycles">–</strong><span>经期</span></div>
+              <div class="admin-stat-card"><strong id="statReportsOpen">–</strong><span>待处理举报</span></div>
+            </div>
+            <button class="btn-link" type="button" id="refreshStatsBtn">刷新</button>
+          </section>
+
+          <!-- 举报队列 -->
+          <section class="admin-section">
+            <h3 class="section-label">待处理举报</h3>
+            <div class="admin-report-list" id="adminReportsList"></div>
+            <p class="admin-empty" id="adminReportsEmpty" hidden>暂无待处理举报。</p>
+          </section>
+
+          <!-- 选中举报详情 + 操作 -->
+          <section class="admin-section" id="adminReportDetailSection" hidden>
+            <h3 class="section-label">举报详情</h3>
+            <div class="admin-report-detail" id="adminReportDetail"></div>
+            <div class="admin-actions">
+              <button class="btn-primary" type="button" id="dismissReportBtn">关闭举报</button>
+              <button class="btn-link admin-danger" type="button" id="deleteMemoryBtn">删除记忆并核结</button>
+              <button class="btn-link" type="button" id="closeReportDetailBtn">收起</button>
+            </div>
+          </section>
+
+          <!-- 一次性访问令牌 -->
+          <section class="admin-section">
+            <h3 class="section-label">高危：一次性访问记忆</h3>
+            <p class="admin-note">需要查看某条特定记忆的原文时使用。必须填写理由（至少 10 字），生成的令牌 10 分钟内、一次访问有效。</p>
+            <form class="admin-access-form" id="adminAccessForm">
+              <label class="auth-field"><span class="auth-label">记忆 ID</span><input class="auth-input" type="number" id="adminAccessMemoryId" min="1" required></label>
+              <label class="auth-field"><span class="auth-label">访问理由（≥ 10 字）</span><input class="auth-input" type="text" id="adminAccessReason" minlength="10" required></label>
+              <button class="btn-primary" type="submit" id="adminAccessIssueBtn">签发令牌</button>
+            </form>
+            <div class="admin-access-result" id="adminAccessResult" hidden></div>
+          </section>
+
+          <!-- AI 设置 -->
+          <section class="admin-section">
+            <h3 class="section-label">AI 接入</h3>
+            <form class="admin-ai-form" id="adminAiForm">
+              <label class="auth-field">
+                <span class="auth-label">默认提供商</span>
+                <select class="auth-input" id="aiDefaultProvider">
+                  <option value="minimax">minimax</option>
+                  <option value="deepseek">deepseek</option>
+                </select>
+              </label>
+              <div class="admin-ai-grid">
+                <label class="auth-field">
+                  <span class="auth-label">minimax 模型</span>
+                  <input class="auth-input" type="text" id="aiMinimaxModel" value="M3">
+                </label>
+                <label class="auth-field">
+                  <span class="auth-label">deepseek 模型</span>
+                  <input class="auth-input" type="text" id="aiDeepseekModel" value="v4-flash">
+                </label>
+              </div>
+              <label class="admin-ai-toggle">
+                <input type="checkbox" id="aiEnableThirdParty">
+                <span>启用第三方 AI（关闭后仅走关键词/规则降级）</span>
+              </label>
+              <label class="admin-ai-toggle">
+                <input type="checkbox" id="aiEnableKeywordFallback">
+                <span>AI 失败时允许关键词降级（关闭后 AI 失败返回 503）</span>
+              </label>
+              <label class="auth-field">
+                <span class="auth-label">minimax API Key（≥ 16 字符，留空表示不修改）</span>
+                <input class="auth-input" type="password" id="aiMinimaxKey" autocomplete="new-password" placeholder="已有 Key 时留空保持">
+              </label>
+              <label class="auth-field">
+                <span class="auth-label">deepseek API Key（≥ 16 字符，留空表示不修改）</span>
+                <input class="auth-input" type="password" id="aiDeepseekKey" autocomplete="new-password" placeholder="已有 Key 时留空保持">
+              </label>
+              <div class="admin-actions">
+                <button class="btn-primary" type="submit">保存设置</button>
+                <button class="btn-link" type="button" id="aiTestBtn">测试连接</button>
+              </div>
+              <p class="admin-ai-status" id="aiStatus"></p>
+            </form>
+          </section>
+
+          <!-- 审计日志 -->
+          <section class="admin-section">
+            <h3 class="section-label">审计日志（最近 90 天）</h3>
+            <div class="admin-audit" id="adminAudit"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>window.__ADMIN_API_BASE__ = 'http://127.0.0.1:8001';</script>
+<script src="./admin.js?v=20260711a"></script>
+</body>
+</html>
