@@ -41,6 +41,14 @@ def _seed_defaults() -> None:
                     updated_at=datetime.utcnow(),
                     updated_by="system",
                 ))
+            else:
+                # 修复旧数据库中默认值缺失的字段
+                if existing.value in (None, "") and key in (
+                    KEY_ENABLE_THIRD_PARTY, KEY_ENABLE_KEYWORD_FALLBACK,
+                ):
+                    existing.value = value
+                    existing.updated_at = datetime.utcnow()
+                    existing.updated_by = "system-repair"
         session.commit()
 
 

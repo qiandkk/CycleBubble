@@ -99,3 +99,47 @@ def require_real_user(request: Request) -> None:
             status_code=status.HTTP_403_FORBIDDEN,
             detail="演示模式仅供浏览，请登录后使用此功能。",
         )
+
+
+# ========== 管理员 JWT（独立签名密钥 + kid + aud） ==========
+
+def create_admin_token(username: str) -> tuple[str, datetime]:
+    """生成管理员 token。
+
+    返回 (token, expires_at)。
+    JWT header: kid="admin" 标识签名密钥
+    JWT payload: aud="admin", sub=username, exp, iat
+    """
+    expire = datetime.utcnow() + timedelta(hours=settings.admin_jwt_expire_hours)
+    payload = {
+        "aud": "admin",
+        "sub": username,
+        "exp": expire,
+        "iat": datetime.utcnow(),
+    }
+    token = jwt.encode(
+        payload,
+        settings.admin_jwt_secret,
+        algorithm=settings.jwt_algorithm,
+        headers={"kid": "admin"},
+    )
+    return token, expire
+
+
+def decode_admin_token(token: str) -> Optional[str]:
+    """校验 admin token：kid 必须为 admin，aud 必须为 admin。"""
+    try:
+        # python-jose 不会主动校验 kid，但会通过签名选择密钥。
+        # 我们单独 verify 签名前先解码 header。
+        unverified_header = jwt.get_unverified_header(token)
+        if unverified_header.get("kid") != "admin":
+            return None
+        payload = jwt.decode(
+            token,
+            settings.admin_jwt_secret,
+            algorithms=[settings.jwt_algorithm],
+            audience="admin",
+        )
+        return payload.get("sub")
+    except (JWTError, ValueError, TypeError, KeyError):
+        return None
