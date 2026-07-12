@@ -2251,10 +2251,11 @@
   // 状态记录在 localStorage cb_genesis_seen，播放完成或跳过后永久写入。
 
   var GENESIS_PHASES = [
-    { duration: 2800, text: "每一次记录，都是了解自己的一个线索。" },
-    { duration: 2400, text: "一次体验被保存。" },
-    { duration: 2800, text: "相似的记录，慢慢连成了线索。" },
-    { duration: 3000, text: "这就是你的 Bubble —— 它会随着理解慢慢形成。" }
+    { duration: 2200, text: "有些变化，发生在身体里，也发生在情绪里。" },
+    { duration: 1700, text: "一次记录，成为一个线索。" },
+    { duration: 2000, text: "重复出现的体验，开始形成属于你的 Pattern。" },
+    { duration: 1700, text: "Bubble 会随着理解慢慢形成。" },
+    { duration: 1800, text: "有些经历，你并不孤单。" }
   ];
 
   function hasSeenGenesis() {
@@ -2321,6 +2322,7 @@
     var particlesEl = document.getElementById('genesisParticles');
     var connectionsEl = document.getElementById('genesisConnections');
     var textureEl = document.getElementById('genesisTexture');
+    var distantLightsEl = document.getElementById('genesisDistantLights');
 
     // 粒子位置（模拟记录进入 Bubble）
     var particlePositions = [
@@ -2380,6 +2382,32 @@
       }
     }
 
+    // Phase 5：生成远处微弱光点（共鸣概念暗示，不展示具体用户故事）
+    function spawnDistantLights() {
+      if (!distantLightsEl) return;
+      distantLightsEl.innerHTML = '';
+      distantLightsEl.hidden = false;
+      var lights = [
+        { left: '8%', top: '22%', size: 4, color: 'rgba(245,217,216,.5)', delay: 0 },
+        { left: '88%', top: '18%', size: 3, color: 'rgba(181,169,207,.45)', delay: 0.3 },
+        { left: '12%', top: '72%', size: 5, color: 'rgba(232,163,167,.4)', delay: 0.6 },
+        { left: '82%', top: '68%', size: 3, color: 'rgba(212,165,207,.4)', delay: 0.9 },
+        { left: '50%', top: '10%', size: 2, color: 'rgba(184,184,222,.35)', delay: 1.2 }
+      ];
+      for (var i = 0; i < lights.length; i++) {
+        var l = document.createElement('span');
+        l.className = 'genesis-distant-light';
+        l.style.left = lights[i].left;
+        l.style.top = lights[i].top;
+        l.style.width = lights[i].size + 'px';
+        l.style.height = lights[i].size + 'px';
+        l.style.background = lights[i].color;
+        l.style.boxShadow = '0 0 ' + (lights[i].size * 3) + 'px ' + lights[i].color;
+        l.style.animationDelay = lights[i].delay + 's';
+        distantLightsEl.appendChild(l);
+      }
+    }
+
     function setPhase(idx) {
       if (finished || idx >= GENESIS_PHASES.length) {
         finishGenesis();
@@ -2416,6 +2444,9 @@
         // Phase 4：最后一个粒子 + 更丰富纹理（Bubble 成型）
         spawnParticle(3);
         addTextureLayers(4);
+      } else if (idx === 4) {
+        // Phase 5：远处微弱光点（共鸣概念暗示，不展示具体用户故事）
+        spawnDistantLights();
       }
 
       // 调度下一阶段
@@ -2448,10 +2479,11 @@
         overlay.classList.remove('genesis-leaving');
         overlay.removeAttribute('data-phase');
 
-        // 清理粒子、连线和纹理
+        // 清理粒子、连线、纹理和远处光点
         if (particlesEl) particlesEl.innerHTML = '';
         if (connectionsEl) connectionsEl.innerHTML = '';
         if (textureEl) textureEl.innerHTML = '';
+        if (distantLightsEl) { distantLightsEl.innerHTML = ''; distantLightsEl.hidden = true; }
 
         if (onComplete) onComplete();
       }, 800);
