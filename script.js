@@ -2251,11 +2251,10 @@
   // 状态记录在 localStorage cb_genesis_seen，播放完成或跳过后永久写入。
 
   var GENESIS_PHASES = [
-    { duration: 2200, text: "有些变化，发生在身体里，也发生在情绪里。" },
-    { duration: 1700, text: "一次记录，成为一个线索。" },
-    { duration: 2000, text: "重复出现的体验，开始形成属于你的 Pattern。" },
-    { duration: 1700, text: "Bubble 会随着理解慢慢形成。" },
-    { duration: 1800, text: "有些经历，你并不孤单。" }
+    { duration: 5000, text: "有些变化，发生在身体，也发生在情绪里。" },
+    { duration: 5000, text: "每一次记录，都会在这里留下痕迹。" },
+    { duration: 5000, text: "慢慢沉淀，形成属于你的 Pattern。" },
+    { duration: 2000, text: "看见变化，也接纳自己的感受。" }
   ];
 
   function hasSeenGenesis() {
@@ -2322,7 +2321,6 @@
     var particlesEl = document.getElementById('genesisParticles');
     var connectionsEl = document.getElementById('genesisConnections');
     var textureEl = document.getElementById('genesisTexture');
-    var distantLightsEl = document.getElementById('genesisDistantLights');
 
     // 粒子位置（模拟记录进入 Bubble）
     var particlePositions = [
@@ -2366,6 +2364,7 @@
       }
     }
 
+    // Phase 2：添加初始纹理层（记录留下的痕迹）
     function addTextureLayers(count) {
       if (!textureEl) return;
       textureEl.innerHTML = '';
@@ -2379,32 +2378,6 @@
           ';pointer-events:none;background:radial-gradient(circle at ' + xPos + '% ' + yPos + '%, ' +
           'hsla(275, 40%, 70%, .5), transparent 40%);';
         textureEl.appendChild(layer);
-      }
-    }
-
-    // Phase 5：生成远处微弱光点（共鸣概念暗示，不展示具体用户故事）
-    function spawnDistantLights() {
-      if (!distantLightsEl) return;
-      distantLightsEl.innerHTML = '';
-      distantLightsEl.hidden = false;
-      var lights = [
-        { left: '8%', top: '22%', size: 4, color: 'rgba(245,217,216,.5)', delay: 0 },
-        { left: '88%', top: '18%', size: 3, color: 'rgba(181,169,207,.45)', delay: 0.3 },
-        { left: '12%', top: '72%', size: 5, color: 'rgba(232,163,167,.4)', delay: 0.6 },
-        { left: '82%', top: '68%', size: 3, color: 'rgba(212,165,207,.4)', delay: 0.9 },
-        { left: '50%', top: '10%', size: 2, color: 'rgba(184,184,222,.35)', delay: 1.2 }
-      ];
-      for (var i = 0; i < lights.length; i++) {
-        var l = document.createElement('span');
-        l.className = 'genesis-distant-light';
-        l.style.left = lights[i].left;
-        l.style.top = lights[i].top;
-        l.style.width = lights[i].size + 'px';
-        l.style.height = lights[i].size + 'px';
-        l.style.background = lights[i].color;
-        l.style.boxShadow = '0 0 ' + (lights[i].size * 3) + 'px ' + lights[i].color;
-        l.style.animationDelay = lights[i].delay + 's';
-        distantLightsEl.appendChild(l);
       }
     }
 
@@ -2430,24 +2403,20 @@
         dots[d].classList.toggle('active', d === idx);
       }
 
-      // 阶段特定视觉效果
+      // 阶段特定视觉效果（文字与 Bubble 成长同步）
       if (idx === 1) {
-        // Phase 2：第一个粒子进入（第一次记录被保存）
+        // Phase 2：记录留下痕迹 — 前两个粒子缓慢进入 + 初始纹理
         spawnParticle(0);
+        setTimeout(function () { spawnParticle(1); }, 1200);
+        addTextureLayers(1);
       } else if (idx === 2) {
-        // Phase 3：更多粒子 + 连线 + 纹理（Pattern 形成）
-        spawnParticle(1);
+        // Phase 3：Pattern 形成 — 更多粒子 + 连线 + 丰富纹理
         spawnParticle(2);
-        setTimeout(function () { spawnConnections(); }, 500);
-        addTextureLayers(2);
-      } else if (idx === 3) {
-        // Phase 4：最后一个粒子 + 更丰富纹理（Bubble 成型）
         spawnParticle(3);
-        addTextureLayers(4);
-      } else if (idx === 4) {
-        // Phase 5：远处微弱光点（共鸣概念暗示，不展示具体用户故事）
-        spawnDistantLights();
+        setTimeout(function () { spawnConnections(); }, 800);
+        addTextureLayers(3);
       }
+      // Phase 4（idx === 3）：沉淀停留，无新视觉元素，让用户感受完成状态
 
       // 调度下一阶段
       var timer = setTimeout(function () {
@@ -2479,11 +2448,10 @@
         overlay.classList.remove('genesis-leaving');
         overlay.removeAttribute('data-phase');
 
-        // 清理粒子、连线、纹理和远处光点
+        // 清理粒子和连线
         if (particlesEl) particlesEl.innerHTML = '';
         if (connectionsEl) connectionsEl.innerHTML = '';
         if (textureEl) textureEl.innerHTML = '';
-        if (distantLightsEl) { distantLightsEl.innerHTML = ''; distantLightsEl.hidden = true; }
 
         if (onComplete) onComplete();
       }, 800);
