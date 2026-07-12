@@ -3,6 +3,9 @@
 端点：
 - POST /api/reports  — 提交一条举报（同一用户对同一 memory 去重）
 - GET  /api/reports/me — 当前用户的举报历史
+
+演示模式拒绝：举报是真实账号的行为，demo 模式只供浏览，
+不允许在 demo 库写入 Report 数据。
 """
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -11,9 +14,14 @@ from typing import List
 from datetime import datetime
 from ..database import get_session
 from ..models import User, Memory, Report
-from ..auth import get_current_user
+from ..auth import get_current_user, require_real_user
 
-router = APIRouter(prefix="/api/reports", tags=["reports"])
+router = APIRouter(
+    prefix="/api/reports",
+    tags=["reports"],
+    # router 级别拒绝 demo 模式：所有举报端点仅供真实账号
+    dependencies=[Depends(require_real_user)],
+)
 
 
 class CreateReportRequest(BaseModel):
