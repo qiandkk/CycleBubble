@@ -129,7 +129,7 @@
 
   function _stopDemoPlayback() {
     if (_demoPlaybackTimer) {
-      clearInterval(_demoPlaybackTimer);
+      clearTimeout(_demoPlaybackTimer);
       _demoPlaybackTimer = null;
     }
     _demoPlaybackIdx = 0;
@@ -139,6 +139,8 @@
     if (ticker) ticker.hidden = true;
     var stepBtn = document.getElementById('demoNextStepBtn');
     if (stepBtn) stepBtn.hidden = true;
+    var progressEl = document.getElementById('demoIntroProgress');
+    if (progressEl) progressEl.style.width = '0%';
     var quoteBox = document.getElementById('demoQuoteBox');
     if (quoteBox) quoteBox.hidden = true;
     var stage = document.getElementById('demoStage');
@@ -150,34 +152,57 @@
     _showDemoStep(0); // 开场自动播放
   }
 
+  function _finishDemo() {
+    // 退出演示模式后跳到登录页，让用户登录使用完整功能
+    _stopDemoPlayback();
+    if (typeof window.__cbExitDemo === 'function') {
+      window.__cbExitDemo();
+    }
+    if (typeof switchTo === 'function') switchTo('auth');
+  }
+
   function _showDemoStep(idx) {
     _demoPlaybackIdx = idx;
     var step = DEMO_STEPS[idx];
     if (!step) return;
 
-    // intro 阶段：自动放 8 秒后跳到 timeline
+    // intro 阶段：自动放 8 秒后跳到 timeline，同时显示"下一步"和倒计时进度条
     if (step.id === 'intro') {
       _demoVisibleMemoryCount = 1;
       _demoIntroPlayed = false;
       // 自动播放：8 秒后切到下一步
       if (_demoPlaybackTimer) clearTimeout(_demoPlaybackTimer);
+      var introStart = Date.now();
       _demoPlaybackTimer = setTimeout(function () {
         _demoIntroPlayed = true;
         if (!isDemoMode) return;
         _showDemoStep(1);
       }, step.auto_ms);
-      // 渲染 intro 阶段 UI
+      // 进度条动画：每 80ms 更新一次宽度
+      var progressEl = document.getElementById('demoIntroProgress');
+      if (progressEl) {
+        progressEl.style.transition = 'width 80ms linear';
+        progressEl.style.width = '0%';
+        var tick = setInterval(function () {
+          var elapsed = Date.now() - introStart;
+          var pct = Math.min(100, (elapsed / step.auto_ms) * 100);
+          if (progressEl) progressEl.style.width = pct.toFixed(1) + '%';
+          if (pct >= 100 || _demoPlaybackIdx !== 0) clearInterval(tick);
+        }, 80);
+      }
+      // 渲染 intro 阶段 UI（按钮显示"下一步"）
       _renderDemoStage(step, idx);
     } else {
-      // 手动阶段：累积记忆数递增（演示"层次累积"而非"色温变化"）
-      if (idx === 1) _demoVisibleMemoryCount = 5;       // 时间线：5 条全展示
-      else if (idx === 2) _demoVisibleMemoryCount = 5;  // AI 理解：5 条都参与
-      else if (idx === 3) _demoVisibleMemoryCount = 5;  // 共鸣
-      else if (idx === 4) _demoVisibleMemoryCount = 5;  // 总结
+      // 手动阶段：累积记忆数递增
+      if (idx === 1) _demoVisibleMemoryCount = 2;       // 时间线：先展开 2 层
+      else if (idx === 2) _demoVisibleMemoryCount = 3;  // AI 理解：3 层
+      else if (idx === 3) _demoVisibleMemoryCount = 4;  // 共鸣：4 层
+      else if (idx === 4) _demoVisibleMemoryCount = 5;  // 总结：5 层完全展开
       _renderDemoStage(step, idx);
     }
 
     if (typeof applyBubbleState === 'function') applyBubbleState();
+    if (typeof _animateDemoEnter === 'function') _animateDemoEnter(idx);
   }
 
   function _nextDemoStep() {
@@ -187,11 +212,73 @@
     _showDemoStep(next);
   }
 
+  // ===== Phase 2: 视觉动画 =====
+  // Bubble 成长：进入新阶段时让 Bubble 做一次"脉冲"放大 + 纹理闪烁
+  // 共鸣连接：点 chip 时让 Bubble 周围产生连接线
+  // 时间轴：进入 timeline 阶段时让 memoryTimeline 元素依次淡入
+  var _demoPulseTimer = null;
+
+  function _animateDemoEnter(idx) {
+    // 1. Bubble 脉冲：1.5 秒内 scale 1 → 1.06 → 1，颜色轻微变亮
+    var bubble = document.getElementById('mainBubble');
+    if (bubble) {
+      if (_demoPulseTimer) clearTimeout(_demoPulseTimer);
+      bubble.classList.remove('demo-pulse');
+      void bubble.offsetWidth; // force reflow 重启动画
+      bubble.classList.add('demo-pulse');
+      _demoPulseTimer = setTimeout(function () {
+        bubble.classList.remove('demo-pulse');
+      }, 1500);
+    }
+
+    // 2. 时间轴阶段：让 memoryTimeline 元素依次淡入
+    if (idx === 1) {
+      var timeline = document.getElementById('memoryTimeline');
+      if (timeline) {
+        var entries = timeline.querySelectorAll('.memory-entry, .memory-line, .memory-empty, .memory-gap');
+        for (var i = 0; i < entries.length; i++) {
+          (function (el, idx) {
+            el.classList.remove('demo-timeline-in');
+            el.style.animationDelay = (idx * 220) + 'ms';
+            void el.offsetWidth;
+            el.classList.add('demo-timeline-in');
+          })(entries[i], i);
+        }
+      }
+    }
+
+    // 3. AI 理解阶段：让 growth-stories / discoveries 元素淡入
+    if (idx === 2) {
+      var insights = document.querySelectorAll('.growth-story-card, .discovery-card, .memory-section, .growth-headline, .section-label');
+      for (var j = 0; j < insights.length; j++) {
+        (function (el, idx) {
+          el.classList.remove('demo-timeline-in');
+          el.style.animationDelay = (idx * 180) + 'ms';
+          void el.offsetWidth;
+          el.classList.add('demo-timeline-in');
+        })(insights[j], j);
+      }
+    }
+  }
+
+  // 共鸣连接：点 chip 时给 Bubble 周围加一圈涟漪
+  // 由 bindResponseChips 调用（外部）
+  window.__demoResonancePing = function () {
+    if (!isDemoMode) return;
+    var bubble = document.getElementById('mainBubble');
+    if (!bubble) return;
+    var ring = document.createElement('span');
+    ring.className = 'demo-resonance-ring';
+    bubble.appendChild(ring);
+    setTimeout(function () { if (ring.parentNode) ring.parentNode.removeChild(ring); }, 1800);
+  };
+
   // 把当前阶段信息渲染到底部 ticker + 大字说明
   function _renderDemoStage(step, idx) {
     var ticker = document.getElementById('demoPlaybackTicker');
     var stepBtn = document.getElementById('demoNextStepBtn');
     var stage = document.getElementById('demoStage');
+    var progressBar = document.getElementById('demoIntroProgress');
 
     if (ticker) {
       ticker.hidden = false;
@@ -205,15 +292,25 @@
     }
 
     if (stepBtn) {
-      // intro 自动放，不显示按钮；最后阶段（summary）禁用按钮
-      if (idx === 0) {
-        stepBtn.hidden = true;
-      } else if (idx === DEMO_STEPS.length - 1) {
-        stepBtn.hidden = true;
+      // 所有阶段都有按钮：
+      // - intro（idx=0）：显示"下一步 · 时间线"，可手动跳过 8 秒
+      // - 中间阶段：显示"下一步 · 下个阶段"
+      // - summary（最后）：显示"完成 · 登录使用完整功能"，退出 demo 跳到 auth 页
+      if (idx === DEMO_STEPS.length - 1) {
+        stepBtn.hidden = false;
+        stepBtn.textContent = '完成 · 登录使用完整功能';
+        stepBtn.dataset.action = 'finish';
       } else {
         stepBtn.hidden = false;
+        stepBtn.dataset.action = 'next';
         stepBtn.textContent = '下一步 · ' + DEMO_STEPS[idx + 1].label;
       }
+    }
+
+    if (progressBar) {
+      // intro 阶段显示进度条，其他阶段隐藏
+      progressBar.style.display = (idx === 0) ? 'block' : 'none';
+      if (idx !== 0) progressBar.style.width = '0%';
     }
 
     // 在首页叠加一段大字价值介绍
@@ -235,7 +332,8 @@
             '<div class="demo-stage-line">不评判自己，不贴标签，记录本身就是观察</div>' +
             '<div class="demo-stage-line demo-stage-line--accent">自我观察</div>' +
             '<div class="demo-stage-line">CycleBubble 不预测你的情绪，只是帮你看见自己的节律</div>' +
-          '</div>';
+          '</div>' +
+          '<div class="demo-stage-hint">登录后可以开始记录你自己的情绪旅程</div>';
       }
       stage.innerHTML = stageText;
     }
@@ -1019,6 +1117,9 @@
         if (responseType === "我也经历过") addLightPoint("connection");
         else if (responseType === "抱抱") addLightPoint("warmth");
         else addLightPoint("connection");
+
+        // Phase 2: 演示模式共鸣涟漪 — 让 Bubble 周围产生连接线
+        if (typeof window.__demoResonancePing === 'function') window.__demoResonancePing();
 
         setTimeout(nextCard, 1500);
       });
@@ -2725,10 +2826,21 @@
     });
   }
 
-  // 演示模式"下一步"按钮：驱动半自动引导流程
+  // 演示模式"下一步/完成"按钮：根据当前阶段区分动作
   var demoNextStepBtn = document.getElementById('demoNextStepBtn');
   if (demoNextStepBtn) {
     demoNextStepBtn.addEventListener('click', function () {
+      // 最后阶段：完成 → 退出演示 + 跳到登录页
+      if (demoNextStepBtn.dataset.action === 'finish') {
+        _finishDemo();
+        return;
+      }
+      // 其他阶段：取消 intro 自动定时器（如果还在），然后手动推进
+      if (_demoPlaybackTimer && _demoPlaybackIdx === 0) {
+        clearTimeout(_demoPlaybackTimer);
+        _demoPlaybackTimer = null;
+        _demoIntroPlayed = true;
+      }
       _nextDemoStep();
     });
   }
