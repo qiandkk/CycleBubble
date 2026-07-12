@@ -97,269 +97,6 @@
   var authAutoSwitched = false; // 防止 initAuthState 重复切屏
 
   // ===== Demo 模式半自动引导 =====
-  // 设计：避免"色温 = 评分"的误解。
-  // Bubble 色温不随 mood 切换，只在 demo 模式下展示累积感（纹理/层次/连接逐步出现）。
-  // 流程：进入 demo 后自动放一段开场（约 8 秒），然后由"下一步"按钮驱动 4 个阶段：
-  //   1. 时间线：展示 5 条 seed memory 的 90 天跨度
-  //   2. AI 理解：展示 CycleBubble 如何从原文提取 Pattern（不实时调用 AI，用 seed 已有的 themes/triggers/recovery）
-  //   3. 共鸣：交互环节，用户点 chip 模拟回应（仅前端 local state）
-  //   4. 价值总结：突出"理解 / 接纳 / 自我观察"，避免医疗化诊断化语言
-  var _demoPlaybackIdx = 0;       // 当前阶段 0..3（intro 自动放，然后 1..4 手动）
-  var _demoPlaybackTimer = null;  // intro 自动播放定时器
-  var _demoPlaybackMood = null;   // 留 null，Bubble 不再被 mood 驱动
-  var _demoIntroPlayed = false;   // 是否已放过开场
-  var _demoVisibleMemoryCount = 1; // demo 模式下 Bubble 看到的"累积记忆数"，控制层次动画
-  var DEMO_STEPS = [
-    { id: 'intro',   auto_ms: 8000, label: '已形成的 Bubble',        desc: '一段已经走过的旅程' },
-    { id: 'timeline', auto_ms: 0,  label: '90 天时间线',             desc: '5 段记录横跨约 90 天' },
-    { id: 'ai',      auto_ms: 0,  label: 'AI 看到的 Pattern',        desc: '不是判断你是什么样的人，而是观察你的变化' },
-    { id: 'resonance', auto_ms: 0, label: '匿名共鸣',                 desc: '你并不孤独 —— 有人经历过类似的阶段' },
-    { id: 'summary', auto_ms: 0,  label: '理解 ≠ 评判',                desc: 'CycleBubble 不预测你的情绪，只是帮你观察自己的节律' },
-  ];
-  // 与 seed_demo.py 的 SEED_MEMORIES 顺序对齐的引文
-  var DEMO_QUOTES = [
-    '今天又因为领导的一句话纠结了一整天。我是不是太敏感了？',
-    '和朋友聊了之后好多了。原来不只是我一个人这样。',
-    '开会时又想反驳但没说出口。下次想试着表达出来。',
-    '今天终于主动说出了自己的想法，虽然说出口时手在抖。',
-    '这个阶段又到了，提前做好了心理准备。没有像上次那样陷入很久。',
-  ];
-
-  function isAppMode() { return !isDemoMode; }
-
-  function _stopDemoPlayback() {
-    if (_demoPlaybackTimer) {
-      clearTimeout(_demoPlaybackTimer);
-      _demoPlaybackTimer = null;
-    }
-    _demoPlaybackIdx = 0;
-    _demoIntroPlayed = false;
-    _demoVisibleMemoryCount = 1;
-    var ticker = document.getElementById('demoPlaybackTicker');
-    if (ticker) ticker.hidden = true;
-    var stepBtn = document.getElementById('demoNextStepBtn');
-    if (stepBtn) stepBtn.hidden = true;
-    var progressEl = document.getElementById('demoIntroProgress');
-    if (progressEl) progressEl.style.width = '0%';
-    var quoteBox = document.getElementById('demoQuoteBox');
-    if (quoteBox) quoteBox.hidden = true;
-    var stage = document.getElementById('demoStage');
-    if (stage) stage.hidden = true;
-  }
-
-  function _startDemoPlayback() {
-    _stopDemoPlayback();
-    _showDemoStep(0); // 开场自动播放
-  }
-
-  function _finishDemo() {
-    // 退出演示模式后跳到登录页，让用户登录使用完整功能
-    _stopDemoPlayback();
-    if (typeof window.__cbExitDemo === 'function') {
-      window.__cbExitDemo();
-    }
-    if (typeof switchTo === 'function') switchTo('auth');
-  }
-
-  // 关闭演示模式的引导浮层（stage / ticker / 下一步按钮 / 进度条）
-  // 但保留 demo 状态本身（isDemoMode=true），让用户继续自由浏览 demo 内容（成长页/共鸣页等）
-  // 用户随时可以通过顶部 demoBar 的「登录/注册」按钮或 demoBar 上的"完整功能"完全退出
-  function _closeDemoOverlay() {
-    var stage = document.getElementById('demoStage');
-    if (stage) stage.hidden = true;
-    var ticker = document.getElementById('demoPlaybackTicker');
-    if (ticker) ticker.hidden = true;
-    var stepBtn = document.getElementById('demoNextStepBtn');
-    if (stepBtn) stepBtn.hidden = true;
-    var progressEl = document.getElementById('demoIntroProgress');
-    if (progressEl) progressEl.style.width = '0%';
-    if (_demoPlaybackTimer) {
-      clearTimeout(_demoPlaybackTimer);
-      _demoPlaybackTimer = null;
-    }
-    // 提示用户：可以继续浏览，登录入口始终在 demo-bar 顶部
-    if (typeof showDemoToast === 'function') {
-      showDemoToast('可以继续浏览 · 登录入口在顶部');
-    }
-  }
-
-  function _showDemoStep(idx) {
-    _demoPlaybackIdx = idx;
-    var step = DEMO_STEPS[idx];
-    if (!step) return;
-
-    // intro 阶段：自动放 8 秒后跳到 timeline，同时显示"下一步"和倒计时进度条
-    if (step.id === 'intro') {
-      _demoVisibleMemoryCount = 1;
-      _demoIntroPlayed = false;
-      // 自动播放：8 秒后切到下一步
-      if (_demoPlaybackTimer) clearTimeout(_demoPlaybackTimer);
-      var introStart = Date.now();
-      _demoPlaybackTimer = setTimeout(function () {
-        _demoIntroPlayed = true;
-        if (!isDemoMode) return;
-        _showDemoStep(1);
-      }, step.auto_ms);
-      // 进度条动画：每 80ms 更新一次宽度
-      var progressEl = document.getElementById('demoIntroProgress');
-      if (progressEl) {
-        progressEl.style.transition = 'width 80ms linear';
-        progressEl.style.width = '0%';
-        var tick = setInterval(function () {
-          var elapsed = Date.now() - introStart;
-          var pct = Math.min(100, (elapsed / step.auto_ms) * 100);
-          if (progressEl) progressEl.style.width = pct.toFixed(1) + '%';
-          if (pct >= 100 || _demoPlaybackIdx !== 0) clearInterval(tick);
-        }, 80);
-      }
-      // 渲染 intro 阶段 UI（按钮显示"下一步"）
-      _renderDemoStage(step, idx);
-    } else {
-      // 手动阶段：累积记忆数递增
-      if (idx === 1) _demoVisibleMemoryCount = 2;       // 时间线：先展开 2 层
-      else if (idx === 2) _demoVisibleMemoryCount = 3;  // AI 理解：3 层
-      else if (idx === 3) _demoVisibleMemoryCount = 4;  // 共鸣：4 层
-      else if (idx === 4) _demoVisibleMemoryCount = 5;  // 总结：5 层完全展开
-      _renderDemoStage(step, idx);
-    }
-
-    if (typeof applyBubbleState === 'function') applyBubbleState();
-    if (typeof _animateDemoEnter === 'function') _animateDemoEnter(idx);
-  }
-
-  function _nextDemoStep() {
-    if (!isDemoMode) return;
-    var next = Math.min(_demoPlaybackIdx + 1, DEMO_STEPS.length - 1);
-    if (next === _demoPlaybackIdx) return;
-    _showDemoStep(next);
-  }
-
-  // ===== Phase 2: 视觉动画 =====
-  // Bubble 成长：进入新阶段时让 Bubble 做一次"脉冲"放大 + 纹理闪烁
-  // 共鸣连接：点 chip 时让 Bubble 周围产生连接线
-  // 时间轴：进入 timeline 阶段时让 memoryTimeline 元素依次淡入
-  var _demoPulseTimer = null;
-
-  function _animateDemoEnter(idx) {
-    // 1. Bubble 脉冲：1.5 秒内 scale 1 → 1.06 → 1，颜色轻微变亮
-    var bubble = document.getElementById('mainBubble');
-    if (bubble) {
-      if (_demoPulseTimer) clearTimeout(_demoPulseTimer);
-      bubble.classList.remove('demo-pulse');
-      void bubble.offsetWidth; // force reflow 重启动画
-      bubble.classList.add('demo-pulse');
-      _demoPulseTimer = setTimeout(function () {
-        bubble.classList.remove('demo-pulse');
-      }, 1500);
-    }
-
-    // 2. 时间轴阶段：让 memoryTimeline 元素依次淡入
-    if (idx === 1) {
-      var timeline = document.getElementById('memoryTimeline');
-      if (timeline) {
-        var entries = timeline.querySelectorAll('.memory-entry, .memory-line, .memory-empty, .memory-gap');
-        for (var i = 0; i < entries.length; i++) {
-          (function (el, idx) {
-            el.classList.remove('demo-timeline-in');
-            el.style.animationDelay = (idx * 220) + 'ms';
-            void el.offsetWidth;
-            el.classList.add('demo-timeline-in');
-          })(entries[i], i);
-        }
-      }
-    }
-
-    // 3. AI 理解阶段：让 growth-stories / discoveries 元素淡入
-    if (idx === 2) {
-      var insights = document.querySelectorAll('.growth-story-card, .discovery-card, .memory-section, .growth-headline, .section-label');
-      for (var j = 0; j < insights.length; j++) {
-        (function (el, idx) {
-          el.classList.remove('demo-timeline-in');
-          el.style.animationDelay = (idx * 180) + 'ms';
-          void el.offsetWidth;
-          el.classList.add('demo-timeline-in');
-        })(insights[j], j);
-      }
-    }
-  }
-
-  // 共鸣连接：点 chip 时给 Bubble 周围加一圈涟漪
-  // 由 bindResponseChips 调用（外部）
-  window.__demoResonancePing = function () {
-    if (!isDemoMode) return;
-    var bubble = document.getElementById('mainBubble');
-    if (!bubble) return;
-    var ring = document.createElement('span');
-    ring.className = 'demo-resonance-ring';
-    bubble.appendChild(ring);
-    setTimeout(function () { if (ring.parentNode) ring.parentNode.removeChild(ring); }, 1800);
-  };
-
-  // 把当前阶段信息渲染到底部 ticker + 大字说明
-  function _renderDemoStage(step, idx) {
-    var ticker = document.getElementById('demoPlaybackTicker');
-    var stepBtn = document.getElementById('demoNextStepBtn');
-    var stage = document.getElementById('demoStage');
-    var progressBar = document.getElementById('demoIntroProgress');
-
-    if (ticker) {
-      ticker.hidden = false;
-      var dots = '';
-      for (var i = 1; i < DEMO_STEPS.length; i++) {
-        dots += '<span class="demo-playback-dot' + (i <= idx ? ' active' : '') + '"></span>';
-      }
-      ticker.innerHTML =
-        '<div class="demo-playback-label">阶段 ' + idx + ' / ' + (DEMO_STEPS.length - 1) + ' · ' + step.label + '</div>' +
-        '<div class="demo-playback-dots">' + dots + '</div>';
-    }
-
-    if (stepBtn) {
-      // 所有阶段都有按钮：
-      // - intro（idx=0）：显示"下一步 · 时间线"，可手动跳过 8 秒
-      // - 中间阶段：显示"下一步 · 下个阶段"
-      // - summary（最后）：显示"完成 · 继续浏览"，关闭引导浮层（保留 demo 状态），用户可继续浏览内容或点顶部 demoBar 登录
-      if (idx === DEMO_STEPS.length - 1) {
-        stepBtn.hidden = false;
-        stepBtn.textContent = '完成 · 继续浏览演示';
-        stepBtn.dataset.action = 'close';
-      } else {
-        stepBtn.hidden = false;
-        stepBtn.dataset.action = 'next';
-        stepBtn.textContent = '下一步 · ' + DEMO_STEPS[idx + 1].label;
-      }
-    }
-
-    if (progressBar) {
-      // intro 阶段显示进度条，其他阶段隐藏
-      progressBar.style.display = (idx === 0) ? 'block' : 'none';
-      if (idx !== 0) progressBar.style.width = '0%';
-    }
-
-    // 在首页叠加一段大字价值介绍
-    if (stage) {
-      stage.hidden = false;
-      var stageText = '<div class="demo-stage-eyebrow">' + step.label + '</div>' +
-        '<div class="demo-stage-desc">' + escapeHTML(step.desc) + '</div>';
-      if (idx === 0) {
-        stageText += '<div class="demo-stage-quote">"' + escapeHTML(DEMO_QUOTES[0]) + '"</div>';
-      } else if (idx === 1) {
-        stageText += '<div class="demo-stage-quote">"' + escapeHTML(DEMO_QUOTES[Math.min(_demoPlaybackIdx, DEMO_QUOTES.length - 1)]) + '"</div>';
-      } else if (idx === 4) {
-        // 价值总结（避免医疗化、诊断化）
-        stageText +=
-          '<div class="demo-stage-summary">' +
-            '<div class="demo-stage-line demo-stage-line--accent">理解</div>' +
-            '<div class="demo-stage-line">看见身体的节律、情绪的起伏、相似经历的他人</div>' +
-            '<div class="demo-stage-line demo-stage-line--accent">接纳</div>' +
-            '<div class="demo-stage-line">不评判自己，不贴标签，记录本身就是观察</div>' +
-            '<div class="demo-stage-line demo-stage-line--accent">自我观察</div>' +
-            '<div class="demo-stage-line">CycleBubble 不预测你的情绪，只是帮你看见自己的节律</div>' +
-          '</div>' +
-          '<div class="demo-stage-hint">登录后可以开始记录你自己的情绪旅程</div>';
-      }
-      stage.innerHTML = stageText;
-    }
-  }
 
   function refreshDemoBar() {
     var bar = document.getElementById('demoBar');
@@ -753,12 +490,6 @@
     var memoryCount = p.totalMemories;
     var patternRichness = p.themeCount + p.recoveryCount + p.triggerCount;
 
-    // 演示模式：用 _demoVisibleMemoryCount 控制"累积动画"
-    // 真实模式：用真实 memoryCount
-    if (isDemoMode) {
-      memoryCount = _demoVisibleMemoryCount;
-    }
-
     // 液体层次：Memory 越多，矿物层越厚
     var liquidLayers = Math.min(5, Math.floor(memoryCount / 1)); // demo 用累加动画，1 层→5 层逐步展开
 
@@ -1139,9 +870,6 @@
         if (responseType === "我也经历过") addLightPoint("connection");
         else if (responseType === "抱抱") addLightPoint("warmth");
         else addLightPoint("connection");
-
-        // Phase 2: 演示模式共鸣涟漪 — 让 Bubble 周围产生连接线
-        if (typeof window.__demoResonancePing === 'function') window.__demoResonancePing();
 
         setTimeout(nextCard, 1500);
       });
@@ -2467,7 +2195,6 @@
         isDemoMode = false;
         syncDemoFlag();
         refreshDemoBar();
-        if (typeof _stopDemoPlayback === 'function') _stopDemoPlayback();
 
         // 登录/注册成功：清掉本地 demo 种子记忆 + 从后端拉真实数据
         try {
@@ -2849,33 +2576,7 @@
       if (typeof renderResonanceFeed === 'function') renderResonanceFeed();
       if (typeof loadMemoriesFromBackend === 'function') loadMemoriesFromBackend().then(function () {
         if (typeof applyBubbleState === 'function') applyBubbleState();
-        // 启动半自动引导流程：开场 8 秒自动播放，之后由"下一步"按钮驱动
-        _startDemoPlayback();
       });
-    });
-  }
-
-  // 演示模式"下一步/完成"按钮：根据当前阶段区分动作
-  var demoNextStepBtn = document.getElementById('demoNextStepBtn');
-  if (demoNextStepBtn) {
-    demoNextStepBtn.addEventListener('click', function () {
-      // 最后阶段：完成 → 关闭引导浮层（保留 demo 状态），让用户继续浏览
-      if (demoNextStepBtn.dataset.action === 'close') {
-        _closeDemoOverlay();
-        return;
-      }
-      // 最后阶段另一个分支：login（保留旧 _finishDemo 路径）
-      if (demoNextStepBtn.dataset.action === 'finish') {
-        _finishDemo();
-        return;
-      }
-      // 其他阶段：取消 intro 自动定时器（如果还在），然后手动推进
-      if (_demoPlaybackTimer && _demoPlaybackIdx === 0) {
-        clearTimeout(_demoPlaybackTimer);
-        _demoPlaybackTimer = null;
-        _demoIntroPlayed = true;
-      }
-      _nextDemoStep();
     });
   }
 
@@ -2884,7 +2585,6 @@
     isDemoMode = false;
     syncDemoFlag();
     refreshDemoBar();
-    _stopDemoPlayback();
     if (typeof applyBubbleState === 'function') applyBubbleState();
   };
 
