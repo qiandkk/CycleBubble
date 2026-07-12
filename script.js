@@ -161,6 +161,28 @@
     if (typeof switchTo === 'function') switchTo('auth');
   }
 
+  // 关闭演示模式的引导浮层（stage / ticker / 下一步按钮 / 进度条）
+  // 但保留 demo 状态本身（isDemoMode=true），让用户继续自由浏览 demo 内容（成长页/共鸣页等）
+  // 用户随时可以通过顶部 demoBar 的「登录/注册」按钮或 demoBar 上的"完整功能"完全退出
+  function _closeDemoOverlay() {
+    var stage = document.getElementById('demoStage');
+    if (stage) stage.hidden = true;
+    var ticker = document.getElementById('demoPlaybackTicker');
+    if (ticker) ticker.hidden = true;
+    var stepBtn = document.getElementById('demoNextStepBtn');
+    if (stepBtn) stepBtn.hidden = true;
+    var progressEl = document.getElementById('demoIntroProgress');
+    if (progressEl) progressEl.style.width = '0%';
+    if (_demoPlaybackTimer) {
+      clearTimeout(_demoPlaybackTimer);
+      _demoPlaybackTimer = null;
+    }
+    // 提示用户：可以继续浏览，登录入口始终在 demo-bar 顶部
+    if (typeof showDemoToast === 'function') {
+      showDemoToast('可以继续浏览 · 登录入口在顶部');
+    }
+  }
+
   function _showDemoStep(idx) {
     _demoPlaybackIdx = idx;
     var step = DEMO_STEPS[idx];
@@ -295,11 +317,11 @@
       // 所有阶段都有按钮：
       // - intro（idx=0）：显示"下一步 · 时间线"，可手动跳过 8 秒
       // - 中间阶段：显示"下一步 · 下个阶段"
-      // - summary（最后）：显示"完成 · 登录使用完整功能"，退出 demo 跳到 auth 页
+      // - summary（最后）：显示"完成 · 继续浏览"，关闭引导浮层（保留 demo 状态），用户可继续浏览内容或点顶部 demoBar 登录
       if (idx === DEMO_STEPS.length - 1) {
         stepBtn.hidden = false;
-        stepBtn.textContent = '完成 · 登录使用完整功能';
-        stepBtn.dataset.action = 'finish';
+        stepBtn.textContent = '完成 · 继续浏览演示';
+        stepBtn.dataset.action = 'close';
       } else {
         stepBtn.hidden = false;
         stepBtn.dataset.action = 'next';
@@ -2837,7 +2859,12 @@
   var demoNextStepBtn = document.getElementById('demoNextStepBtn');
   if (demoNextStepBtn) {
     demoNextStepBtn.addEventListener('click', function () {
-      // 最后阶段：完成 → 退出演示 + 跳到登录页
+      // 最后阶段：完成 → 关闭引导浮层（保留 demo 状态），让用户继续浏览
+      if (demoNextStepBtn.dataset.action === 'close') {
+        _closeDemoOverlay();
+        return;
+      }
+      // 最后阶段另一个分支：login（保留旧 _finishDemo 路径）
       if (demoNextStepBtn.dataset.action === 'finish') {
         _finishDemo();
         return;
