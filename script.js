@@ -2369,7 +2369,7 @@
           try { localStorage.removeItem('cb_genesis_seen'); } catch (e) {}
           playGenesis(function () {
             var narration = document.getElementById('growthNarration');
-            if (narration) narration.textContent = '你的记录正在慢慢形成属于你的 Pattern。';
+            if (narration) narration.textContent = '你的记录正在慢慢形成属于你的轨迹。';
           });
         }
         // 重置表单
