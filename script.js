@@ -96,7 +96,150 @@
   var isDemoMode = false;
   var authAutoSwitched = false; // 防止 initAuthState 重复切屏
 
+  // ===== Demo 模式半自动引导 =====
+  // 设计：避免"色温 = 评分"的误解。
+  // Bubble 色温不随 mood 切换，只在 demo 模式下展示累积感（纹理/层次/连接逐步出现）。
+  // 流程：进入 demo 后自动放一段开场（约 8 秒），然后由"下一步"按钮驱动 4 个阶段：
+  //   1. 时间线：展示 5 条 seed memory 的 90 天跨度
+  //   2. AI 理解：展示 CycleBubble 如何从原文提取 Pattern（不实时调用 AI，用 seed 已有的 themes/triggers/recovery）
+  //   3. 共鸣：交互环节，用户点 chip 模拟回应（仅前端 local state）
+  //   4. 价值总结：突出"理解 / 接纳 / 自我观察"，避免医疗化诊断化语言
+  var _demoPlaybackIdx = 0;       // 当前阶段 0..3（intro 自动放，然后 1..4 手动）
+  var _demoPlaybackTimer = null;  // intro 自动播放定时器
+  var _demoPlaybackMood = null;   // 留 null，Bubble 不再被 mood 驱动
+  var _demoIntroPlayed = false;   // 是否已放过开场
+  var _demoVisibleMemoryCount = 1; // demo 模式下 Bubble 看到的"累积记忆数"，控制层次动画
+  var DEMO_STEPS = [
+    { id: 'intro',   auto_ms: 8000, label: '已形成的 Bubble',        desc: '一段已经走过的旅程' },
+    { id: 'timeline', auto_ms: 0,  label: '90 天时间线',             desc: '5 段记录横跨约 90 天' },
+    { id: 'ai',      auto_ms: 0,  label: 'AI 看到的 Pattern',        desc: '不是判断你是什么样的人，而是观察你的变化' },
+    { id: 'resonance', auto_ms: 0, label: '匿名共鸣',                 desc: '你并不孤独 —— 有人经历过类似的阶段' },
+    { id: 'summary', auto_ms: 0,  label: '理解 ≠ 评判',                desc: 'CycleBubble 不预测你的情绪，只是帮你观察自己的节律' },
+  ];
+  // 与 seed_demo.py 的 SEED_MEMORIES 顺序对齐的引文
+  var DEMO_QUOTES = [
+    '今天又因为领导的一句话纠结了一整天。我是不是太敏感了？',
+    '和朋友聊了之后好多了。原来不只是我一个人这样。',
+    '开会时又想反驳但没说出口。下次想试着表达出来。',
+    '今天终于主动说出了自己的想法，虽然说出口时手在抖。',
+    '这个阶段又到了，提前做好了心理准备。没有像上次那样陷入很久。',
+  ];
+
   function isAppMode() { return !isDemoMode; }
+
+  function _stopDemoPlayback() {
+    if (_demoPlaybackTimer) {
+      clearInterval(_demoPlaybackTimer);
+      _demoPlaybackTimer = null;
+    }
+    _demoPlaybackIdx = 0;
+    _demoIntroPlayed = false;
+    _demoVisibleMemoryCount = 1;
+    var ticker = document.getElementById('demoPlaybackTicker');
+    if (ticker) ticker.hidden = true;
+    var stepBtn = document.getElementById('demoNextStepBtn');
+    if (stepBtn) stepBtn.hidden = true;
+    var quoteBox = document.getElementById('demoQuoteBox');
+    if (quoteBox) quoteBox.hidden = true;
+    var stage = document.getElementById('demoStage');
+    if (stage) stage.hidden = true;
+  }
+
+  function _startDemoPlayback() {
+    _stopDemoPlayback();
+    _showDemoStep(0); // 开场自动播放
+  }
+
+  function _showDemoStep(idx) {
+    _demoPlaybackIdx = idx;
+    var step = DEMO_STEPS[idx];
+    if (!step) return;
+
+    // intro 阶段：自动放 8 秒后跳到 timeline
+    if (step.id === 'intro') {
+      _demoVisibleMemoryCount = 1;
+      _demoIntroPlayed = false;
+      // 自动播放：8 秒后切到下一步
+      if (_demoPlaybackTimer) clearTimeout(_demoPlaybackTimer);
+      _demoPlaybackTimer = setTimeout(function () {
+        _demoIntroPlayed = true;
+        if (!isDemoMode) return;
+        _showDemoStep(1);
+      }, step.auto_ms);
+      // 渲染 intro 阶段 UI
+      _renderDemoStage(step, idx);
+    } else {
+      // 手动阶段：累积记忆数递增（演示"层次累积"而非"色温变化"）
+      if (idx === 1) _demoVisibleMemoryCount = 5;       // 时间线：5 条全展示
+      else if (idx === 2) _demoVisibleMemoryCount = 5;  // AI 理解：5 条都参与
+      else if (idx === 3) _demoVisibleMemoryCount = 5;  // 共鸣
+      else if (idx === 4) _demoVisibleMemoryCount = 5;  // 总结
+      _renderDemoStage(step, idx);
+    }
+
+    if (typeof applyBubbleState === 'function') applyBubbleState();
+  }
+
+  function _nextDemoStep() {
+    if (!isDemoMode) return;
+    var next = Math.min(_demoPlaybackIdx + 1, DEMO_STEPS.length - 1);
+    if (next === _demoPlaybackIdx) return;
+    _showDemoStep(next);
+  }
+
+  // 把当前阶段信息渲染到底部 ticker + 大字说明
+  function _renderDemoStage(step, idx) {
+    var ticker = document.getElementById('demoPlaybackTicker');
+    var stepBtn = document.getElementById('demoNextStepBtn');
+    var stage = document.getElementById('demoStage');
+
+    if (ticker) {
+      ticker.hidden = false;
+      var dots = '';
+      for (var i = 1; i < DEMO_STEPS.length; i++) {
+        dots += '<span class="demo-playback-dot' + (i <= idx ? ' active' : '') + '"></span>';
+      }
+      ticker.innerHTML =
+        '<div class="demo-playback-label">阶段 ' + idx + ' / ' + (DEMO_STEPS.length - 1) + ' · ' + step.label + '</div>' +
+        '<div class="demo-playback-dots">' + dots + '</div>';
+    }
+
+    if (stepBtn) {
+      // intro 自动放，不显示按钮；最后阶段（summary）禁用按钮
+      if (idx === 0) {
+        stepBtn.hidden = true;
+      } else if (idx === DEMO_STEPS.length - 1) {
+        stepBtn.hidden = true;
+      } else {
+        stepBtn.hidden = false;
+        stepBtn.textContent = '下一步 · ' + DEMO_STEPS[idx + 1].label;
+      }
+    }
+
+    // 在首页叠加一段大字价值介绍
+    if (stage) {
+      stage.hidden = false;
+      var stageText = '<div class="demo-stage-eyebrow">' + step.label + '</div>' +
+        '<div class="demo-stage-desc">' + escapeHTML(step.desc) + '</div>';
+      if (idx === 0) {
+        stageText += '<div class="demo-stage-quote">"' + escapeHTML(DEMO_QUOTES[0]) + '"</div>';
+      } else if (idx === 1) {
+        stageText += '<div class="demo-stage-quote">"' + escapeHTML(DEMO_QUOTES[Math.min(_demoPlaybackIdx, DEMO_QUOTES.length - 1)]) + '"</div>';
+      } else if (idx === 4) {
+        // 价值总结（避免医疗化、诊断化）
+        stageText +=
+          '<div class="demo-stage-summary">' +
+            '<div class="demo-stage-line demo-stage-line--accent">理解</div>' +
+            '<div class="demo-stage-line">看见身体的节律、情绪的起伏、相似经历的他人</div>' +
+            '<div class="demo-stage-line demo-stage-line--accent">接纳</div>' +
+            '<div class="demo-stage-line">不评判自己，不贴标签，记录本身就是观察</div>' +
+            '<div class="demo-stage-line demo-stage-line--accent">自我观察</div>' +
+            '<div class="demo-stage-line">CycleBubble 不预测你的情绪，只是帮你看见自己的节律</div>' +
+          '</div>';
+      }
+      stage.innerHTML = stageText;
+    }
+  }
 
   function refreshDemoBar() {
     var bar = document.getElementById('demoBar');
@@ -490,14 +633,23 @@
     var memoryCount = p.totalMemories;
     var patternRichness = p.themeCount + p.recoveryCount + p.triggerCount;
 
+    // 演示模式：用 _demoVisibleMemoryCount 控制"累积动画"
+    // 真实模式：用真实 memoryCount
+    if (isDemoMode) {
+      memoryCount = _demoVisibleMemoryCount;
+    }
+
     // 液体层次：Memory 越多，矿物层越厚
-    var liquidLayers = Math.min(5, Math.floor(memoryCount / 3));
+    var liquidLayers = Math.min(5, Math.floor(memoryCount / 1)); // demo 用累加动画，1 层→5 层逐步展开
 
     // 粒子密度：Pattern 越丰富，内部生命越多
     var particleDensity = 2 + Math.floor(patternRichness / 2);
 
-    // 色温：来自近期情绪基调
-    var moodData = moodColorMap[p.recentMood] || moodColorMap["未明"];
+    // 色温：演示模式下锁定为"柔紫"中性色，避免被理解为"评分"
+    // 真实模式下仍按最近情绪基调变化
+    var effectiveMood = p.recentMood;
+    if (isDemoMode) effectiveMood = "未明";
+    var moodData = moodColorMap[effectiveMood] || moodColorMap["未明"];
 
     // 呼吸节奏：记录越多越稳定（越慢）
     var breatheDuration = Math.max(4.0, 6.0 - memoryCount * 0.15);
@@ -518,7 +670,7 @@
       textureLayers: textureLayers,
       patternRichness: patternRichness,
       memoryCount: memoryCount,
-      recentMood: p.recentMood
+      recentMood: effectiveMood
     };
   }
 
@@ -821,7 +973,7 @@
       panel.remove();
     });
     panel.querySelector(".resonance-report-submit").addEventListener("click", async function () {
-      if (isDemoMode) { showDemoToast("演示模式只读，登录后可以举报"); return; }
+      if (isDemoMode) { showDemoToast("演示模式下举报不会提交，登录后可以保护共鸣流"); return; }
       var reason = panel.querySelector(".resonance-report-reason").value;
       var note = panel.querySelector(".resonance-report-note").value.trim();
       try {
@@ -1290,7 +1442,7 @@
     var memoryCount = document.getElementById('profileMemoryCount');
     var cycleCount = document.getElementById('profilePeriodCount');
     if (isDemoMode) {
-      setProfileIdentity('演示用户', '演示模式', '演示数据不会保存、导出或修改');
+      setProfileIdentity('体验用户 · 这是 Bubble 旅程样例', '探索模式', '所有内容不会保存 · 登录后可以使用完整功能');
       if (memoryCount) memoryCount.textContent = bubbleDNA.totalRecords || '–';
       if (cycleCount) cycleCount.textContent = '–';
       setProfileManagementVisibility(true);
@@ -1387,7 +1539,7 @@
 
   async function loadPeriods() {
     if (isDemoMode) {
-      showDemoToast('演示模式只读，登录后可以管理经期记录');
+      showDemoToast('这是体验样例 · 登录后可以管理自己的经期记录');
       switchTo('profile');
       return;
     }
@@ -1430,11 +1582,11 @@
   }
 
   bindProfileButton('periodsEntryBtn', function () {
-    if (isDemoMode) { showDemoToast('演示模式只读，登录后可以管理经期记录'); return; }
+    if (isDemoMode) { showDemoToast('这是体验样例 · 登录后可以管理自己的经期记录'); return; }
     switchTo('periods');
   });
   bindProfileButton('profileImportBtn', function () {
-    if (isDemoMode) { showDemoToast('演示模式只读，登录后可以导入数据'); return; }
+    if (isDemoMode) { showDemoToast('这是体验样例 · 登录后可以导入自己的经期数据'); return; }
     switchTo('import');
   });
   bindProfileButton('exportJsonBtn', async function () {
@@ -1593,7 +1745,7 @@
     saveBtn.addEventListener("click", function () {
       // 演示模式拦截：弹 toast 提示但不保存
       if (isDemoMode) {
-        showDemoToast('演示模式无法保存，登录后可以记录你的真实情绪');
+        showDemoToast('这是体验样例 · 登录后可以记录你自己的情绪');
         return;
       }
 
@@ -1628,7 +1780,7 @@
 
         if (isDemoMode) {
           // 演示模式：后端会 403 拒绝。前端给个友好提示后直接跳到 insight。
-          showDemoToast('演示模式无法保存，登录后可以记录你的真实情绪');
+          showDemoToast('这是体验样例 · 登录后可以记录你自己的情绪');
           switchTo("insight");
           applyBubbleState();
         } else {
@@ -2185,6 +2337,7 @@
         isDemoMode = false;
         syncDemoFlag();
         refreshDemoBar();
+        if (typeof _stopDemoPlayback === 'function') _stopDemoPlayback();
 
         // 登录/注册成功：清掉本地 demo 种子记忆 + 从后端拉真实数据
         try {
@@ -2566,7 +2719,17 @@
       if (typeof renderResonanceFeed === 'function') renderResonanceFeed();
       if (typeof loadMemoriesFromBackend === 'function') loadMemoriesFromBackend().then(function () {
         if (typeof applyBubbleState === 'function') applyBubbleState();
+        // 启动半自动引导流程：开场 8 秒自动播放，之后由"下一步"按钮驱动
+        _startDemoPlayback();
       });
+    });
+  }
+
+  // 演示模式"下一步"按钮：驱动半自动引导流程
+  var demoNextStepBtn = document.getElementById('demoNextStepBtn');
+  if (demoNextStepBtn) {
+    demoNextStepBtn.addEventListener('click', function () {
+      _nextDemoStep();
     });
   }
 
@@ -2575,6 +2738,8 @@
     isDemoMode = false;
     syncDemoFlag();
     refreshDemoBar();
+    _stopDemoPlayback();
+    if (typeof applyBubbleState === 'function') applyBubbleState();
   };
 
 })();
