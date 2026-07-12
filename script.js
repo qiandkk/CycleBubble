@@ -1875,38 +1875,45 @@
 
       if (settlingLiquid) settlingLiquid.classList.add("rising");
 
-      // 3 秒后：结构化抽取 → 存入 Memory → Pattern 更新 → 跳转理解页
-      setTimeout(function () {
+      // ===== 修复 saveBtn 持久化 + 收尾动画的竞态（用户反馈 PR#15/#17 后暴露）=====
+      // 之前逻辑：固定 3000ms 后调 persistMemoryToBackend（异步）+ 500ms 后立即收尾 UI
+      //             ↑ 这两个 setTimeout 是兄弟关系，不互相等待
+      // 问题：AI 接入后请求耗时长（最坏 16 秒超时重试），UI 在 500ms 后就重置，
+      //       等 AI 真正返回时才被强制跳转 → 用户感到页面"鬼畜"
+      // 现在逻辑：用 Promise.all 同时等"动画至少放够 3 秒"和"AI/后端请求完成"，
+      //       两个都完成才一起跳转 + 收尾 UI，杜绝竞态。
+      var slowHintTimer = setTimeout(function () {
+        // 超过 5 秒还没返回，给用户一个可视反馈：AI 在慢处理
+        if (settlingText) settlingText.textContent = 'AI 在慢慢理解你的话……';
+      }, 5000);
+
+      // 至少 3 秒的视觉仪式
+      var minAnimationDelay = new Promise(function (resolve) {
+        setTimeout(resolve, 3000);
+      });
+
+      // 后端保存请求（catch 内部已 toast，"失败"也走收尾流程）
+      var backendRequest = persistMemoryToBackend(userInput)
+        .catch(function (err) {
+          // 失败的情况：toast 已经显示，但我们要继续往下收尾
+          // 不让 Promise.all 因为 reject 就停了
+          return Promise.resolve(false);
+        });
+
+      // 同时等两个完成（race：先到的也不"提前结束"，保证"至少"的条件）
+      Promise.all([minAnimationDelay, backendRequest]).then(function () {
+        clearTimeout(slowHintTimer);
         clearInterval(msgInterval);
-
-        if (isDemoMode) {
-          // 演示模式：后端会 403 拒绝。前端给个友好提示后直接跳到 insight。
-          showDemoToast('这是体验样例 · 登录后可以记录你自己的情绪');
-          switchTo("insight");
-          applyBubbleState();
-        } else {
-          // 真实模式：调后端持久化
-          persistMemoryToBackend(userInput).then(function (ok) {
-            switchTo("insight");
-            applyBubbleState();
-          }).catch(function (err) {
-            // 后端失败：不静默写本地（避免演示模式记忆伪装成真实记录）
-            console.warn('保存到后端失败:', err);
-            showDemoToast('保存失败，请稍后再试');
-            switchTo("insight");
-            applyBubbleState();
-          });
-        }
-
-        setTimeout(function () {
-          saveBtn.style.display = "";
-          if (recordInput) recordInput.value = "";
-          if (noteField) noteField.style.display = "";
-          if (recordHead) recordHead.style.display = "";
-          if (bubbleSettling) bubbleSettling.hidden = true;
-          if (settlingLiquid) settlingLiquid.classList.remove("rising");
-        }, 500);
-      }, 3000);
+        // 两个都完成才跳转 + 重置 UI
+        switchTo("insight");
+        applyBubbleState();
+        saveBtn.style.display = "";
+        if (recordInput) recordInput.value = "";
+        if (noteField) noteField.style.display = "";
+        if (recordHead) recordHead.style.display = "";
+        if (bubbleSettling) bubbleSettling.hidden = true;
+        if (settlingLiquid) settlingLiquid.classList.remove("rising");
+      });
     });
   }
 
