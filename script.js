@@ -1597,11 +1597,15 @@
         return;
       }
 
-      var userInput = "";
-      if (recordInput && recordInput.value.trim()) {
-        userInput = recordInput.value.trim();
-      } else {
-        userInput = "今天开会时领导说了一句话，我反复想了一整天。好像在意的是自己有没有被认可。";
+      // 没输入任何文字时直接提示并返回，绝不虚拟造假。
+      // 之前会用 "今天开会时领导说了一句话..." 这种默认文本冒充用户记录，
+      // 严重违背"只属于你的私密空间"的产品承诺——即使没有 AI 也不能伪造。
+      var rawInput = recordInput && recordInput.value ? recordInput.value : '';
+      var userInput = rawInput.trim();
+      if (!userInput) {
+        showDemoToast('请先写点什么，再放进泡泡');
+        if (recordInput) recordInput.focus();
+        return;
       }
 
       saveBtn.style.display = "none";

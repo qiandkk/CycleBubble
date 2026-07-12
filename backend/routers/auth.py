@@ -77,53 +77,61 @@ def _record_user_login_attempt(key: str, kind: str, success: bool) -> None:
 
 
 @router.post("/register", response_model=AuthResponse)
-def register(req: RegisterRequest, request: Request, session: Session = Depends(get_session)):
-    """注册"""
+def register(req: RegisterRequest, request: Request):
+    """注册（强制写入真实库，不受 X-Demo-Mode header 影响）
+
+    安全：注册必须走真实库，否则 demo 模式下的注册请求会把用户写到
+    cyclebubble_demo.db，污染演示数据，导致后续 demo 浏览看到"测试用户"
+    或其他人留下的真实账号 nickname。
+    """
     ip = _client_ip(request)
 
-    # 检查邮箱是否已存在
-    existing = session.exec(select(User).where(User.email == req.email)).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="该邮箱已被注册")
+    with Session(real_engine) as session:
+        # 检查邮箱是否已存在
+        existing = session.exec(select(User).where(User.email == req.email)).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="该邮箱已被注册")
 
-    # 密码长度由 Pydantic Field 校验；这里冗余一句方便错误消息本地化
-    if len(req.password) < USER_PASSWORD_MIN_LENGTH:
-        raise HTTPException(status_code=400, detail=f"密码至少 {USER_PASSWORD_MIN_LENGTH} 位")
+        # 密码长度由 Pydantic Field 校验；这里冗余一句方便错误消息本地化
+        if len(req.password) < USER_PASSWORD_MIN_LENGTH:
+            raise HTTPException(status_code=400, detail=f"密码至少 {USER_PASSWORD_MIN_LENGTH} 位")
 
-    user = User(
-        email=req.email,
-        password_hash=hash_password(req.password),
-        nickname=req.nickname or req.email.split("@")[0],
-        created_at=datetime.utcnow(),
-        last_active_at=datetime.utcnow()
-    )
-    session.add(user)
-    session.commit()
-    session.refresh(user)
+        user = User(
+            email=req.email,
+            password_hash=hash_password(req.password),
+            nickname=req.nickname or req.email.split("@")[0],
+            created_at=datetime.utcnow(),
+            last_active_at=datetime.utcnow()
+        )
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        user_payload = {
+            "id": user.id,
+            "email": user.email,
+            "nickname": user.nickname,
+        }
 
     # 注册成功 = 登录成功，清掉失败计数
     _record_user_login_attempt(req.email, "email", True)
     _record_user_login_attempt(ip, "ip", True)
 
-    token = create_access_token(user.id)
+    token = create_access_token(user_payload["id"])
     return {
         "token": token,
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "nickname": user.nickname
-        }
+        "user": user_payload,
     }
 
 
 @router.post("/login", response_model=AuthResponse)
-def login(req: LoginRequest, request: Request, session: Session = Depends(get_session)):
-    """登录
+def login(req: LoginRequest, request: Request):
+    """登录（强制从真实库验证，不受 X-Demo-Mode header 影响）
 
     安全：
     - EmailStr 强制邮箱格式
     - 密码最少 8 位（前端 + 后端双向校验）
     - 同一邮箱 5 次失败锁 15 分钟；同一 IP 20 次失败锁 15 分钟（防扫号）
+    - 必须走真实库——demo 库是只读演示数据，不应被登录命中
     """
     email = (req.email or "").strip().lower()
     ip = _client_ip(request)
@@ -144,30 +152,32 @@ def login(req: LoginRequest, request: Request, session: Session = Depends(get_se
             headers={"Retry-After": str(remaining_ip)},
         )
 
-    user = session.exec(select(User).where(User.email == email)).first()
-    # 用统一消息避免泄露"账号不存在"信息
-    credentials_invalid = (not user) or (not verify_password(req.password, user.password_hash))
-    if credentials_invalid:
-        _record_user_login_attempt(email, "email", False)
-        _record_user_login_attempt(ip, "ip", False)
-        raise HTTPException(status_code=401, detail="邮箱或密码错误")
+    with Session(real_engine) as session:
+        user = session.exec(select(User).where(User.email == email)).first()
+        # 用统一消息避免泄露"账号不存在"信息
+        credentials_invalid = (not user) or (not verify_password(req.password, user.password_hash))
+        if credentials_invalid:
+            _record_user_login_attempt(email, "email", False)
+            _record_user_login_attempt(ip, "ip", False)
+            raise HTTPException(status_code=401, detail="邮箱或密码错误")
 
-    # 登录成功：清掉失败计数（记一笔 success，下一次失败时窗口重新算）
-    _record_user_login_attempt(email, "email", True)
-    _record_user_login_attempt(ip, "ip", True)
+        # 登录成功：清掉失败计数（记一笔 success，下一次失败时窗口重新算）
+        _record_user_login_attempt(email, "email", True)
+        _record_user_login_attempt(ip, "ip", True)
 
-    user.last_active_at = datetime.utcnow()
-    session.add(user)
-    session.commit()
+        user.last_active_at = datetime.utcnow()
+        session.add(user)
+        session.commit()
+        user_payload = {
+            "id": user.id,
+            "email": user.email,
+            "nickname": user.nickname,
+        }
 
     token = create_access_token(user.id)
     return {
         "token": token,
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "nickname": user.nickname
-        }
+        "user": user_payload,
     }
 
 

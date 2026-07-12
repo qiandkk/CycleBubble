@@ -41,18 +41,22 @@
   }
 
   // ===== 通用请求封装 =====
-  function authHeaders(options) {
+  function authHeaders(options, forceReal) {
     const headers = Object.assign({ 'Content-Type': 'application/json' }, (options && options.headers) || {});
     const token = getToken();
     // 真实模式：附带 Bearer token
     if (token && !isDemoMode()) headers['Authorization'] = 'Bearer ' + token;
     // 演示模式：附带 X-Demo-Mode header（后端会跳过 token 校验，从 demo 库读种子）
-    if (isDemoMode()) headers['X-Demo-Mode'] = '1';
+    // 但被 forceReal 强制时（如注册/登录），不能带这个 header，否则会写错库
+    if (isDemoMode() && !forceReal) headers['X-Demo-Mode'] = '1';
     return headers;
   }
 
   async function request(path, options = {}) {
-    const headers = authHeaders(options);
+    // 内部标记：__force_real=true 时即使在 demo 模式也不带 X-Demo-Mode header
+    // （注册/登录/获取 token 必须走真实库）
+    const forceReal = !!options.__force_real;
+    const headers = authHeaders(options, forceReal);
 
     let res;
     try {
@@ -101,20 +105,31 @@
   // ===== 认证 =====
   const auth = {
     async register(email, password, nickname) {
+      // 注册/登录必须强制真实模式，避免 demo 标记残留导致写错库。
+      // 显式传 __force_real：true 走 noDemo 通道，request 会忽略 X-Demo-Mode。
       const data = await request('/api/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ email, password, nickname: nickname || '' })
+        body: JSON.stringify({ email, password, nickname: nickname || '' }),
+        __force_real: true
       });
-      if (data.token) setToken(data.token);
+      if (data.token) {
+        setToken(data.token);
+        // 注册成功后立即清除 demo 标记，确保后续所有请求走真实库
+        setDemoMode(false);
+      }
       return data;
     },
 
     async login(email, password) {
       const data = await request('/api/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
+        __force_real: true
       });
-      if (data.token) setToken(data.token);
+      if (data.token) {
+        setToken(data.token);
+        setDemoMode(false);
+      }
       return data;
     },
 
