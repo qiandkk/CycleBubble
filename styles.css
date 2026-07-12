@@ -1872,6 +1872,165 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
   top: 52px;
 }
 
+/* ====== Demo Tour 引导式演示导览 ====== */
+.demo-tour {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 800;
+  width: 100%;
+  max-width: 420px;
+  padding: 0 12px 12px;
+  pointer-events: none;
+  animation: demo-tour-slide-up .5s ease-in-out;
+}
+
+.demo-tour[hidden] { display: none !important; }
+
+@keyframes demo-tour-slide-up {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.demo-tour-card {
+  pointer-events: auto;
+  background: rgba(255, 253, 251, .96);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(181, 169, 207, .3);
+  border-radius: 16px;
+  padding: 14px 16px 12px;
+  box-shadow: 0 8px 32px rgba(138, 125, 184, .15);
+}
+
+.demo-tour-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.demo-tour-step {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--lavender);
+  letter-spacing: .5px;
+  flex-shrink: 0;
+}
+
+.demo-tour-progress {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(181, 169, 207, .15);
+  overflow: hidden;
+}
+
+.demo-tour-progress::after {
+  content: '';
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--rose), var(--lavender));
+  transition: width .5s ease-in-out;
+}
+
+.demo-tour-skip {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  font-size: 11px;
+  color: var(--subtle);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: color .2s, background .2s;
+}
+
+.demo-tour-skip:hover {
+  color: var(--muted);
+  background: rgba(181, 169, 207, .08);
+}
+
+.demo-tour-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.demo-tour-desc {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.demo-tour-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.demo-tour-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid rgba(181, 169, 207, .25);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .2s ease-in-out;
+}
+
+.demo-tour-btn--prev {
+  background: transparent;
+  color: var(--muted);
+}
+
+.demo-tour-btn--prev:hover {
+  border-color: rgba(181, 169, 207, .4);
+  background: rgba(181, 169, 207, .06);
+}
+
+.demo-tour-btn--prev:disabled {
+  opacity: .35;
+  cursor: default;
+}
+
+.demo-tour-btn--next {
+  background: linear-gradient(135deg, var(--rose), var(--lavender));
+  color: #fff;
+  border-color: transparent;
+}
+
+.demo-tour-btn--next:hover {
+  opacity: .9;
+  transform: translateY(-1px);
+}
+
+/* Tour 激活时高亮目标区域 */
+.demo-tour-highlight {
+  position: relative;
+  z-index: 1;
+}
+
+.demo-tour-highlight::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border: 2px solid rgba(181, 169, 207, .5);
+  border-radius: inherit;
+  pointer-events: none;
+  animation: demo-tour-pulse 2s ease-in-out infinite;
+}
+
+@keyframes demo-tour-pulse {
+  0%, 100% { opacity: .3; }
+  50% { opacity: .7; }
+}
+
 /* ====== 我的：私密资料与数据管理 ====== */
 .screen-profile .screen-body { padding: 8px 20px 30px; }
 .profile-nav { padding-bottom: 4px; }

@@ -2576,7 +2576,162 @@
       if (typeof renderResonanceFeed === 'function') renderResonanceFeed();
       if (typeof loadMemoriesFromBackend === 'function') loadMemoriesFromBackend().then(function () {
         if (typeof applyBubbleState === 'function') applyBubbleState();
+        // 数据加载完成后启动 Demo Tour
+        startDemoTour();
       });
+    });
+  }
+
+  // ====== Demo Tour 引导式演示导览 ======
+  // 5 步 × 12 秒 = 60 秒完整价值链体验
+  // Step 1: 已形成的 Bubble（首页）
+  // Step 2: 记录沉淀（成长页时间线）
+  // Step 3: AI 理解过程（理解页）
+  // Step 4: Bubble 变化（首页纹理/层次）
+  // Step 5: 匿名共鸣（共鸣页）
+
+  var DEMO_TOUR_STEPS = [
+    {
+      title: '这是一个已经使用一段时间的 Bubble',
+      desc: 'Bubble 不是分数，也不是评分。它随着记录慢慢形成，代表理解的积累。',
+      page: 'home',
+      highlight: '#mainBubble',
+      autoMs: 12000
+    },
+    {
+      title: '每一次记录都沉淀在这里',
+      desc: '用户记录的自然语言，会变成 Bubble 里的痕迹。时间线展示了一段走过的路。',
+      page: 'growth',
+      highlight: '#memoryTimeline',
+      autoMs: 12000
+    },
+    {
+      title: 'AI 从自然语言中提取理解',
+      desc: '不是判断你是什么样的人，而是观察反复出现的主题、触发因素和恢复方式。',
+      page: 'insight',
+      highlight: '#insightBody',
+      autoMs: 12000
+    },
+    {
+      title: 'Bubble 随着理解慢慢丰富',
+      desc: '纹理增加、层次丰富。这不是成长值，是理解越来越深。',
+      page: 'home',
+      highlight: '#mainBubble',
+      autoMs: 12000
+    },
+    {
+      title: '你并不孤单',
+      desc: '匿名共鸣让你看到，有人也经历过类似的阶段。所有内容仅为体验样例。',
+      page: 'resonance',
+      highlight: '#resonanceStack',
+      autoMs: 12000
+    }
+  ];
+
+  var demoTourEl = null;
+  var demoTourIdx = 0;
+  var demoTourTimer = null;
+  var demoTourActive = false;
+
+  function startDemoTour() {
+    demoTourEl = document.getElementById('demoTour');
+    if (!demoTourEl) return;
+    demoTourIdx = 0;
+    demoTourActive = true;
+    demoTourEl.hidden = false;
+    showDemoTourStep(0);
+  }
+
+  function showDemoTourStep(idx) {
+    if (!demoTourActive || idx < 0 || idx >= DEMO_TOUR_STEPS.length) return;
+    demoTourIdx = idx;
+    var step = DEMO_TOUR_STEPS[idx];
+
+    // 导航到目标页面
+    if (typeof switchTo === 'function') switchTo(step.page);
+
+    // 更新文案
+    var stepEl = document.getElementById('demoTourStep');
+    var titleEl = document.getElementById('demoTourTitle');
+    var descEl = document.getElementById('demoTourDesc');
+    var progressEl = document.getElementById('demoTourProgress');
+    var prevBtn = document.getElementById('demoTourPrev');
+    var nextBtn = document.getElementById('demoTourNext');
+
+    if (stepEl) stepEl.textContent = (idx + 1) + ' / ' + DEMO_TOUR_STEPS.length;
+    if (titleEl) titleEl.textContent = step.title;
+    if (descEl) descEl.textContent = step.desc;
+    if (progressEl) progressEl.style.setProperty('--progress', ((idx + 1) / DEMO_TOUR_STEPS.length * 100) + '%');
+    if (progressEl) {
+      // 直接设置 ::after width
+      progressEl.style.cssText = '--progress: ' + ((idx + 1) / DEMO_TOUR_STEPS.length * 100) + '%';
+    }
+    // 用内联样式设置进度条宽度
+    var progressFill = progressEl;
+    if (progressFill) {
+      progressFill.style.background = 'linear-gradient(90deg, var(--rose), var(--lavender)) no-repeat';
+      progressFill.style.backgroundSize = ((idx + 1) / DEMO_TOUR_STEPS.length * 100) + '% 100%';
+    }
+
+    if (prevBtn) prevBtn.disabled = (idx === 0);
+    if (nextBtn) nextBtn.textContent = (idx === DEMO_TOUR_STEPS.length - 1) ? '完成' : '下一步';
+
+    // 高亮目标元素
+    clearDemoTourHighlight();
+    setTimeout(function () {
+      if (step.highlight) {
+        var target = document.querySelector(step.highlight);
+        if (target) target.classList.add('demo-tour-highlight');
+      }
+    }, 300);
+
+    // 自动推进
+    if (demoTourTimer) clearTimeout(demoTourTimer);
+    demoTourTimer = setTimeout(function () {
+      if (idx < DEMO_TOUR_STEPS.length - 1) {
+        showDemoTourStep(idx + 1);
+      } else {
+        endDemoTour();
+      }
+    }, step.autoMs);
+  }
+
+  function clearDemoTourHighlight() {
+    var highlighted = document.querySelectorAll('.demo-tour-highlight');
+    for (var i = 0; i < highlighted.length; i++) {
+      highlighted[i].classList.remove('demo-tour-highlight');
+    }
+  }
+
+  function endDemoTour() {
+    demoTourActive = false;
+    if (demoTourTimer) { clearTimeout(demoTourTimer); demoTourTimer = null; }
+    clearDemoTourHighlight();
+    if (demoTourEl) demoTourEl.hidden = true;
+  }
+
+  // 绑定 Tour 按钮事件
+  var demoTourPrev = document.getElementById('demoTourPrev');
+  var demoTourNext = document.getElementById('demoTourNext');
+  var demoTourSkip = document.getElementById('demoTourSkip');
+
+  if (demoTourPrev) {
+    demoTourPrev.addEventListener('click', function () {
+      if (demoTourIdx > 0) showDemoTourStep(demoTourIdx - 1);
+    });
+  }
+  if (demoTourNext) {
+    demoTourNext.addEventListener('click', function () {
+      if (demoTourIdx < DEMO_TOUR_STEPS.length - 1) {
+        showDemoTourStep(demoTourIdx + 1);
+      } else {
+        endDemoTour();
+      }
+    });
+  }
+  if (demoTourSkip) {
+    demoTourSkip.addEventListener('click', function () {
+      endDemoTour();
     });
   }
 
