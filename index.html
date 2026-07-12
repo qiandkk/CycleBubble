@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CycleBubble</title>
   <meta name="description" content="CycleBubble — 一个持续理解你的情绪空间。">
-  <link rel="stylesheet" href="./styles.css?v=20260712d">
+  <link rel="stylesheet" href="./styles.css?v=20260712f">
   <!-- API 基础 URL：默认空字符串 = 同源（Nginx 反代 /api/ 到 FastAPI）。
        部署到 Render/其他跨域后端时，把下面这一行改成对应的 URL，例如：
          window.__API_BASE__ = 'https://cyclebubble-api.onrender.com';
@@ -531,6 +531,23 @@
     </div>
   </div>
 
-  <script src="./script.js?v=20260712e"></script>
+  <!-- ====== Demo Tour 引导式演示导览 ====== -->
+  <div class="demo-tour" id="demoTour" hidden>
+    <div class="demo-tour-card">
+      <div class="demo-tour-header">
+        <span class="demo-tour-step" id="demoTourStep">1 / 5</span>
+        <span class="demo-tour-progress" id="demoTourProgress"></span>
+        <button class="demo-tour-skip" type="button" id="demoTourSkip">跳过导览</button>
+      </div>
+      <h4 class="demo-tour-title" id="demoTourTitle"></h4>
+      <p class="demo-tour-desc" id="demoTourDesc"></p>
+      <div class="demo-tour-actions">
+        <button class="demo-tour-btn demo-tour-btn--prev" type="button" id="demoTourPrev">上一步</button>
+        <button class="demo-tour-btn demo-tour-btn--next" type="button" id="demoTourNext">下一步</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./script.js?v=20260712f"></script>
 </body>
 </html>
