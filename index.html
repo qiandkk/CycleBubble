@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CycleBubble</title>
   <meta name="description" content="CycleBubble — 一个持续理解你的情绪空间。">
-  <link rel="stylesheet" href="./styles.css?v=20260711b">
+  <link rel="stylesheet" href="./styles.css?v=20260712a">
   <!-- API 基础 URL：默认空字符串 = 同源（Nginx 反代 /api/ 到 FastAPI）。
        部署到 Render/其他跨域后端时，把下面这一行改成对应的 URL，例如：
          window.__API_BASE__ = 'https://cyclebubble-api.onrender.com';
@@ -494,8 +494,11 @@
             <span class="genesis-dot"></span>
             <span class="genesis-dot"></span>
             <span class="genesis-dot"></span>
+            <span class="genesis-dot"></span>
           </div>
         </div>
+        <!-- 远处微弱光点（Phase 5：共鸣概念暗示） -->
+        <div class="genesis-distant-lights" id="genesisDistantLights" hidden></div>
         <button class="genesis-skip" type="button" id="genesisSkip">跳过</button>
       </div>
 
@@ -531,6 +534,6 @@
     </div>
   </div>
 
-  <script src="./script.js?v=20260711b"></script>
+  <script src="./script.js?v=20260712a"></script>
 </body>
 </html>
