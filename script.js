@@ -2255,9 +2255,9 @@
 
   var GENESIS_PHASES = [
     { duration: 5500, text: "身体会变化，所以情绪也会变化。", textDelay: 400 },
-    { duration: 4500, text: "每一次记录，都会在这里留下痕迹。", textDelay: 300 },
-    { duration: 4500, text: "慢慢沉淀，形成属于你的 Pattern。", textDelay: 300 },
-    { duration: 3500, text: "看见变化，也接纳自己的感受。", textDelay: 200 }
+    { duration: 4500, text: "每一次记录，都会留下理解自己的线索。", textDelay: 300 },
+    { duration: 4500, text: "慢慢沉淀，形成属于你的 Pattern（理解轨迹）。", textDelay: 300 },
+    { duration: 4000, text: "慢慢理解自己，发现身体与情绪之间的联系。", textDelay: 200 }
   ];
 
   function hasSeenGenesis() {
