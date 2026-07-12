@@ -2407,10 +2407,10 @@
   // 状态记录在 localStorage cb_genesis_seen，播放完成或跳过后永久写入。
 
   var GENESIS_PHASES = [
-    { duration: 5500, text: "身体会变化，所以情绪也会变化。", textDelay: 400 },
-    { duration: 4500, text: "每一次记录，都会留下理解自己的线索。", textDelay: 300 },
-    { duration: 4500, text: "慢慢沉淀，形成属于你的 Pattern（理解轨迹）。", textDelay: 300 },
-    { duration: 4000, text: "慢慢理解自己，发现身体与情绪之间的联系。", textDelay: 200 }
+    { duration: 5000, text: "身体的变化，也会影响每天的感受。", textDelay: 400 },
+    { duration: 4500, text: "每一次记录，都会帮你慢慢发现规律。", textDelay: 300 },
+    { duration: 4500, text: "这些记录，会慢慢连成属于你的轨迹。", textDelay: 300 },
+    { duration: 4000, text: "更了解自己的身体，也更理解自己的感受。", textDelay: 200 }
   ];
 
   function hasSeenGenesis() {
