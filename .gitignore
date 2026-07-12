@@ -41,3 +41,9 @@ Thumbs.db
 # Local verification screenshots (not part of repo)
 screenshot_*.jpeg
 screenshot_*.png
+
+# Environment files (NEVER commit secrets)
+.env
+.env.local
+.env.*.local
+deploy/.env

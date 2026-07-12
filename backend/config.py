@@ -72,14 +72,23 @@ class Settings(BaseSettings):
 
     # AI 提供商配置
     ai_default_provider: str = "minimax"
-    ai_default_model_minimax: str = "M3"
-    ai_default_model_deepseek: str = "v4-flash"
+    ai_default_model_minimax: str = "minimax-m3"
+    ai_default_model_deepseek: str = "deepseek-v4-flash"
     ai_request_timeout_seconds: int = 8
+
+    # API 文档（/docs /redoc /openapi.json）开关
+    # 默认关闭：公网开放 Swagger UI 等同于把整个 API schema 暴露给攻击者，
+    # 而且内置 "Try it out" 给探测提供便利。
+    # 开发时可在 .env 中设置 CB_API_DOCS_ENABLED=true 临时开启。
+    api_docs_enabled: bool = False
 
     # 管理员配置
     admin_username: str = "admin"
     admin_password: str = ""
-    admin_jwt_secret: str = ""
+    # 必须显式设置 CB_ADMIN_JWT_SECRET，不允许从 jwt_secret 派生。
+    # 自动派生 = "jwt_secret + ::admin"，等同于"泄露普通密钥 → 也能签出 admin token"，
+    # 与"独立签名密钥"的设计初衷矛盾。
+    admin_jwt_secret: str
     admin_jwt_expire_hours: int = 4
     admin_login_max_fails: int = 5
     admin_login_lock_minutes: int = 15
@@ -119,6 +128,15 @@ def _build_settings() -> Settings:
                 "   生成方式：\n"
                 "     python -c \"import secrets; print(secrets.token_urlsafe(48))\"\n"
             ) from e
+        if "admin_jwt_secret" in msg.lower() or "ADMIN_JWT_SECRET" in msg:
+            raise RuntimeError(
+                "\n\n❌ CycleBubble 启动失败：管理员 JWT 签名密钥未配置。\n"
+                "   管理员 token 必须使用与普通用户不同的签名密钥。\n"
+                "   请在 .env 或环境变量中显式设置 CB_ADMIN_JWT_SECRET：\n"
+                "     CB_ADMIN_JWT_SECRET=<强随机字符串，至少 32 字符>\n"
+                "   生成方式：\n"
+                "     python -c \"import secrets; print(secrets.token_urlsafe(48))\"\n"
+            ) from e
         if "admin_password" in msg.lower() or "ADMIN_PASSWORD" in msg:
             raise RuntimeError(
                 "\n\n❌ CycleBubble 启动失败：管理员密码配置无效。\n"
@@ -128,9 +146,7 @@ def _build_settings() -> Settings:
             ) from e
         raise
 
-    # admin_jwt_secret 默认派生：dev 模式用 jwt_secret + "::admin"
-    if not s.admin_jwt_secret:
-        s.admin_jwt_secret = s.jwt_secret + "::admin"
+    # 不再做 admin_jwt_secret 自动派生：必须显式设置，否则启动失败。
     return s
 
 

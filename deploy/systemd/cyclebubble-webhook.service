@@ -1,0 +1,14 @@
+[Unit]
+Description=CycleBubble GitHub Webhook Receiver
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3.11 /usr/local/bin/cyclebubble-webhook.py
+Restart=always
+RestartSec=5
+Environment=PORT=9000
+
+[Install]
+WantedBy=multi-user.target

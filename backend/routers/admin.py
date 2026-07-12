@@ -178,8 +178,8 @@ class LoginResponse(BaseModel):
 
 class AISettingsPayload(BaseModel):
     default_provider: str = "minimax"
-    minimax_model: str = "M3"
-    deepseek_model: str = "v4-flash"
+    minimax_model: str = "minimax-m3"
+    deepseek_model: str = "deepseek-v4-flash"
     enable_third_party_ai: bool = True
     enable_keyword_fallback: bool = True
     minimax_api_key: Optional[str] = None
@@ -433,61 +433,87 @@ async def admin_ai_test(
     request: Request,
     username: str = Depends(require_admin),
 ):
-    """测试当前 AI 配置连通性，返回延迟/状态/错误。"""
+    """测试所有已配置 API Key 的 AI provider 连通性，返回按 provider 分组的结果。
+
+    返回结构（与 admin.js 联动）：
+    {
+      "ok": <bool, 至少一个 provider 成功>,
+      "primary_provider": "<minimax|deepseek>",
+      "providers": {
+        "minimax": {"ok", "model", "latency_ms", "status_code", "error"},
+        "deepseek": {...}
+      }
+    }
+    """
     _audit(request, username, "ai_test", "ai_settings")
-    provider_name = get_setting(KEY_DEFAULT_PROVIDER, settings.ai_default_provider)
     if get_setting(KEY_ENABLE_THIRD_PARTY, "true") != "true":
-        return {"ok": False, "provider": provider_name, "error": "third-party AI disabled"}
+        return {"ok": False, "error": "third-party AI disabled"}
 
-    api_key = get_setting(
-        {"minimax": KEY_MINIMAX_KEY, "deepseek": KEY_DEEPSEEK_KEY}.get(provider_name, ""),
-        "",
-    )
-    if not api_key:
-        return {"ok": False, "provider": provider_name, "error": "missing api key"}
-
-    if provider_name == "deepseek":
-        return {"ok": False, "provider": provider_name, "error": "deepseek provider not yet wired"}
-
-    if provider_name != "minimax":
-        return {"ok": False, "provider": provider_name, "error": "unsupported provider"}
-
-    # 实际发一个最小请求
     import time
+    import asyncio
     import httpx
-    model = get_setting(KEY_DEFAULT_MODEL_MINIMAX, settings.ai_default_model_minimax)
-    started = time.time()
-    try:
-        resp = httpx.post(
-            "https://api.minimax.chat/v1/text/chatcompletion_v2",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json={
+
+    # 定义各 provider 的测试配置
+    providers_cfg = {
+        "minimax": {
+            "key_setting": KEY_MINIMAX_KEY,
+            "model": get_setting(KEY_DEFAULT_MODEL_MINIMAX, settings.ai_default_model_minimax),
+            "endpoint": "https://api.minimax.chat/v1/text/chatcompletion_v2",
+            "body_fmt": lambda m: {"model": m, "messages": [{"role": "user", "content": "ping"}], "max_tokens": 1},
+        },
+        "deepseek": {
+            "key_setting": KEY_DEEPSEEK_KEY,
+            "model": get_setting(KEY_DEFAULT_MODEL_DEEPSEEK, settings.ai_default_model_deepseek),
+            "endpoint": "https://api.deepseek.com/v1/chat/completions",
+            "body_fmt": lambda m: {"model": m, "messages": [{"role": "user", "content": "ping"}], "max_tokens": 1},
+        },
+    }
+
+    async def _test_one(pname: str, cfg: dict) -> tuple:
+        """测试单个 provider，返回 (pname, result_dict)。"""
+        api_key = get_setting(cfg["key_setting"], "")
+        if not api_key:
+            return pname, {"ok": False, "error": "missing api key", "latency_ms": None}
+        model = cfg["model"]
+        started = time.time()
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    cfg["endpoint"],
+                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                    json=cfg["body_fmt"](model),
+                    timeout=settings.ai_request_timeout_seconds,
+                )
+            latency_ms = int((time.time() - started) * 1000)
+            ok = resp.status_code == 200
+            return pname, {
+                "ok": ok,
                 "model": model,
-                "messages": [{"role": "user", "content": "ping"}],
-                "max_tokens": 1,
-            },
-            timeout=settings.ai_request_timeout_seconds,
-        )
-        latency_ms = int((time.time() - started) * 1000)
-        return {
-            "ok": resp.status_code == 200,
-            "provider": provider_name,
-            "model": model,
-            "latency_ms": latency_ms,
-            "status_code": resp.status_code,
-            "error": None if resp.status_code == 200 else resp.text[:200],
-        }
-    except Exception as e:
-        return {
-            "ok": False,
-            "provider": provider_name,
-            "model": model,
-            "latency_ms": int((time.time() - started) * 1000),
-            "error": str(e)[:200],
-        }
+                "latency_ms": latency_ms,
+                "status_code": resp.status_code,
+                "error": None if ok else resp.text[:200],
+            }
+        except Exception as e:
+            return pname, {
+                "ok": False,
+                "model": model,
+                "latency_ms": int((time.time() - started) * 1000),
+                "error": str(e)[:200],
+            }
+
+    # 并发测试所有 provider（不等一个完成再测另一个），加速 admin 后台体验
+    tasks = [_test_one(pname, cfg) for pname, cfg in providers_cfg.items()]
+    pairs = await asyncio.gather(*tasks, return_exceptions=False)
+
+    results = {pname: result for pname, result in pairs}
+    any_ok = any(r.get("ok") for r in results.values())
+    primary = get_setting(KEY_DEFAULT_PROVIDER, settings.ai_default_provider)
+
+    return {
+        "ok": any_ok,
+        "primary_provider": primary,
+        "providers": results,
+    }
 
 
 @router.get("/audit")

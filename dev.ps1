@@ -67,9 +67,11 @@ $BackendErrFile    = Join-Path $LogDir 'backend.err.log'
 $FrontendOutFile   = Join-Path $LogDir 'frontend.out.log'
 $FrontendErrFile   = Join-Path $LogDir 'frontend.err.log'
 $CbJwtSecret       = 'dev-local-secret-not-for-prod'
+$CbAdminJwtSecret  = 'dev-local-admin-jwt-secret-not-for-prod'
 $CbAdminPassword   = 'dev-local-admin-secret-not-for-prod'
 # pydantic-settings 的 List[str] 字段要求 JSON 数组格式（非 CSV）
-$CbCorsOrigins     = '["http://localhost:{0}","http://127.0.0.1:{0}"]' -f $FrontendPort
+# CORS 同时允许开发期常用端口（8000 后端直接访问 / 8765 前端 / 8766/8767/8768 备用）
+$CbCorsOrigins     = '["http://localhost:8000","http://127.0.0.1:8000","http://localhost:{0}","http://127.0.0.1:{0}"]' -f $FrontendPort
 # 与 backend/main.py 的 DEMO_EMAIL / DEMO_PASSWORD 保持一致（dev 启动横幅）
 $DemoEmail         = 'demo@cyclebubble.local'
 $DemoPassword      = 'demo'
@@ -335,7 +337,7 @@ function Action-Start {
 
     Start-One -Label 'backend'  -WorkingDir $BackendDir  -CommandArgs @('-m','uvicorn','backend.main:app','--host',$BackendHost,'--port',[string]$BackendPort) `
               -PidFile $BackendPidFile  -OutFile $BackendOutFile  -ErrFile $BackendErrFile `
-              -ExtraEnv @{ Port=$BackendPort; CB_JWT_SECRET=$CbJwtSecret; CB_ADMIN_PASSWORD=$CbAdminPassword; CB_CORS_ORIGINS=$CbCorsOrigins }
+              -ExtraEnv @{ Port=$BackendPort; CB_JWT_SECRET=$CbJwtSecret; CB_ADMIN_JWT_SECRET=$CbAdminJwtSecret; CB_ADMIN_PASSWORD=$CbAdminPassword; CB_CORS_ORIGINS=$CbCorsOrigins }
     Start-One -Label 'frontend' -WorkingDir $FrontendDir -CommandArgs @('-m','http.server',[string]$FrontendPort,'--bind',$FrontendHost) `
               -PidFile $FrontendPidFile -OutFile $FrontendOutFile -ErrFile $FrontendErrFile `
               -ExtraEnv @{ Port=$FrontendPort }

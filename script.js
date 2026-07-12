@@ -65,6 +65,16 @@
     } catch (e) {}
   }
 
+  // ====== HTML 转义 helper ======
+  // 所有往 .innerHTML 塞的"用户原文/后端返回字符串"必须先过这个函数，
+  // 否则用户在原文里写 <script>...</script> 会被当脚本执行。
+  // 这关系到 JWT 存于 localStorage 的连带风险（一旦 XSS 发生，攻击者可读 token）。
+  var HTML_ESCAPE_MAP = { "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" };
+  function escapeHTML(s) {
+    if (s == null) return "";
+    return String(s).replace(/[<>&"']/g, function (c) { return HTML_ESCAPE_MAP[c]; });
+  }
+
   // ====== Memory 结构化抽取 ======
   // 已移除前端关键词匹配和 extractMemory()。结构化字段完全由后端提供：
   // - 真实模式：后端 AI 提取（失败时按后端关键词后备）
@@ -942,7 +952,7 @@
     if (latest) {
       html += '<section class="insight-evidence">';
       html += '<p class="evidence-label">你刚刚写下的</p>';
-      html += '<p class="evidence-text">' + latest.snippet + '</p>';
+      html += '<p class="evidence-text">' + escapeHTML(latest.snippet) + '</p>';
       html += '</section>';
     }
 
@@ -955,7 +965,7 @@
       html += '</section>';
     } else if (topTheme && topTheme.count >= 2) {
       html += '<section class="insight-pattern">';
-      html += '<p class="pattern-text">这些记录里，「' + topTheme.name + '」反复出现了 ' + topTheme.count + ' 次。</p>';
+      html += '<p class="pattern-text">这些记录里，「' + escapeHTML(topTheme.name) + '」反复出现了 ' + topTheme.count + ' 次。</p>';
       html += '</section>';
     } else {
       html += '<section class="insight-pattern">';
@@ -989,10 +999,10 @@
     var html = '<div class="memory-entry' + (isLatest ? ' memory-entry--latest' : '') + '">';
     html += '<span class="memory-dot"></span>';
     html += '<div class="memory-content">';
-    html += '<span class="memory-time">' + m.timeLabel + '</span>';
-    html += '<p class="memory-snippet">' + m.snippet + '</p>';
+    html += '<span class="memory-time">' + escapeHTML(m.timeLabel) + '</span>';
+    html += '<p class="memory-snippet">' + escapeHTML(m.snippet) + '</p>';
     if (m.themes && m.themes.length > 0) {
-      html += '<span class="memory-theme">' + m.themes[0] + '</span>';
+      html += '<span class="memory-theme">' + escapeHTML(m.themes[0]) + '</span>';
     } else {
       html += '<span class="memory-theme">今天的表达</span>';
     }
@@ -1166,8 +1176,8 @@
       html += '<div class="memory-entry">';
       html += '<span class="memory-dot"></span>';
       html += '<div class="memory-content">';
-      html += '<span class="memory-time">' + (item.week || "") + '</span>';
-      html += '<p class="memory-snippet">' + (item.first_text || "") + '</p>';
+      html += '<span class="memory-time">' + escapeHTML(item.week || "") + '</span>';
+      html += '<p class="memory-snippet">' + escapeHTML(item.first_text || "") + '</p>';
       if (item.count) {
         html += '<span class="memory-theme">本周 ' + item.count + ' 条</span>';
       }
@@ -1209,16 +1219,16 @@
     var s = stories[idx];
     var html = '';
     html += '<div class="growth-story-card growth-story-card--single">';
-    html += '<span class="growth-story-tag">' + s.tag + '</span>';
-    html += '<p class="growth-story-text">' + s.text + '</p>';
+    html += '<span class="growth-story-tag">' + escapeHTML(s.tag) + '</span>';
+    html += '<p class="growth-story-text">' + escapeHTML(s.text) + '</p>';
     // 展示用户原话引用——以小泡泡形态呈现
     if (s.quotes && s.quotes.length > 0) {
       html += '<div class="story-bubbles">';
       for (var q = 0; q < s.quotes.length; q++) {
         html += '<div class="story-bubble">';
         html += '<div class="story-bubble-liquid"></div>';
-        html += '<span class="story-bubble-time">' + s.quotes[q].time + '</span>';
-        html += '<p class="story-bubble-text">' + s.quotes[q].text + '</p>';
+        html += '<span class="story-bubble-time">' + escapeHTML(s.quotes[q].time) + '</span>';
+        html += '<p class="story-bubble-text">' + escapeHTML(s.quotes[q].text) + '</p>';
         html += '</div>';
         if (q < s.quotes.length - 1) {
           html += '<div class="story-bubble-link"><span></span></div>';
@@ -2155,7 +2165,7 @@
       var nickname = (nickEl && nickEl.value || '').trim();
 
       if (!email) { showAuthError('请输入邮箱'); return; }
-      if (!password || password.length < 4) { showAuthError('密码至少 4 位'); return; }
+      if (!password || password.length < 8) { showAuthError('密码至少 8 位'); return; }
 
       if (submitBtn) {
         submitBtn.disabled = true;

@@ -1,0 +1,24 @@
+[Unit]
+Description=CycleBubble FastAPI Backend
+After=network.target
+# 数据目录写入依赖（SQLite 路径就在这里）
+After=var-www-app.mount
+
+[Service]
+Type=simple
+User=www
+Group=www
+WorkingDirectory=/var/www/app
+# 密钥统一从 .env 读取，文件权限 600（setup 脚本会 chmod）
+# 不再硬编码到 unit 文件——/etc/systemd/system/*.service 默认 644 权限，
+# 任何本地账户都能 cat 出来
+EnvironmentFile=/var/www/app/.env
+Environment="PATH=/var/www/app/venv/bin"
+ExecStart=/var/www/app/venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8000 --workers 2
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/app/cyclebubble-api.log
+StandardError=append:/var/log/app/cyclebubble-api.err.log
+
+[Install]
+WantedBy=multi-user.target

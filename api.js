@@ -75,7 +75,25 @@
     }
 
     if (!res.ok) {
-      throw new Error((data && data.detail) ? data.detail : '请求失败');
+      // FastAPI 422 校验错误时 detail 是数组（[{loc, msg, type}, ...]），
+      // 必须提取 msg 字段拼成字符串，否则 new Error(数组) → "[object Object]"
+      var detail = (data && data.detail) || null;
+      var errorMsg = '请求失败';
+      if (detail) {
+        if (typeof detail === 'string') {
+          errorMsg = detail;
+        } else if (Array.isArray(detail)) {
+          // 提取每个校验错误的 msg（取第一个非空的）
+          var msgs = [];
+          for (var di = 0; di < detail.length; di++) {
+            if (detail[di] && detail[di].msg) msgs.push(detail[di].msg);
+          }
+          errorMsg = msgs.length > 0 ? msgs.join('；') : '请求数据格式有误';
+        } else if (typeof detail === 'object') {
+          errorMsg = detail.msg || detail.message || JSON.stringify(detail);
+        }
+      }
+      throw new Error(errorMsg);
     }
     return data;
   }

@@ -91,6 +91,21 @@ class AdminLoginAttempt(SQLModel, table=True):
     timestamp: datetime = Field(default_factory=datetime.utcnow, index=True)
 
 
+class UserLoginAttempt(SQLModel, table=True):
+    """普通用户登录尝试事件表（防暴力破解）
+
+    用 key 字段（email 或 ip）区分两类限速：
+    - key=email：同一个邮箱连续失败 → 锁账号
+    - key=ip：同一个 IP 跨账号连续失败 → 锁 IP（防恶意扫号）
+    """
+    __tablename__ = "user_login_attempt"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    key: str = Field(index=True, max_length=255)  # email 或 ip
+    kind: str = Field(index=True, max_length=16)  # 'email' | 'ip'
+    success: bool = Field(default=False)
+    timestamp: datetime = Field(default_factory=datetime.utcnow, index=True)
+
+
 class AdminAudit(SQLModel, table=True):
     """管理员操作审计日志"""
     __tablename__ = "admin_audit"

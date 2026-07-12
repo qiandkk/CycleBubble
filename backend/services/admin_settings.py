@@ -23,7 +23,11 @@ KEY_DEFAULT_MODEL_DEEPSEEK = "default_model:deepseek"
 
 
 def _seed_defaults() -> None:
-    """把环境变量默认值写入 DB 一次（如果 DB 中没有）。"""
+    """把环境变量默认值写入 DB 一次（如果 DB 中没有）。
+
+    用 try/except 包裹 INSERT，避免多 worker 并发启动时
+    两个 worker 同时查到"不存在"然后都尝试 INSERT，导致 UNIQUE 冲突。
+    """
     defaults = {
         KEY_ENABLE_THIRD_PARTY: "true",
         KEY_ENABLE_KEYWORD_FALLBACK: "true",
@@ -35,12 +39,17 @@ def _seed_defaults() -> None:
         for key, value in defaults.items():
             existing = session.get(AdminSetting, key)
             if existing is None:
-                session.add(AdminSetting(
-                    key=key,
-                    value=value,
-                    updated_at=datetime.utcnow(),
-                    updated_by="system",
-                ))
+                try:
+                    session.add(AdminSetting(
+                        key=key,
+                        value=value,
+                        updated_at=datetime.utcnow(),
+                        updated_by="system",
+                    ))
+                    session.commit()
+                except Exception:
+                    # 并发 worker 抢占失败，说明另一个 worker 已经插入；忽略
+                    session.rollback()
             else:
                 # 修复旧数据库中默认值缺失的字段
                 if existing.value in (None, "") and key in (
@@ -49,7 +58,7 @@ def _seed_defaults() -> None:
                     existing.value = value
                     existing.updated_at = datetime.utcnow()
                     existing.updated_by = "system-repair"
-        session.commit()
+                    session.commit()
 
 
 def init_settings_from_env() -> None:
