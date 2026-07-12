@@ -133,6 +133,92 @@
     } catch (e) {}
   }
 
+  // ====== Demo 离线兜底数据（无后端时使用） ======
+  // 仅在演示模式 + 后端不可达时启用，不写入数据库，不污染真实数据
+  var DEMO_FALLBACK_MEMORIES = [
+    { id: "demo_1", time: Date.now() - 90*86400000, timeLabel: "3个月前",
+      rawText: "最近工作后容易疲惫，下班回来什么都不想做。",
+      snippet: "最近工作后容易疲惫，下班回来什么都不想做。",
+      themes: ["工作压力"], triggers: ["工作"], recovery: ["休息"],
+      emotions: ["疲惫"], mood: "低落", expressionStyle: "倾诉", hasAction: false, source: "demo" },
+    { id: "demo_2", time: Date.now() - 60*86400000, timeLabel: "2个月前",
+      rawText: "周期前几天情绪更敏感，容易因为小事烦躁。",
+      snippet: "周期前几天情绪更敏感，容易因为小事烦躁。",
+      themes: ["身体周期", "情绪波动"], triggers: ["周期"], recovery: ["自我觉察"],
+      emotions: ["烦躁"], mood: "烦躁", expressionStyle: "倾诉", hasAction: false, source: "demo" },
+    { id: "demo_3", time: Date.now() - 42*86400000, timeLabel: "6周前",
+      rawText: "有时候不知道为什么烦躁，可能和身体状态有关。",
+      snippet: "有时候不知道为什么烦躁，可能和身体状态有关。",
+      themes: ["身体周期", "情绪波动"], triggers: ["周期"], recovery: ["记录"],
+      emotions: ["迷茫"], mood: "未明", expressionStyle: "倾诉", hasAction: false, source: "demo" },
+    { id: "demo_4", time: Date.now() - 30*86400000, timeLabel: "1个月前",
+      rawText: "和朋友聊了之后好多了，原来不只是我一个人这样。",
+      snippet: "和朋友聊了之后好多了，原来不只是我一个人这样。",
+      themes: ["社交支持"], triggers: [], recovery: ["社交", "倾诉"],
+      emotions: ["释然"], mood: "平静", expressionStyle: "倾诉", hasAction: false, source: "demo" },
+    { id: "demo_5", time: Date.now() - 14*86400000, timeLabel: "2周前",
+      rawText: "这个阶段又到了，提前做好了心理准备。没有像上次那样陷入很久。",
+      snippet: "这个阶段又到了，提前做好了心理准备。没有像上次那样陷入很久。",
+      themes: ["身体周期", "自我成长"], triggers: ["周期"], recovery: ["准备", "自我觉察"],
+      emotions: ["平静"], mood: "平静", expressionStyle: "倾诉", hasAction: false, source: "demo" }
+  ];
+
+  var DEMO_FALLBACK_STORIES = [
+    { id: 101, text_excerpt: "经期前那几天总是控制不住情绪，后来发现这不是我的错，只是身体在变化。" },
+    { id: 102, text_excerpt: "加班到很晚，回家后突然哭了。不是因为工作，是最近太累了。" },
+    { id: 103, text_excerpt: "今天终于鼓起勇气和领导说了自己的感受，虽然紧张但很值得。" }
+  ];
+
+  var DEMO_FALLBACK_CYCLE = {
+    phase_name: "黄体期",
+    description: "情绪可能更敏感，身体也在准备新的周期",
+    confidence: "medium",
+    phase: "luteal"
+  };
+
+  function loadDemoFallbackMemories() {
+    bubbleDNA.memories = JSON.parse(JSON.stringify(DEMO_FALLBACK_MEMORIES));
+    bubbleDNA.totalRecords = DEMO_FALLBACK_MEMORIES.length;
+    bubbleDNA._patternsCache = null;
+    bubbleDNA._patternsCacheVersion++;
+    saveDNA();
+    return bubbleDNA.memories;
+  }
+
+  function applyDemoFallbackCycle() {
+    var phaseEl = document.getElementById("bubblePhase");
+    var hintEl = document.getElementById("bubbleHint");
+    var statusEl = document.getElementById("cycleStatus");
+    var s = DEMO_FALLBACK_CYCLE;
+    if (statusEl) statusEl.textContent = s.phase_name + "｜" + s.description + "（预测中）";
+    if (phaseEl) phaseEl.textContent = s.phase_name;
+    if (hintEl) hintEl.textContent = s.description;
+  }
+
+  function renderDemoFallbackResonance() {
+    var stack = document.getElementById("resonanceStack");
+    var dots = document.getElementById("pageDots");
+    var empty = document.getElementById("resonanceEmptyState");
+    if (!stack) return;
+    var stories = DEMO_FALLBACK_STORIES;
+    var html = "";
+    for (var i = 0; i < stories.length; i++) {
+      html += buildResonanceCardFromStory(stories[i], i);
+    }
+    stack.innerHTML = html;
+    stack.style.display = "";
+    if (empty) empty.hidden = true;
+    if (dots && dots.parentNode) dots.parentNode.style.display = "";
+    if (dots) {
+      var dotsHtml = "";
+      for (var d = 0; d < stories.length; d++) {
+        dotsHtml += d === 0 ? '<i class="active"></i>' : '<i></i>';
+      }
+      dots.innerHTML = dotsHtml;
+    }
+    initResonancePager();
+  }
+
   // ====== 援助 modal 触发逻辑 ======
   function showCrisisModal(resources) {
     var modal = document.getElementById('crisisModal');
@@ -621,7 +707,10 @@
 
   // 从后端拉取真实记忆，覆盖本地 bubbleDNA.memories
   async function loadMemoriesFromBackend() {
-    if (!window.CB_API || !CB_API.memory || !CB_API.memory.list) return null;
+    if (!window.CB_API || !CB_API.memory || !CB_API.memory.list) {
+      if (isDemoMode) return loadDemoFallbackMemories();
+      return null;
+    }
     try {
       var resp = await CB_API.memory.list(50, 0);
       var items = (resp && resp.memories) ? resp.memories : [];
@@ -638,6 +727,7 @@
       return localMemories;
     } catch (e) {
       console.warn("加载记忆失败:", e);
+      if (isDemoMode) return loadDemoFallbackMemories();
       return null;
     }
   }
@@ -655,12 +745,14 @@
       if (statusEl) statusEl.textContent = "Bubble 正在了解你的节奏";
     };
     if (!window.CB_API || !window.CB_API.cycle || !window.CB_API.cycle.getStatus) {
+      if (isDemoMode) { applyDemoFallbackCycle(); return; }
       resetToPlaceholder();
       return;
     }
     try {
       const status = await window.CB_API.cycle.getStatus();
       if (!status || !status.phase_name || status.confidence === "none" || status.phase === "unknown") {
+        if (isDemoMode) { applyDemoFallbackCycle(); return; }
         resetToPlaceholder();
         return;
       }
@@ -674,6 +766,7 @@
       if (hintEl) hintEl.textContent = status.description || "Bubble 在慢慢认识你";
     } catch (e) {
       console.warn("加载周期状态失败:", e);
+      if (isDemoMode) { applyDemoFallbackCycle(); return; }
       resetToPlaceholder();
     }
   }
@@ -681,11 +774,15 @@
   async function loadGrowthData() {
     // 演示/真实模式都通过 API 拿，后端根据 X-Demo-Mode header 自动切库
     try {
-      if (!window.CB_API || !window.CB_API.growth || !window.CB_API.growth.get) return null;
+      if (!window.CB_API || !window.CB_API.growth || !window.CB_API.growth.get) {
+        if (isDemoMode) return { impact: { accompanied_count: 8 } };
+        return null;
+      }
       const data = await window.CB_API.growth.get();
       return data || null;
     } catch (e) {
       console.warn("加载成长数据失败:", e);
+      if (isDemoMode) return { impact: { accompanied_count: 8 } };
       return null;
     }
   }
@@ -693,11 +790,15 @@
   async function loadResonanceFeed() {
     // 演示/真实模式都通过 API 拿，后端根据 X-Demo-Mode header 自动切库
     try {
-      if (!window.CB_API || !window.CB_API.resonance || !window.CB_API.resonance.getFeed) return [];
+      if (!window.CB_API || !window.CB_API.resonance || !window.CB_API.resonance.getFeed) {
+        if (isDemoMode) return DEMO_FALLBACK_STORIES;
+        return [];
+      }
       const data = await window.CB_API.resonance.getFeed(10);
       return (data && data.stories) ? data.stories : [];
     } catch (e) {
       console.warn("加载共鸣流失败:", e);
+      if (isDemoMode) return DEMO_FALLBACK_STORIES;
       return [];
     }
   }
