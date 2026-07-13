@@ -74,6 +74,27 @@ for f in $FRONTEND_FILES; do
         rm -f "$WEB_ROOT/$f.new" 2>/dev/null
     fi
 done
+
+# 4.5. 诊断 admin.* 失败原因（写到公开 log）
+log "[4.5/6] diagnostic: ls/stat of admin.* in WEB_ROOT"
+ls -la "$WEB_ROOT/admin.html" "$WEB_ROOT/admin.js" >>"$LOG" 2>&1 || true
+stat "$WEB_ROOT/admin.html" "$WEB_ROOT/admin.js" >>"$LOG" 2>&1 || true
+lsattr "$WEB_ROOT/admin.html" "$WEB_ROOT/admin.js" >>"$LOG" 2>&1 || true
+mount | grep -E "(frontend|www)" >>"$LOG" 2>&1 || true
+
+# 4.7 用 dd 强制 truncate 然后 cat 写入（更猛）
+log "[4.7/6] force rewrite via dd seek=0"
+for f in admin.html admin.js; do
+    if [[ -f "$f" ]] && [[ -f "$WEB_ROOT/$f" ]]; then
+        chattr -i "$WEB_ROOT/$f" 2>/dev/null || true
+        # dd 把目标 truncate 到 0, 然后 cat 写入
+        if dd if=/dev/null of="$WEB_ROOT/$f" bs=1 count=0 conv=notrunc 2>>"$LOG"            && cat "$f" >>"$WEB_ROOT/$f" 2>>"$LOG"; then
+            log "  dd+cat appended: $f"
+        else
+            log "  WARN: dd+cat failed for $f"
+        fi
+    fi
+done
 chown -R www:www "$WEB_ROOT"
 chmod 755 "$WEB_ROOT"
 find "$WEB_ROOT" -type f -exec chmod 644 {} +
