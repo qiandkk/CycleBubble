@@ -2730,6 +2730,11 @@
     if (ndBubble) ndBubble.setAttribute('data-mood', mood);
   }
 
+  // 设置呼吸速度（与产品 applyBubbleState 的 animationDuration 机制一致）
+  function ndSetBreathe(durationSec) {
+    if (ndBubble) ndBubble.style.animationDuration = durationSec + 's';
+  }
+
   // 设置液体高度百分比（与产品 applyBubbleState 机制一致）
   function ndSetLiquid(pct, opacity) {
     if (ndLiquid) {
@@ -2817,26 +2822,28 @@
   }
 
   // ====== Scene 1：第一次记录 — 被老板骂，难过 ======
-  // Bubble: 未明→低落（变冷蓝），液体从 30%→18%，呼吸变慢
+  // Bubble: 未明→低落（变冷蓝），液体 30%→18%，呼吸变慢
   function ndScene1() {
     ndSetMood('未明');
+    ndSetBreathe(5.8);
     ndSetLiquid(30, 0.72);
     ndSetTexture(0);
     ndTimer(function () {
       if (ndInput) ndInput.hidden = false;
       if (ndCursor) ndCursor.style.display = 'inline-block';
-      ndTypewriter('今天被老板骂了，好难过。', ndInputText, 120, function () { ndSoundKey(); }, function () {
+      ndTypewriter('今天在会上被老板点名批评了，明明不是我的问题，却当着所有人的面说。感觉好委屈，好像做什么都不对。', ndInputText, 80, function () { ndSoundKey(); }, function () {
         if (ndCursor) ndCursor.style.display = 'none';
         ndSoundSave();
-        // 保存瞬间：Bubble 开始变冷
+        // 保存瞬间：Bubble 开始变冷，呼吸变慢
         ndTimer(function () {
           ndSetMood('低落');
+          ndSetBreathe(7.5);
           ndSetLiquid(18, 0.78);
           ndSoundDrop();
           ndAddParticle('30%', '40%', 'rgba(184,184,222,.6)');
         }, 300);
         ndTimer(function () {
-          ndShowCaption('每一次记录，\n都会留下一个线索。');
+          ndShowCaption('每一次记录，\n都是在给自己留一个线索。');
         }, 1500);
       });
     }, 600);
@@ -2853,8 +2860,8 @@
       if (!ndResonance) return;
       ndResonance.hidden = false;
       var distant = [
-        { left: '8%', top: '28%', size: 36, color: 'rgba(245,217,216,.3)', delay: 0, text: '我也被骂过。', textLeft: '4%', textTop: '36%' },
-        { left: '82%', top: '22%', size: 30, color: 'rgba(181,169,207,.3)', delay: 1000, text: '不是你的错。', textLeft: '66%', textTop: '30%' }
+        { left: '8%', top: '28%', size: 36, color: 'rgba(245,217,216,.3)', delay: 0, text: '我也经历过这样的时刻', textLeft: '4%', textTop: '36%' },
+        { left: '82%', top: '22%', size: 30, color: 'rgba(181,169,207,.3)', delay: 1000, text: '那不是你的问题', textLeft: '66%', textTop: '30%' }
       ];
       for (var i = 0; i < distant.length; i++) {
         (function (idx) {
@@ -2883,11 +2890,11 @@
       }
       ndTimer(function () { ndAddRipple(); }, 1600);
     }, 500);
-    ndTimer(function () { ndShowCaption('原来，\n不是只有我。'); }, 2500);
+    ndTimer(function () { ndShowCaption('原来这些感受，\n不只属于我一个人。'); }, 2500);
   }
 
   // ====== Scene 3：两周后 — 又被骂，但这次没那么难受 ======
-  // Bubble: 低落→平静（回暖），液体 18%→28%，呼吸稳定
+  // Bubble: 低落→平静（回暖），液体 18%→28%，呼吸回稳
   // 发现：原来黄体期就是会低落一点
   function ndScene3() {
     if (ndResonance) { ndResonance.style.opacity = '0'; }
@@ -2896,12 +2903,13 @@
       if (ndInput) ndInput.hidden = false;
       if (ndInputText) ndInputText.textContent = '';
       if (ndCursor) ndCursor.style.display = 'inline-block';
-      ndTypewriter('今天又被说了，但好像没那么难受。', ndInputText, 100, function () { ndSoundKey(); }, function () {
+      ndTypewriter('今天又被挑刺了，但奇怪的是没上次那么崩溃。看了下日期快到生理期了，上次被骂也是这时候。也许那几天的难过，不全是因为我不好。', ndInputText, 65, function () { ndSoundKey(); }, function () {
         if (ndCursor) ndCursor.style.display = 'none';
         ndSoundSave();
         ndTimer(function () {
-          // 从低落转向平静 — 液体回升，色温回暖
+          // 从低落转向平静 — 液体回升，色温回暖，呼吸回稳
           ndSetMood('平静');
+          ndSetBreathe(6.0);
           ndSetLiquid(28, 0.82);
           ndSoundDrop();
           ndAddParticle('45%', '35%', 'rgba(180,220,210,.5)');
@@ -2909,7 +2917,7 @@
           ndSetTexture(1, 180);
           ndAddLightPoint('connection', '30%', '60%');
         }, 300);
-        ndTimer(function () { ndShowCaption('身体在不同的阶段，\n感受也会不同。'); }, 1500);
+        ndTimer(function () { ndShowCaption('身体的节奏，\n也在悄悄影响着每一天的感受。'); }, 1500);
       });
     }, 800);
   }
@@ -2926,12 +2934,13 @@
       if (ndInput) ndInput.hidden = false;
       if (ndInputText) ndInputText.textContent = '';
       if (ndCursor) ndCursor.style.display = 'inline-block';
-      ndTypewriter('今天又被说了，我在想怎么解决。', ndInputText, 100, function () { ndSoundKey(); }, function () {
+      ndTypewriter('今天又被说了，但这次我没有一直沉浸在难过里，而是在想怎么把问题解决掉。不知道从什么时候开始，好像不太一样了。', ndInputText, 70, function () { ndSoundKey(); }, function () {
         if (ndCursor) ndCursor.style.display = 'none';
         ndSoundSave();
         ndTimer(function () {
-          // 从平静转向力量 — 液体上升，色温变暖金
+          // 从平静转向力量 — 液体上升，色温变暖金，呼吸稳定有力
           ndSetMood('力量');
+          ndSetBreathe(5.0);
           ndSetLiquid(45, 0.88);
           ndSoundDrop();
           ndAddParticle('50%', '30%', 'rgba(255,200,100,.5)');
@@ -2941,7 +2950,7 @@
           ndAddLightPoint('warmth', '60%', '35%');
           ndAddLightPoint('connection', '35%', '40%');
         }, 300);
-        ndTimer(function () { ndShowCaption('原来，\n我早就在变化了。'); }, 1500);
+        ndTimer(function () { ndShowCaption('那些难过的日子，\n也在帮你慢慢长出力量。'); }, 1500);
       });
     }, 800);
   }
@@ -2958,8 +2967,8 @@
       ndResonance.hidden = false;
       ndResonance.innerHTML = '';
       var distant = [
-        { left: '5%', top: '30%', size: 40, color: 'rgba(255,200,100,.25)', delay: 0, text: '谢谢你写下这些。', textLeft: '3%', textTop: '38%' },
-        { left: '85%', top: '25%', size: 32, color: 'rgba(245,217,216,.3)', delay: 800, text: '我也在学着处理。', textLeft: '68%', textTop: '32%' },
+        { left: '5%', top: '30%', size: 40, color: 'rgba(255,200,100,.25)', delay: 0, text: '看到你的记录，觉得也被理解了', textLeft: '3%', textTop: '38%' },
+        { left: '85%', top: '25%', size: 32, color: 'rgba(245,217,216,.3)', delay: 800, text: '我也在学着面对', textLeft: '68%', textTop: '32%' },
         { left: '12%', top: '65%', size: 28, color: 'rgba(181,169,207,.25)', delay: 1600, text: null, textLeft: null, textTop: null }
       ];
       for (var i = 0; i < distant.length; i++) {
@@ -2989,7 +2998,7 @@
       }
       ndTimer(function () { ndAddRipple(); ndAddLightPoint('warmth', '55%', '45%'); }, 2000);
     }, 500);
-    ndTimer(function () { ndShowCaption('每一次记录，\n都在陪伴另一个人。'); }, 3000);
+    ndTimer(function () { ndShowCaption('你的变化，\n也在陪伴着正在经历同样事的人。'); }, 3000);
   }
 
   // ====== Scene 6：结束 — 镜头拉远，只留按钮 ======
