@@ -6,6 +6,7 @@ from ..database import get_session
 from ..models import Memory, Response, User, Cycle
 from ..auth import get_current_user
 from ..bubble_engine import compute_bubble_params
+from ..pattern_engine import detect_patterns
 
 router = APIRouter()
 
@@ -155,3 +156,37 @@ def get_bubble_params(
     ).all()
 
     return compute_bubble_params(memories, cycles)
+
+
+@router.get("/patterns")
+def get_patterns(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    """获取长期 Pattern 描述
+
+    AI Duty 2: Pattern 建立
+    AI 不分析今天，AI 分析长期。
+    Pattern 需要至少一个完整周期或连续多个相似事件才能形成。
+
+    返回观察性 Pattern 描述（不定义用户，不评价）。
+    """
+    memories = session.exec(
+        select(Memory)
+        .where(Memory.user_id == current_user.id)
+        .order_by(Memory.created_at.desc())
+    ).all()
+
+    cycles = session.exec(
+        select(Cycle)
+        .where(Cycle.user_id == current_user.id)
+        .order_by(Cycle.start_date)
+    ).all()
+
+    patterns = detect_patterns(memories, cycles)
+
+    return {
+        "patterns": patterns,
+        "total": len(patterns),
+        "empty_state": len(patterns) == 0
+    }

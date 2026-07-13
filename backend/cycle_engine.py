@@ -15,7 +15,8 @@ PHASE_NAMES = {
     "menstrual": "月经期",
     "follicular": "卵泡期",
     "ovulation": "排卵期",
-    "luteal": "黄体期"
+    "luteal": "黄体期",
+    "unknown": "未知"
 }
 
 PHASE_DESCRIPTIONS = {

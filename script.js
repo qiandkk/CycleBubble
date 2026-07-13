@@ -683,11 +683,13 @@
       texture: texture,
       transparency: transparency,
       narration: getGrowthNarration(),
+      patterns: [],
       meta: {
         total_memories: memoryCount,
         recent_memories_30d: recentCount,
         cycle_phase: phase,
-        has_pattern: hasPattern
+        has_pattern: hasPattern,
+        pattern_count: 0
       }
     };
   }
@@ -941,10 +943,20 @@
     var text = (story.text_excerpt || "").replace(/[<>&"']/g, function (c) {
       return ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" })[c];
     });
+    // AI Duty 3: 共鸣匹配理由（身体背景 + Pattern 相似度，不是兴趣算法）
+    var matchReason = story.match_reason || "";
+    var matchHtml = "";
+    if (matchReason) {
+      matchHtml = '<p class="resonance-match-reason">' +
+        matchReason.replace(/[<>&"']/g, function (c) {
+          return ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" })[c];
+        }) + '</p>';
+    }
     var html = "";
     html += '<section class="resonance-card' + activeClass + '" style="' + inlineStyle + '" data-index="' + index + '" data-memory-id="' + (story.id || 0) + '">';
     html += '<p class="anonymous">匿名泡泡 ' + num + '</p>';
     html += '<p class="quote">"' + text + '"</p>';
+    html += matchHtml;
     html += '<div class="response-options">';
     html += '<button type="button" class="response-chip" data-response="我也经历过">我也经历过</button>';
     html += '<button type="button" class="response-chip" data-response="谢谢">谢谢你的分享</button>';
@@ -1245,8 +1257,11 @@
 
     var p = getPatterns();
 
-    // 异步加载成长数据（含陪伴人数、空状态）
+    // 异步加载成长数据（含陪伴人数、空状态、Pattern 描述）
     loadAndApplyGrowthData();
+
+    // 异步加载后端 Pattern 描述（AI Duty 2: Pattern 建立）
+    loadAndApplyPatterns();
 
     // 记忆时间线（只展示最早和最近，形成时间对比，不列全部）
     var timeline = document.getElementById("memoryTimeline");
@@ -1390,6 +1405,73 @@
       html += '</div>';
     }
     storiesEl.innerHTML = html;
+  }
+
+  // AI Duty 2: 加载后端 Pattern 描述，展示在成长页
+  // AI Invisible: Pattern 来自后端数据分析，不直接展示 "AI 分析"
+  async function loadAndApplyPatterns() {
+    if (isDemoMode) return; // 演示模式用前端本地数据
+
+    try {
+      if (!window.CB_API || !window.CB_API.growth || !window.CB_API.growth.getPatterns) return;
+      var data = await window.CB_API.growth.getPatterns();
+      if (!data || !data.patterns || data.patterns.length === 0) return;
+
+      // 如果后端有 Pattern，替换成长故事区域的内容
+      var storiesEl = document.getElementById("growthStories");
+      var storiesSection = storiesEl ? storiesEl.closest('.growth-stories-section') : null;
+      if (!storiesEl) return;
+
+      if (storiesSection) storiesSection.style.display = '';
+
+      var html = '';
+      for (var i = 0; i < data.patterns.length; i++) {
+        var pat = data.patterns[i];
+        html += '<div class="growth-story-card growth-story-card--single">';
+        // Pattern 类型作为标签（翻译为中文）
+        var tagMap = {
+          'cross_cycle_repeat': '跨周期重复',
+          'theme_trigger_pair': '主题与触发',
+          'phase_emotion_link': '身体与感受',
+          'recovery_pattern': '恢复方式',
+          'relationship_pattern': '关系模式',
+          'phase_body_link': '身体感受'
+        };
+        var tagText = tagMap[pat.type] || '观察';
+        html += '<span class="growth-story-tag">' + escapeHTML(tagText) + '</span>';
+        html += '<p class="growth-story-text">' + escapeHTML(pat.description || '') + '</p>';
+        // 展示支撑证据（用户原话）
+        if (pat.evidence && pat.evidence.length > 0) {
+          html += '<div class="story-bubbles">';
+          for (var e = 0; e < pat.evidence.length; e++) {
+            html += '<div class="story-bubble">';
+            html += '<div class="story-bubble-liquid"></div>';
+            if (pat.evidence[e].date) {
+              html += '<span class="story-bubble-time">' + escapeHTML(pat.evidence[e].date.substring(0, 10)) + '</span>';
+            }
+            if (pat.evidence[e].text) {
+              html += '<p class="story-bubble-text">' + escapeHTML(pat.evidence[e].text) + '</p>';
+            }
+            html += '</div>';
+            if (e < pat.evidence.length - 1) {
+              html += '<div class="story-bubble-link"><span></span></div>';
+            }
+          }
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+      storiesEl.innerHTML = html;
+
+      // 更新成长旁白为 Pattern 描述
+      var narration = document.getElementById("growthNarration");
+      if (narration && data.patterns.length > 0) {
+        narration.textContent = data.patterns[0].description || narration.textContent;
+      }
+    } catch (e) {
+      // 后端不可用时静默降级，使用前端本地数据
+      console.warn("加载 Pattern 数据失败:", e);
+    }
   }
 
   function renderBackendTimeline(timeline) {
