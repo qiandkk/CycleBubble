@@ -36,6 +36,11 @@ class Memory(SQLModel, table=True):
     recovery: str = Field(default="[]", max_length=500)
     emotions: str = Field(default="[]", max_length=500)  # JSON array of {name, intensity}
     mood: str = Field(default="", max_length=50)
+    # AI Architecture: 扩展结构化提取字段（AI Invisible — AI 只提取，不分析）
+    relationship: str = Field(default="[]", max_length=300)  # JSON array — 关系对象（领导/伴侣/朋友...）
+    body_sensation: str = Field(default="[]", max_length=300)  # JSON array — 身体感受（胸闷/头痛/疲惫...）
+    keywords: str = Field(default="[]", max_length=300)  # JSON array — 关键词
+    public_suggestion: str = Field(default="private", max_length=20)  # 'public' | 'private' — AI 公开建议
     is_public: bool = Field(default=False, index=True)
     is_sensitive: bool = Field(default=False, index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)

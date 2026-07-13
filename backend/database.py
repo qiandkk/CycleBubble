@@ -83,12 +83,21 @@ def _apply_column_migrations(engine) -> None:
     try:
         with engine.connect() as conn:
             from sqlalchemy import text
-            # memory.is_sensitive
             cols = [row[1] for row in conn.exec_driver_sql("PRAGMA table_info(memory)").fetchall()]
+            # memory.is_sensitive
             if "is_sensitive" not in cols:
                 conn.exec_driver_sql("ALTER TABLE memory ADD COLUMN is_sensitive BOOLEAN NOT NULL DEFAULT 0")
                 conn.exec_driver_sql("CREATE INDEX IF NOT EXISTS ix_memory_is_sensitive ON memory(is_sensitive)")
-                conn.commit()
+            # AI Architecture: 新增结构化提取字段
+            if "relationship" not in cols:
+                conn.exec_driver_sql("ALTER TABLE memory ADD COLUMN relationship VARCHAR(300) NOT NULL DEFAULT '[]'")
+            if "body_sensation" not in cols:
+                conn.exec_driver_sql("ALTER TABLE memory ADD COLUMN body_sensation VARCHAR(300) NOT NULL DEFAULT '[]'")
+            if "keywords" not in cols:
+                conn.exec_driver_sql("ALTER TABLE memory ADD COLUMN keywords VARCHAR(300) NOT NULL DEFAULT '[]'")
+            if "public_suggestion" not in cols:
+                conn.exec_driver_sql("ALTER TABLE memory ADD COLUMN public_suggestion VARCHAR(20) NOT NULL DEFAULT 'private'")
+            conn.commit()
     except Exception:
         # 列迁移失败不影响主流程；下一轮会重试
         pass

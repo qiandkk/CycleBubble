@@ -26,6 +26,7 @@ from datetime import datetime, date, timedelta
 from typing import List, Dict, Any, Optional
 from .models import Memory, Cycle
 from .cycle_engine import compute_cycle_status
+from .pattern_engine import detect_patterns, generate_pattern_narration
 
 
 # ============================================================
@@ -352,7 +353,12 @@ def compute_bubble_params(
         transparency = max(0.3, 0.7 - pattern_richness * 0.03)
 
     # -- 成长旁白（遵守 Constitution） --
-    narration = _generate_narration(n, has_pattern, pattern_richness, texture, phase, recent_count)
+    # AI Duty 2: Pattern 建立后，旁白来自 Pattern 描述而不是简单计数
+    detected_patterns = detect_patterns(memories, cycles, today)
+    if detected_patterns:
+        narration = generate_pattern_narration(detected_patterns)
+    else:
+        narration = _generate_narration(n, has_pattern, pattern_richness, texture, phase, recent_count)
 
     return {
         "liquid_height": round(liquid_height, 1),
@@ -362,6 +368,7 @@ def compute_bubble_params(
         "texture": texture,
         "transparency": round(transparency, 2),
         "narration": narration,
+        "patterns": detected_patterns,
         "constitution": {
             "never_define": CONSTITUTION_RULES["never_define"],
             "never_evaluate": CONSTITUTION_RULES["never_evaluate"],
@@ -372,7 +379,8 @@ def compute_bubble_params(
             "total_memories": n,
             "recent_memories_30d": recent_count,
             "cycle_phase": phase,
-            "has_pattern": has_pattern
+            "has_pattern": has_pattern,
+            "pattern_count": len(detected_patterns)
         }
     }
 

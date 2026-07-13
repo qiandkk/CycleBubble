@@ -296,6 +296,9 @@
     },
     async getBubbleParams() {
       return await request('/api/growth/bubble-params', { method: 'GET' });
+    },
+    async getPatterns() {
+      return await request('/api/growth/patterns', { method: 'GET' });
     }
   };
 
