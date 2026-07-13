@@ -1920,23 +1920,38 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
 /* 复用产品 .breathing-bubble 全部视觉，仅覆盖尺寸 */
 .narrative-bubble {
   width: 220px;
-  /* 色温变化通过 filter（与产品 applyBubbleState 同一机制） */
-  transition: filter 1.2s cubic-bezier(.4,0,.2,1), animation-duration 1.2s ease;
+  /* 覆盖产品 bubble-breathe 动画：去掉 keyframes 中的 filter，让 data-mood 的 filter 生效 */
+  animation: narrative-breathe 5.8s ease-in-out infinite;
+  transition: filter 1.2s cubic-bezier(.4,0,.2,1);
+}
+
+/* 叙事专用呼吸动画 — 只做 transform，不碰 filter（避免覆盖 data-mood 色温） */
+@keyframes narrative-breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.04); }
 }
 
 /* ---- 情绪色温（data-mood 属性，与产品 moodColorMap 一致） ---- */
 /* 产品用 hue-rotate(moodHue-275)*0.6deg + saturate(1+moodSat) + brightness(1+moodSat*0.3) */
-.narrative-bubble[data-mood="低落"]   { filter: brightness(0.970) saturate(1.080) hue-rotate(-33deg); }
-.narrative-bubble[data-mood="委屈"]   { filter: brightness(1.014) saturate(1.140) hue-rotate(39deg); }
-.narrative-bubble[data-mood="焦虑"]   { filter: brightness(0.964) saturate(1.150) hue-rotate(-6deg); }
-.narrative-bubble[data-mood="温暖"]   { filter: brightness(1.021) saturate(1.140) hue-rotate(-144deg); }
-.narrative-bubble[data-mood="力量"]   { filter: brightness(1.024) saturate(1.160) hue-rotate(-135deg); }
-.narrative-bubble[data-mood="平静"]   { filter: brightness(0.982) saturate(1.060) hue-rotate(-57deg); }
+.narrative-bubble[data-mood="低落"]   { filter: brightness(0.940) saturate(1.120) hue-rotate(-33deg); }
+.narrative-bubble[data-mood="委屈"]   { filter: brightness(1.020) saturate(1.180) hue-rotate(39deg); }
+.narrative-bubble[data-mood="焦虑"]   { filter: brightness(0.950) saturate(1.200) hue-rotate(-6deg); }
+.narrative-bubble[data-mood="温暖"]   { filter: brightness(1.030) saturate(1.180) hue-rotate(-144deg); }
+.narrative-bubble[data-mood="力量"]   { filter: brightness(1.040) saturate(1.220) hue-rotate(-135deg); }
+.narrative-bubble[data-mood="平静"]   { filter: brightness(0.970) saturate(1.100) hue-rotate(-57deg); }
 .narrative-bubble[data-mood="未明"]   { filter: none; }
 
 /* ---- 液体高度（由 JS 动态控制，与产品一致） ---- */
+/* 覆盖产品 liquid-sway 动画：去掉 keyframes 中的 height，让 JS inline style 生效 */
 .narrative-bubble .bubble-liquid {
+  animation: narrative-liquid-sway 7.8s ease-in-out infinite;
   transition: height 1.2s cubic-bezier(.4,0,.2,1), opacity 1.2s ease;
+}
+
+/* 叙事专用液体晃动 — 只做 transform，不碰 height（避免覆盖 JS 设置的液体高度） */
+@keyframes narrative-liquid-sway {
+  0%, 100% { transform: translateX(-6px) translateY(0) rotate(-.45deg) scaleX(1.02); }
+  50% { transform: translateX(8px) translateY(-8px) rotate(.75deg) scaleX(1.055); }
 }
 
 /* ---- 演示专用粒子（用于记录被吸收时的光点动画） ---- */
