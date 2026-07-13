@@ -2104,8 +2104,8 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
 }
 
 @keyframes narrative-end-appear {
-  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from { opacity: 0; transform: translateX(-50%) scale(.96); }
+  to { opacity: 1; transform: translateX(-50%) scale(1); }
 }
 
 .narrative-end-btn:hover {
@@ -2114,8 +2114,16 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
   transform: translateY(-1px);
 }
 
-/* ---- 跳过按钮 ---- */
-$112px;
+/* ---- 跳过按钮（右上角） ---- */
+.narrative-skip {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  border: 1px solid rgba(181,169,207,.15);
+  background: rgba(255,253,251,.03);
+  color: rgba(181,169,207,.4);
+  font-size: 12px;
   font-family: inherit;
   padding: 4px 12px;
   border-radius: 16px;
