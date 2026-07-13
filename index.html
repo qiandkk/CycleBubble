@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CycleBubble</title>
   <meta name="description" content="CycleBubble — 一个持续理解你的情绪空间。">
-  <link rel="stylesheet" href="./styles.css?v=20260712f">
+  <link rel="stylesheet" href="./styles.css?v=20260713a">
   <!-- API 基础 URL：默认空字符串 = 同源（Nginx 反代 /api/ 到 FastAPI）。
        部署到 Render/其他跨域后端时，把下面这一行改成对应的 URL，例如：
          window.__API_BASE__ = 'https://cyclebubble-api.onrender.com';
@@ -531,23 +531,48 @@
     </div>
   </div>
 
-  <!-- ====== Demo Tour 引导式演示导览 ====== -->
-  <div class="demo-tour" id="demoTour" hidden>
-    <div class="demo-tour-card">
-      <div class="demo-tour-header">
-        <span class="demo-tour-step" id="demoTourStep">1 / 5</span>
-        <span class="demo-tour-progress" id="demoTourProgress"></span>
-        <button class="demo-tour-skip" type="button" id="demoTourSkip">跳过导览</button>
-      </div>
-      <h4 class="demo-tour-title" id="demoTourTitle"></h4>
-      <p class="demo-tour-desc" id="demoTourDesc"></p>
-      <div class="demo-tour-actions">
-        <button class="demo-tour-btn demo-tour-btn--prev" type="button" id="demoTourPrev">上一步</button>
-        <button class="demo-tour-btn demo-tour-btn--next" type="button" id="demoTourNext">下一步</button>
+  <!-- ====== Narrative Demo 叙事短片 ====== -->
+  <div class="narrative-demo" id="narrativeDemo" hidden>
+    <!-- 背景层 -->
+    <div class="narrative-bg" id="narrativeBg"></div>
+
+    <!-- 日期显示 -->
+    <div class="narrative-date" id="narrativeDate" hidden></div>
+
+    <!-- 输入框区域（Scene 1 & 2 打字机） -->
+    <div class="narrative-input-area" id="narrativeInput" hidden>
+      <div class="narrative-input-frame">
+        <p class="narrative-input-text" id="narrativeInputText"></p>
+        <span class="narrative-input-cursor" id="narrativeCursor"></span>
       </div>
     </div>
+
+    <!-- AI 理解节点（Scene 3） -->
+    <div class="narrative-ai-area" id="narrativeAi" hidden>
+      <div class="narrative-ai-nodes" id="narrativeAiNodes"></div>
+    </div>
+
+    <!-- 中心 Bubble（贯穿全程） -->
+    <div class="narrative-bubble-wrap" id="narrativeBubbleWrap">
+      <div class="narrative-bubble" id="narrativeBubble">
+        <div class="narrative-bubble-liquid" id="narrativeLiquid"></div>
+        <div class="narrative-bubble-texture" id="narrativeTexture"></div>
+        <div class="narrative-bubble-particles" id="narrativeParticles"></div>
+        <div class="narrative-bubble-glass" id="narrativeGlass"></div>
+        <div class="narrative-bubble-glow" id="narrativeGlow"></div>
+      </div>
+    </div>
+
+    <!-- 远处共鸣 Bubble（Scene 5） -->
+    <div class="narrative-resonance-area" id="narrativeResonance" hidden></div>
+
+    <!-- 场景旁白文案 -->
+    <div class="narrative-caption" id="narrativeCaption"></div>
+
+    <!-- 跳过按钮 -->
+    <button class="narrative-skip" type="button" id="narrativeSkip">跳过</button>
   </div>
 
-  <script src="./script.js?v=20260712g"></script>
+  <script src="./script.js?v=20260713a"></script>
 </body>
 </html>
