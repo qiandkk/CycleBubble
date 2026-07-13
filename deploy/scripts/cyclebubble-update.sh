@@ -62,11 +62,15 @@ for f in $FRONTEND_FILES; do
         log "  WARN: source not found: $f"
         continue
     fi
-    # 防御 nginx mmap / immutable bit：先删除目标，再 cat 到新文件，最后 mv
-    if rm -f "$WEB_ROOT/$f" 2>>"$LOG"        && cat "$f" > "$WEB_ROOT/$f.new" 2>>"$LOG"        && mv -f "$WEB_ROOT/$f.new" "$WEB_ROOT/$f" 2>>"$LOG"; then
-        log "  copied (rm+cat+mv): $f"
+    # 防御 nginx mmap / immutable bit / selinux：先清属性，再 unlink，再重写
+    if [[ -f "$WEB_ROOT/$f" ]]; then
+        chattr -i "$WEB_ROOT/$f" 2>/dev/null || true
+        chattr -a "$WEB_ROOT/$f" 2>/dev/null || true
+    fi
+    if rm -f "$WEB_ROOT/$f" 2>>"$LOG"        && chattr -i "$WEB_ROOT/$f.new" 2>/dev/null || true        && cat "$f" > "$WEB_ROOT/$f.new" 2>>"$LOG"        && mv -f "$WEB_ROOT/$f.new" "$WEB_ROOT/$f" 2>>"$LOG"; then
+        log "  copied (force-rewrite): $f"
     else
-        log "  WARN: rm+cat+mv failed for $f"
+        log "  WARN: force-rewrite failed for $f"
         rm -f "$WEB_ROOT/$f.new" 2>/dev/null
     fi
 done
