@@ -1202,8 +1202,8 @@ $112px;
 
 /* ====== 焦点 ====== */
 button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible {
-  outline: 3px solid rgba(138,125,184,.3);
-  outline-offset: 3px;
+  outline: 2px solid rgba(181,169,207,.2);
+  outline-offset: 2px;
 }
 
 /* ====== 关于入口 ====== */

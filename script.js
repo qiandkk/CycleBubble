@@ -549,7 +549,7 @@
       return "每一段表达，都会成为 Bubble 理解你的开始。";
     }
     if (richness >= 5) {
-      return "这些变化不是结论，只是一种观察。你自己觉得呢？";
+      return "这些变化不是结论，只是 Bubble 注意到的一些痕迹。";
     }
     if (richness >= 3) {
       return "这些只是 Bubble 的观察，不一定是答案。";
@@ -1212,7 +1212,7 @@
 
     // 3. Reflection：留白（一句话，不解释）
     html += '<section class="insight-space">';
-    html += '<p class="space-text">你自己觉得呢？</p>';
+    html += '<p class="space-text">这些痕迹，慢慢会连成属于你的轨迹。</p>';
     html += '</section>';
 
     // 按钮
