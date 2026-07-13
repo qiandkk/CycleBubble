@@ -62,11 +62,12 @@ for f in $FRONTEND_FILES; do
         log "  WARN: source not found: $f"
         continue
     fi
-    if cat "$f" > "$WEB_ROOT/$f.tmp" 2>>"$LOG" && mv -f "$WEB_ROOT/$f.tmp" "$WEB_ROOT/$f" 2>>"$LOG"; then
-        log "  copied: $f"
+    # 防御 nginx mmap / immutable bit：先删除目标，再 cat 到新文件，最后 mv
+    if rm -f "$WEB_ROOT/$f" 2>>"$LOG"        && cat "$f" > "$WEB_ROOT/$f.new" 2>>"$LOG"        && mv -f "$WEB_ROOT/$f.new" "$WEB_ROOT/$f" 2>>"$LOG"; then
+        log "  copied (rm+cat+mv): $f"
     else
-        log "  WARN: cat/mv failed: $f"
-        rm -f "$WEB_ROOT/$f.tmp" 2>/dev/null
+        log "  WARN: rm+cat+mv failed for $f"
+        rm -f "$WEB_ROOT/$f.new" 2>/dev/null
     fi
 done
 chown -R www:www "$WEB_ROOT"
