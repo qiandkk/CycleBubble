@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --milk: #fbf7f3;
   --surface: #fffdfb;
   --ink: #2d2630;
@@ -25,13 +25,17 @@ body {
     radial-gradient(circle at 16% 12%, rgba(245,217,216,.55), transparent 30%),
     radial-gradient(circle at 82% 18%, rgba(181,169,207,.36), transparent 28%),
     linear-gradient(145deg, #fbf7f3, #f5f1ef);
-  font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   letter-spacing: 0;
+  font-size: 15px;
+  line-height: 1.6;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
   padding: 24px 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button, textarea { font: inherit; }
@@ -109,22 +113,23 @@ button { cursor: pointer; }
 
 /* ====== 首页 — 极简三区 ====== */
 .cycle-status {
-  margin: 0 0 0;
+  margin: 0;
   font-size: 14px;
   font-weight: 400;
   color: var(--muted);
   text-align: center;
   line-height: 1.5;
+  word-break: break-word;
 }
 
 .screen-home .screen-body {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   text-align: center;
   padding-bottom: 0;
-  padding-top: 8px;
+  padding-top: 40px;
 }
 
 .bubble-wrap {
@@ -141,13 +146,8 @@ button { cursor: pointer; }
   color: var(--subtle);
   text-align: center;
   letter-spacing: 0.5px;
-  animation: narration-fade 3s ease-in-out infinite;
   transition: opacity 0.8s ease;
-}
-
-@keyframes narration-fade {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 1; }
+  word-break: break-word;
 }
 
 /* ====== 呼吸泡泡 — 生命体 ====== */
@@ -668,9 +668,7 @@ textarea::placeholder { color: var(--subtle); }
   color: var(--ink);
 }
 
-.memory-theme {
-  display: inline-block;
-  font-size: 11px;
+$112px;
   font-weight: 600;
   color: var(--lavender);
   background: var(--lavender-soft);
@@ -689,9 +687,10 @@ textarea::placeholder { color: var(--subtle); }
 .memory-gap {
   margin-left: 16px;
   padding: 6px 0;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--subtle);
   letter-spacing: 0.5px;
+  word-break: break-word;
 }
 
 .memory-empty {
@@ -733,9 +732,7 @@ textarea::placeholder { color: var(--subtle); }
   color: var(--ink);
 }
 
-.growth-story-tag {
-  display: inline-block;
-  font-size: 11px;
+$112px;
   font-weight: 600;
   color: var(--rose);
   background: rgba(245,217,216,.3);
@@ -788,8 +785,7 @@ textarea::placeholder { color: var(--subtle); }
   background: linear-gradient(90deg, transparent, rgba(232,163,167,.25), transparent);
 }
 
-.story-bubble-time {
-  font-size: 11px;
+$112px;
   color: var(--lavender);
   font-weight: 600;
   margin-bottom: 6px;
@@ -901,7 +897,7 @@ textarea::placeholder { color: var(--subtle); }
 /* ====== 共鸣页 ====== */
 .resonance-stack {
   position: relative;
-  min-height: 480px;
+  min-height: 400px;
   margin-bottom: 12px;
 }
 
@@ -923,7 +919,7 @@ textarea::placeholder { color: var(--subtle); }
   transform: translateX(40px) scale(.94);
   transition: opacity .45s cubic-bezier(.4,0,.2,1), transform .45s cubic-bezier(.4,0,.2,1);
   pointer-events: none;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 /* 泡泡顶部弧形液体光感——颜色跟随主 Bubble 情绪色温 */
@@ -978,6 +974,7 @@ textarea::placeholder { color: var(--subtle); }
   background: var(--surface);
   font-size: 12px;
   font-weight: 500;
+  white-space: nowrap;
   transition: all .2s;
 }
 
@@ -1125,15 +1122,7 @@ textarea::placeholder { color: var(--subtle); }
   box-shadow: 0 -14px 36px rgba(82,63,74,.06);
 }
 
-.tab-item {
-  --tab-color: var(--subtle);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  color: var(--tab-color);
-  font-size: 11px;
+$112px;
   font-weight: 600;
   transition: color .2s, transform .2s;
   user-select: none;
@@ -1184,19 +1173,20 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
 
 /* ====== 关于入口 ====== */
 .about-link {
-  margin-top: 24px;
+  margin-top: 20px;
   border: none;
   background: transparent;
-  color: var(--line);
-  font-size: 11px;
+  color: var(--subtle);
+  font-size: 12px;
   font-weight: 400;
   text-decoration: underline;
   text-underline-offset: 3px;
-  text-decoration-color: var(--line);
+  text-decoration-color: rgba(164,154,165,.4);
   transition: color .2s;
+  word-break: break-word;
 }
 
-.about-link:hover { color: var(--subtle); }
+.about-link:hover { color: var(--ink); }
 
 /* ====== 关于弹层 ====== */
 .about-modal {
@@ -1219,11 +1209,14 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
 .about-modal-card {
   width: 100%;
   max-width: 320px;
+  max-height: 80vh;
+  overflow-y: auto;
   padding: 28px 24px;
   border-radius: 20px;
   background: var(--surface);
   box-shadow: 0 30px 80px rgba(82, 63, 74, .2);
   animation: modal-rise .3s cubic-bezier(.4, 0, .2, 1);
+  -webkit-overflow-scrolling: touch;
 }
 
 @keyframes modal-rise { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -1416,6 +1409,8 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
   font-size: 13px;
   line-height: 1.6;
   color: var(--subtle, #a49aa5);
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .import-manual-list {
@@ -1804,6 +1799,7 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
   gap: 6px;
   flex: 1;
   min-width: 0;
+  word-break: break-word;
 }
 .demo-bar-icon {
   color: var(--lavender, #b5a9cf);
@@ -1820,6 +1816,7 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 0;
   transition: background 0.15s, transform 0.15s;
 }
 .demo-bar-btn:hover {
@@ -1973,7 +1970,7 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
 /* ---- 输入框区域（Bubble 下方） ---- */
 .narrative-input-area {
   position: absolute;
-  bottom: 24%;
+  bottom: 30%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 4;
@@ -2045,7 +2042,9 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
   letter-spacing: .5px;
   opacity: 0;
   transition: opacity 2s ease-in-out;
-  white-space: nowrap;
+  max-width: 120px;
+  word-break: break-word;
+  line-height: 1.5;
 }
 
 .narrative-distant-text--visible { opacity: .55; }
@@ -2053,7 +2052,7 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
 /* ---- 场景旁白文案 ---- */
 .narrative-caption {
   position: absolute;
-  bottom: 12%;
+  bottom: 18%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 5;
@@ -2061,11 +2060,12 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
   max-width: 280px;
   text-align: center;
   font-size: 13px;
-  line-height: 1.7;
-  color: rgba(255,253,251,.6);
-  letter-spacing: .3px;
+  line-height: 1.8;
+  color: rgba(255,253,251,.65);
+  letter-spacing: .5px;
   min-height: 44px;
   transition: opacity 1s ease-in-out;
+  word-break: break-word;
 }
 
 .narrative-caption--fade-out { opacity: 0; }
@@ -2079,10 +2079,10 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
 /* ---- 结束按钮 ---- */
 .narrative-end-area {
   position: absolute;
-  bottom: 14%;
+  bottom: 8%;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 5;
+  z-index: 6;
   transition: opacity 1s ease-in-out;
 }
 
@@ -2115,15 +2115,7 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
 }
 
 /* ---- 跳过按钮 ---- */
-.narrative-skip {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 10;
-  border: 1px solid rgba(181,169,207,.15);
-  background: rgba(255,253,251,.03);
-  color: rgba(181,169,207,.4);
-  font-size: 11px;
+$112px;
   font-family: inherit;
   padding: 4px 12px;
   border-radius: 16px;
@@ -2587,3 +2579,4 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
   .genesis-particle { animation-duration: .3s !important; }
   .genesis-connection { animation-duration: .3s !important; }
 }
+
