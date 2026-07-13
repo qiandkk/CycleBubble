@@ -25,6 +25,20 @@ log "=========================================="
 log "Auto-update triggered, branch=$BRANCH"
 log "=========================================="
 
+# 0.5 self-sync：把 repo 最新版同步到 /usr/local/bin/
+# 防止 install-period 静态副本与 repo 漂移（踩过的坑：577b019 简化版丢失 admin.* cp）
+SELF_PATH="/usr/local/bin/cyclebubble-update.sh"
+if [[ -f "$SELF_PATH" ]] && ! diff -q "$SELF_PATH" "$0" >/dev/null 2>&1; then
+    log "[0.5/6] self-sync repo update.sh -> $SELF_PATH"
+    if cp -f "$0" "$SELF_PATH" 2>>"$LOG" && chmod 755 "$SELF_PATH" 2>>"$LOG"; then
+        log "[0.5/6] self-sync OK; subsequent webhooks use this script"
+    else
+        log "[0.5/6] WARN: self-sync failed (continuing with old $SELF_PATH)"
+    fi
+else
+    log "[0.5/6] self-sync: already in sync"
+fi
+
 # 0. 数据库快照备份（在 git pull 前做，这样新代码即使有 bug 也能回滚）
 log "[0/6] backup databases to $BACKUP_DIR"
 mkdir -p "$BACKUP_DIR"
