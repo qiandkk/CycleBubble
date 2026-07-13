@@ -293,6 +293,9 @@
   const growth = {
     async get() {
       return await request('/api/growth', { method: 'GET' });
+    },
+    async getBubbleParams() {
+      return await request('/api/growth/bubble-params', { method: 'GET' });
     }
   };
 

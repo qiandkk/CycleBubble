@@ -3,8 +3,9 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends
 from sqlmodel import Session, select
 from ..database import get_session
-from ..models import Memory, Response, User
+from ..models import Memory, Response, User, Cycle
 from ..auth import get_current_user
+from ..bubble_engine import compute_bubble_params
 
 router = APIRouter()
 
@@ -129,3 +130,28 @@ def get_growth(
             "similar_phase_count": similar_phase_count
         }
     }
+
+
+@router.get("/bubble-params")
+def get_bubble_params(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    """获取 Bubble 6 维度 Growth Parameters
+
+    所有视觉变化都来源于真实数据，不做随机动画。
+    遵守 Bubble Constitution 规则。
+    """
+    memories = session.exec(
+        select(Memory)
+        .where(Memory.user_id == current_user.id)
+        .order_by(Memory.created_at.desc())
+    ).all()
+
+    cycles = session.exec(
+        select(Cycle)
+        .where(Cycle.user_id == current_user.id)
+        .order_by(Cycle.start_date)
+    ).all()
+
+    return compute_bubble_params(memories, cycles)

@@ -409,7 +409,7 @@ button { cursor: pointer; }
   }
 
   .bubble-liquid {
-    animation: liquid-sway 7.8s ease-in-out infinite;
+    animation: product-liquid-sway 7.8s ease-in-out infinite;
   }
 
   .breathing-bubble::before {
@@ -437,6 +437,12 @@ button { cursor: pointer; }
 @keyframes liquid-sway {
   0%, 100% { height: 66%; transform: translateX(-6px) translateY(0) rotate(-.45deg) scaleX(1.02); }
   50% { height: 72%; transform: translateX(8px) translateY(-8px) rotate(.75deg) scaleX(1.055); }
+}
+
+/* 产品 Bubble 液体晃动 — 只做 transform，不碰 height（让 JS inline style 生效） */
+@keyframes product-liquid-sway {
+  0%, 100% { transform: translateX(-6px) translateY(0) rotate(-.45deg) scaleX(1.02); }
+  50% { transform: translateX(8px) translateY(-8px) rotate(.75deg) scaleX(1.055); }
 }
 
 @keyframes water-lines { from { background-position: 0 0; } to { background-position: 0 72px; } }
