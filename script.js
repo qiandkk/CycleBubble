@@ -2831,7 +2831,7 @@
     ndTimer(function () {
       if (ndInput) ndInput.hidden = false;
       if (ndCursor) ndCursor.style.display = 'inline-block';
-      ndTypewriter('今天在会上被老板点名批评了，明明不是我的问题，却当着所有人的面说。感觉好委屈，好像做什么都不对。', ndInputText, 80, function () { ndSoundKey(); }, function () {
+      ndTypewriter('今天在会上被老板点名批评了，明明不是我的问题，却当着所有人的面说。', ndInputText, 80, function () { ndSoundKey(); }, function () {
         if (ndCursor) ndCursor.style.display = 'none';
         ndSoundSave();
         // 保存瞬间：Bubble 开始变冷，呼吸变慢
@@ -2903,7 +2903,7 @@
       if (ndInput) ndInput.hidden = false;
       if (ndInputText) ndInputText.textContent = '';
       if (ndCursor) ndCursor.style.display = 'inline-block';
-      ndTypewriter('今天又被挑刺了，但奇怪的是没上次那么崩溃。看了下日期快到生理期了，上次被骂也是这时候。也许那几天的难过，不全是因为我不好。', ndInputText, 65, function () { ndSoundKey(); }, function () {
+      ndTypewriter('今天又被挑刺了，但没上次那么崩溃。看了下日期快到生理期了，上次也是这时候。', ndInputText, 65, function () {}, function () {
         if (ndCursor) ndCursor.style.display = 'none';
         ndSoundSave();
         ndTimer(function () {
@@ -2934,7 +2934,7 @@
       if (ndInput) ndInput.hidden = false;
       if (ndInputText) ndInputText.textContent = '';
       if (ndCursor) ndCursor.style.display = 'inline-block';
-      ndTypewriter('今天又被说了，但这次我没有一直沉浸在难过里，而是在想怎么把问题解决掉。不知道从什么时候开始，好像不太一样了。', ndInputText, 70, function () { ndSoundKey(); }, function () {
+      ndTypewriter('今天又被说了，但这次我没沉浸在难过里，而是在想怎么解决。好像不太一样了。', ndInputText, 70, function () {}, function () {
         if (ndCursor) ndCursor.style.display = 'none';
         ndSoundSave();
         ndTimer(function () {
