@@ -54,48 +54,10 @@ source venv/bin/activate
 pip install -r requirements.txt --quiet 2>&1 | tail -3 | tee -a "$LOG"
 
 # 4. Refresh frontend files
-# 用 cat > 强制重写 + log 错误；单文件失败仅 warn，不阻塞整个 deploy
 log "[4/6] copy frontend to nginx root"
-FRONTEND_FILES="index.html styles.css script.js api.js admin.html admin.js"
-for f in $FRONTEND_FILES; do
-    if [[ ! -f "$f" ]]; then
-        log "  WARN: source not found: $f"
-        continue
-    fi
-    # 防御 nginx mmap / immutable bit / selinux：先清属性，再 unlink，再重写
-    if [[ -f "$WEB_ROOT/$f" ]]; then
-        chattr -i "$WEB_ROOT/$f" 2>/dev/null || true
-        chattr -a "$WEB_ROOT/$f" 2>/dev/null || true
-    fi
-    if rm -f "$WEB_ROOT/$f" 2>>"$LOG"        && chattr -i "$WEB_ROOT/$f.new" 2>/dev/null || true        && cat "$f" > "$WEB_ROOT/$f.new" 2>>"$LOG"        && mv -f "$WEB_ROOT/$f.new" "$WEB_ROOT/$f" 2>>"$LOG"; then
-        log "  copied (force-rewrite): $f"
-    else
-        log "  WARN: force-rewrite failed for $f"
-        rm -f "$WEB_ROOT/$f.new" 2>/dev/null
-    fi
-done
-
-# 4.5. 诊断 admin.* 失败原因（写到公开 log）
-log "[4.5/6] diagnostic: ls/stat of admin.* in WEB_ROOT"
-ls -la "$WEB_ROOT/admin.html" "$WEB_ROOT/admin.js" >>"$LOG" 2>&1 || true
-stat "$WEB_ROOT/admin.html" "$WEB_ROOT/admin.js" >>"$LOG" 2>&1 || true
-lsattr "$WEB_ROOT/admin.html" "$WEB_ROOT/admin.js" >>"$LOG" 2>&1 || true
-mount | grep -E "(frontend|www)" >>"$LOG" 2>&1 || true
-
-# 4.7 用 dd 强制 truncate 然后 cat 写入（更猛）
-log "[4.7/6] force rewrite via dd seek=0"
-for f in admin.html admin.js; do
-    if [[ -f "$f" ]] && [[ -f "$WEB_ROOT/$f" ]]; then
-        chattr -i "$WEB_ROOT/$f" 2>/dev/null || true
-        # dd 把目标 truncate 到 0, 然后 cat 写入
-        if dd if=/dev/null of="$WEB_ROOT/$f" bs=1 count=0 conv=notrunc 2>>"$LOG"            && cat "$f" >>"$WEB_ROOT/$f" 2>>"$LOG"; then
-            log "  dd+cat appended: $f"
-        else
-            log "  WARN: dd+cat failed for $f"
-        fi
-    fi
-done
+cp -f index.html styles.css script.js api.js admin.html admin.js "$WEB_ROOT/"
 chown -R www:www "$WEB_ROOT"
+# 目录必须有 755（x 权限）才能被 nginx worker 进入，文件 644
 chmod 755 "$WEB_ROOT"
 find "$WEB_ROOT" -type f -exec chmod 644 {} +
 
