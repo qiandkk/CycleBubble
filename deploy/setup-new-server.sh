@@ -129,6 +129,13 @@ chmod 755 /usr/local/bin/cyclebubble-webhook.py
 cp deploy/scripts/cyclebubble-update.sh /usr/local/bin/cyclebubble-update.sh
 chmod 755 /usr/local/bin/cyclebubble-update.sh
 
+# 保险：自动修补 cp list；如果某个未来 commit 不慎丢了 admin.*，这里补上
+# 教训：577b019 commit 误把 update.sh 简化成 5 步 + cp 4 文件，导致 admin.* 永远不同步
+if ! grep -q "admin.html admin.js" /usr/local/bin/cyclebubble-update.sh; then
+    sed -i 's|cp -f index\.html styles\.css script\.js api\.js \?"\$WEB_ROOT/\?"|cp -f index.html styles.css script.js api.js admin.html admin.js "$WEB_ROOT/"|' /usr/local/bin/cyclebubble-update.sh
+    echo "[deploy] auto-fixed cp list to include admin.html admin.js"
+fi
+
 cp deploy/scripts/webhook-watchdog.sh /usr/local/bin/webhook-watchdog.sh
 chmod 755 /usr/local/bin/webhook-watchdog.sh
 
