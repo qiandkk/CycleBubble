@@ -505,12 +505,16 @@
   }
 
   // ====== 成长旁白系统（基于 Pattern 丰富度，非数值总分） ======
+  // ====== 成长旁白系统（遵守 Bubble Constitution） ======
+  // Rule 1: 不定义用户（不说"你是..."）
+  // Rule 3: 不评价（不说"好/坏/积极/消极"）
+  // Rule 6: 帮助理解自己（不说"你应该..."）
   function getGrowthNarration() {
     var p = getPatterns();
     var richness = p.themeCount + p.recoveryCount;
 
     if (p.totalMemories === 0) {
-      return "Bubble 还在等你";
+      return "Bubble 在等你写下第一句";
     }
     if (richness >= 5 && bubbleDNA.totalResponses >= 2) {
       return "Bubble 好像越来越懂你了";
@@ -518,7 +522,7 @@
     if (richness >= 3) {
       return "Bubble 开始记住你的节奏了";
     }
-    return "Bubble 还在慢慢认识你";
+    return "Bubble 正在收集这些日子";
   }
 
   function getGrowthHeadline() {
@@ -553,61 +557,165 @@
     return "每一次表达，都是 Bubble 理解你的一步。";
   }
 
-  // ====== 由 Pattern 计算 Bubble Biology 状态 ======
-  // 视觉表达理解深度，不表达成长分数。
-  // 液体层次 ← Memory 层数（矿物沉积）
-  // 粒子密度 ← Pattern 丰富度
-  // 色温 ← 近期情绪基调
-  // 呼吸节奏 ← 记录连续性
+  // ====== Bubble Constitution + Growth System (6 维度) ======
+  // Bubble 不是情绪分数、不是宠物、不是等级系统、不是 AI 助手。
+  // Bubble 是用户长期记录过程中，逐渐形成的一个"理解自己的生命体"。
+  //
+  // 六维度生命周期：
+  //   ① 液体高度 (Memory)     — 最近30天记录活跃程度
+  //   ② 液体颜色 (Body)       — 身体阶段（绝不表示情绪）
+  //   ③ 饱和度 (Emotion Temp) — 情绪温度（降低饱和度，绝不换颜色）
+  //   ④ 液体运动 (Rhythm)     — 生活节奏稳定性
+  //   ⑤ 内部纹理 (Pattern)    — 长期 Pattern 积累
+  //   ⑥ 透明度 (Understanding) — 理解深度
 
-  var moodColorMap = {
-    "焦虑": { hue: 265, sat: 0.15 },   // 薰衣草紫
-    "委屈": { hue: 340, sat: 0.14 },   // 玫瑰粉
-    "愤怒": { hue: 10, sat: 0.18 },    // 珊瑚红
-    "低落": { hue: 220, sat: 0.08 },   // 雾蓝
-    "平静": { hue: 180, sat: 0.06 },   // 薄荷青
-    "温暖": { hue: 35, sat: 0.14 },    // 暖橙
-    "力量": { hue: 50, sat: 0.16 },    // 金色
-    "未明": { hue: 275, sat: 0.08 }    // 柔紫（空状态默认）
+  // 身体阶段颜色映射（液体颜色 = Body，绝不表示情绪）
+  var phaseColorMap = {
+    "menstrual": { hue: 345, sat: 0.45, light: 38, desc: "身体正在修复" },
+    "follicular": { hue: 165, sat: 0.40, light: 52, desc: "逐渐恢复" },
+    "ovulation": { hue: 42, sat: 0.50, light: 58, desc: "生命力旺盛" },
+    "luteal": { hue: 28, sat: 0.42, light: 48, desc: "能量缓缓下沉" },
+    "unknown": { hue: 275, sat: 0.20, light: 55, desc: "等待了解你的节奏" }
   };
 
-  function computeBubbleState() {
+  // 缓存后端返回的 bubble params
+  var cachedBubbleParams = null;
+
+  // 从后端加载 bubble params，失败时用前端本地数据降级计算
+  async function loadBubbleParams() {
+    if (isDemoMode) {
+      // 演示模式用前端计算（锁定柔紫中性色）
+      return computeBubbleParamsLocal();
+    }
+    try {
+      if (window.CB_API && window.CB_API.growth && window.CB_API.growth.getBubbleParams) {
+        var data = await window.CB_API.growth.getBubbleParams();
+        cachedBubbleParams = data;
+        return data;
+      }
+    } catch (e) {
+      console.warn("加载 Bubble 参数失败，使用本地计算:", e);
+    }
+    return computeBubbleParamsLocal();
+  }
+
+  // 前端本地降级计算（当后端不可用时）
+  function computeBubbleParamsLocal() {
     var p = getPatterns();
     var memoryCount = p.totalMemories;
     var patternRichness = p.themeCount + p.recoveryCount + p.triggerCount;
 
-    // 液体层次：Memory 越多，矿物层越厚
-    var liquidLayers = Math.min(5, Math.floor(memoryCount / 1)); // demo 用累加动画，1 层→5 层逐步展开
+    // 获取当前周期阶段（从全局 cycleStatus 或默认 unknown）
+    var phase = "unknown";
+    if (typeof cycleStatus !== 'undefined' && cycleStatus && cycleStatus.phase) {
+      phase = cycleStatus.phase;
+    }
+    if (isDemoMode) phase = "unknown";
 
-    // 粒子密度：Pattern 越丰富，内部生命越多
-    var particleDensity = 2 + Math.floor(patternRichness / 2);
+    var phaseData = phaseColorMap[phase] || phaseColorMap["unknown"];
 
-    // 色温：演示模式下锁定为"柔紫"中性色，避免被理解为"评分"
-    // 真实模式下仍按最近情绪基调变化
-    var effectiveMood = p.recentMood;
-    if (isDemoMode) effectiveMood = "未明";
-    var moodData = moodColorMap[effectiveMood] || moodColorMap["未明"];
+    // ① 液体高度: 最近30天活跃度
+    var recentCount = 0;
+    var now = Date.now();
+    var thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+    for (var i = 0; i < bubbleDNA.memories.length; i++) {
+      var memTime = new Date(bubbleDNA.memories[i].date || bubbleDNA.memories[i].created_at || now).getTime();
+      if (memTime >= thirtyDaysAgo) recentCount++;
+    }
+    var liquidHeight = Math.min(85, 30 + recentCount * 2);
 
-    // 呼吸节奏：记录越多越稳定（越慢）
-    var breatheDuration = Math.max(4.0, 6.0 - memoryCount * 0.15);
+    // ② 液体颜色: 身体阶段
+    var liquidColor = {
+      hue: phaseData.hue,
+      saturation: phaseData.sat,
+      lightness: phaseData.light,
+      phase: phase,
+      phaseName: phase === "menstrual" ? "月经期" : phase === "follicular" ? "卵泡期" : phase === "ovulation" ? "排卵期" : phase === "luteal" ? "黄体期" : "未知",
+      description: phaseData.desc
+    };
 
-    // 液体不透明度：Memory 越多，液体越有质感（越不透明）
-    var opacity = Math.min(0.95, 0.72 + memoryCount * 0.015);
+    // ③ 饱和度: 情绪温度（只降低饱和度，绝不换颜色）
+    var saturation = 0.85;
+    if (memoryCount > 0 && p.recentMood && p.recentMood !== "未明") {
+      // 简化：有情绪记录时稍微降低饱和度
+      saturation = 0.70;
+    }
 
-    // 纹理层数：Pattern 丰富度
+    // ④ 液体运动: 生活节奏
+    var rhythm = {
+      speed: 0.8,
+      stability: 0.5,
+      turbulence: 0.3
+    };
+    if (memoryCount >= 3) {
+      rhythm.stability = Math.min(1.0, 0.3 + memoryCount * 0.05);
+      rhythm.speed = 0.5 + (1.0 - rhythm.stability) * 0.7;
+      rhythm.turbulence = 1.0 - rhythm.stability;
+    }
+
+    // ⑤ 内部纹理: Pattern 积累
+    var hasPattern = (p.themeCount >= 2) || (p.triggerCount >= 2);
     var textureLayers = Math.min(5, Math.floor(patternRichness / 2));
+    if (!hasPattern) textureLayers = Math.min(textureLayers, 1);
+
+    var texture = {
+      layers: textureLayers,
+      complexity: Math.min(1.0, patternRichness / 15.0),
+      hasPattern: hasPattern,
+      patternRichness: patternRichness
+    };
+
+    // ⑥ 透明度: 理解深度
+    var transparency;
+    if (memoryCount === 0) {
+      transparency = 0.95;
+    } else if (!hasPattern) {
+      transparency = Math.max(0.7, 0.95 - memoryCount * 0.01);
+    } else {
+      transparency = Math.max(0.3, 0.7 - patternRichness * 0.03);
+    }
 
     return {
-      liquidLayers: liquidLayers,
-      particleDensity: particleDensity,
-      moodHue: moodData.hue,
-      moodSat: moodData.sat,
-      breatheDuration: breatheDuration,
-      opacity: opacity,
-      textureLayers: textureLayers,
-      patternRichness: patternRichness,
-      memoryCount: memoryCount,
-      recentMood: effectiveMood
+      liquid_height: liquidHeight,
+      liquid_color: liquidColor,
+      saturation: saturation,
+      rhythm: rhythm,
+      texture: texture,
+      transparency: transparency,
+      narration: getGrowthNarration(),
+      meta: {
+        total_memories: memoryCount,
+        recent_memories_30d: recentCount,
+        cycle_phase: phase,
+        has_pattern: hasPattern
+      }
+    };
+  }
+
+  // 兼容旧代码：返回类似旧 computeBubbleState 的结构
+  function computeBubbleState() {
+    var params = cachedBubbleParams || computeBubbleParamsLocal();
+    var lc = params.liquid_color || { hue: 275, sat: 0.2 };
+
+    return {
+      liquidLayers: Math.min(5, Math.ceil(params.liquid_height / 20)),
+      particleDensity: 2 + Math.floor((params.texture ? params.texture.patternRichness : 0) / 2),
+      moodHue: lc.hue || 275,
+      moodSat: params.saturation || 0.6,
+      breatheDuration: Math.max(4.0, 6.0 - (params.rhythm ? params.rhythm.speed : 0.8) * 2),
+      opacity: params.transparency || 0.95,
+      textureLayers: params.texture ? params.texture.layers : 0,
+      patternRichness: params.texture ? params.texture.patternRichness : 0,
+      memoryCount: params.meta ? params.meta.total_memories : 0,
+      recentMood: "未明",
+      // 新维度
+      liquidHeight: params.liquid_height || 30,
+      phaseColor: lc,
+      saturation: params.saturation || 0.6,
+      rhythm: params.rhythm || { speed: 0.8, stability: 0.5, turbulence: 0.3 },
+      hasPattern: params.texture ? params.texture.has_pattern : false,
+      transparency: params.transparency || 0.95,
+      narration: params.narration || ""
     };
   }
 
@@ -619,19 +727,30 @@
     var narration = document.getElementById("growthNarration");
 
     if (bubble) {
-      // 色温来自情绪基调，不是"好坏"
-      var filterStr = "brightness(" + (1 + st.moodSat * 0.3).toFixed(3) + ")";
-      filterStr += " saturate(" + (1 + st.moodSat).toFixed(3) + ")";
-      filterStr += " hue-rotate(" + ((st.moodHue - 275) * 0.6).toFixed(1) + "deg)";
+      // ② 液体颜色 = 身体阶段（hue-rotate），不是情绪
+      // ③ 饱和度 = 情绪温度（只降低饱和度，绝不换颜色）
+      var baseHue = 275; // CSS 中液体的默认 hue
+      var hueRotate = ((st.phaseColor.hue || 275) - baseHue) * 0.6;
+      var filterStr = "hue-rotate(" + hueRotate.toFixed(1) + "deg)";
+      filterStr += " saturate(" + st.saturation.toFixed(2) + ")";
+      filterStr += " brightness(" + (1 + (st.phaseColor.sat || 0.2) * 0.2).toFixed(3) + ")";
       bubble.style.filter = filterStr;
-      bubble.style.animationDuration = st.breatheDuration.toFixed(1) + "s";
+
+      // ④ 液体运动 = 生活节奏（呼吸速度由 rhythm.speed 控制）
+      var breatheDur = Math.max(3.5, 7.0 - st.rhythm.speed * 3.0);
+      bubble.style.animationDuration = breatheDur.toFixed(1) + "s";
     }
+
     if (liquid) {
-      liquid.style.opacity = st.opacity.toFixed(2);
+      // ① 液体高度 = 最近30天活跃程度
+      liquid.style.height = st.liquidHeight + "%";
+      // ⑥ 透明度 = 理解深度（越理解越透明）
+      liquid.style.opacity = st.transparency.toFixed(2);
     }
+
     if (texture) {
       texture.innerHTML = "";
-      // 纹理层 = 矿物沉积，每层有不同的质感和色调
+      // ⑤ 内部纹理 = Pattern 积累（成长不是越来越大，而是越来越丰富）
       for (var i = 0; i < st.textureLayers; i++) {
         var layer = document.createElement("span");
         var layerOpacity = 0.06 + i * 0.02;
@@ -640,29 +759,31 @@
         layer.style.cssText =
           "position:absolute;inset:0;border-radius:50%;opacity:" + layerOpacity + ";pointer-events:none;" +
           "background:radial-gradient(circle at " + xPos + "% " + yPos + "%, " +
-          "hsla(" + st.moodHue + ", 40%, 70%, .5), transparent 40%);";
+          "hsla(" + (st.phaseColor.hue || 275) + ", 40%, 70%, .5), transparent 40%);";
         texture.appendChild(layer);
       }
       if (st.textureLayers > 0) texture.classList.add("visible");
-    }
-    if (narration) {
-      narration.textContent = getGrowthNarration();
+      else texture.classList.remove("visible");
     }
 
-    // 回应页卡片顶部色温 = 主 Bubble 情绪基调
+    if (narration) {
+      // Constitution: 不定义用户、不评价、帮助理解自己
+      narration.textContent = st.narration || getGrowthNarration();
+    }
+
+    // 回应页卡片色温 = 身体阶段颜色（不是情绪）
     var resonanceCards = document.querySelectorAll(".resonance-card");
     for (var rc = 0; rc < resonanceCards.length; rc++) {
-      // 顶部弧形光感用情绪色温
-      var topGradient = "linear-gradient(90deg, transparent 0%, hsla(" + st.moodHue + ",45%,70%,.5) 20%, hsla(" + st.moodHue + ",50%,72%,.45) 50%, hsla(" + st.moodHue + ",45%,70%,.5) 80%, transparent 100%)";
-      // 背景顶部加情绪色光斑
-      var bgColor = "radial-gradient(ellipse at 30% 0%, hsla(" + st.moodHue + ",40%,80%,.35), transparent 50%), radial-gradient(ellipse at 70% 100%, rgba(240,237,247,.4), transparent 50%), linear-gradient(180deg, rgba(255,253,251,.99), rgba(248,244,250,.9))";
+      var hue = st.phaseColor.hue || 275;
+      var bgColor = "radial-gradient(ellipse at 30% 0%, hsla(" + hue + ",40%,80%,.35), transparent 50%), radial-gradient(ellipse at 70% 100%, rgba(240,237,247,.4), transparent 50%), linear-gradient(180deg, rgba(255,253,251,.99), rgba(248,244,250,.9))";
       resonanceCards[rc].style.background = bgColor;
-      // 用 CSS 变量传递顶部色温（::before 无法直接设 style，用 inline CSS 变量）
-      resonanceCards[rc].style.setProperty("--mood-hue", st.moodHue);
+      resonanceCards[rc].style.setProperty("--mood-hue", hue);
     }
   }
 
-  applyBubbleState();
+  // 初始化时加载后端 bubble params（异步，不阻塞渲染）
+  loadBubbleParams().then(function() { applyBubbleState(); });
+  applyBubbleState(); // 立即用本地数据渲染，后端数据到达后刷新
 
   // ====== 数据加载（接后端 API）======
   // 仅替换硬编码数据来源，不改视觉。失败时保留原 HTML 兜底。
