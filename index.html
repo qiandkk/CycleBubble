@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CycleBubble</title>
   <meta name="description" content="CycleBubble — 一个持续理解你的情绪空间。">
-  <link rel="stylesheet" href="./styles.css?v=20260713a">
+  <link rel="stylesheet" href="./styles.css?v=20260713c">
   <!-- API 基础 URL：默认空字符串 = 同源（Nginx 反代 /api/ 到 FastAPI）。
        部署到 Render/其他跨域后端时，把下面这一行改成对应的 URL，例如：
          window.__API_BASE__ = 'https://cyclebubble-api.onrender.com';
@@ -536,10 +536,34 @@
     <!-- 背景层 -->
     <div class="narrative-bg" id="narrativeBg"></div>
 
-    <!-- 日期显示 -->
-    <div class="narrative-date" id="narrativeDate" hidden></div>
+    <!-- 远处共鸣 Bubble（Scene 2） -->
+    <div class="narrative-resonance-area" id="narrativeResonance" hidden></div>
 
-    <!-- 输入框区域（Scene 1 & 2 打字机） -->
+    <!-- 中心 Bubble（贯穿全程，始终居中，复用产品 Bubble 结构） -->
+    <div class="narrative-bubble-wrap" id="narrativeBubbleWrap">
+      <div class="breathing-bubble narrative-bubble" id="narrativeBubble">
+        <div class="bubble-glass"></div>
+        <div class="bubble-liquid" id="narrativeLiquid">
+          <svg class="wave-svg wave-svg-back" viewBox="0 0 600 40" preserveAspectRatio="none">
+            <path d="M0,20 Q37.5,8 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z" />
+          </svg>
+          <svg class="wave-svg wave-svg-mid" viewBox="0 0 600 40" preserveAspectRatio="none">
+            <path d="M0,20 Q37.5,32 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z" />
+          </svg>
+          <svg class="wave-svg wave-svg-front" viewBox="0 0 600 40" preserveAspectRatio="none">
+            <path d="M0,20 Q37.5,12 75,20 T150,20 T225,20 T300,20 T375,20 T450,20 T525,20 T600,20 L600,40 L0,40 Z" />
+          </svg>
+          <span class="bubble-texture" id="narrativeTexture"></span>
+          <span class="floating-particles" id="narrativeParticles"></span>
+          <span class="light-points" id="narrativeLightPoints"></span>
+          <span class="glow glow-one"></span>
+          <span class="glow glow-two"></span>
+        </div>
+        <div class="bubble-light"></div>
+      </div>
+    </div>
+
+    <!-- 输入框区域（Scene 1 & 3 & 4 打字机，在 Bubble 下方） -->
     <div class="narrative-input-area" id="narrativeInput" hidden>
       <div class="narrative-input-frame">
         <p class="narrative-input-text" id="narrativeInputText"></p>
@@ -547,32 +571,18 @@
       </div>
     </div>
 
-    <!-- AI 理解节点（Scene 3） -->
-    <div class="narrative-ai-area" id="narrativeAi" hidden>
-      <div class="narrative-ai-nodes" id="narrativeAiNodes"></div>
-    </div>
-
-    <!-- 中心 Bubble（贯穿全程） -->
-    <div class="narrative-bubble-wrap" id="narrativeBubbleWrap">
-      <div class="narrative-bubble" id="narrativeBubble">
-        <div class="narrative-bubble-liquid" id="narrativeLiquid"></div>
-        <div class="narrative-bubble-texture" id="narrativeTexture"></div>
-        <div class="narrative-bubble-particles" id="narrativeParticles"></div>
-        <div class="narrative-bubble-glass" id="narrativeGlass"></div>
-        <div class="narrative-bubble-glow" id="narrativeGlow"></div>
-      </div>
-    </div>
-
-    <!-- 远处共鸣 Bubble（Scene 5） -->
-    <div class="narrative-resonance-area" id="narrativeResonance" hidden></div>
-
     <!-- 场景旁白文案 -->
     <div class="narrative-caption" id="narrativeCaption"></div>
+
+    <!-- 结束按钮（Scene 6） -->
+    <div class="narrative-end-area" id="narrativeEnd" hidden>
+      <button class="narrative-end-btn" type="button" id="narrativeEndBtn">开始记录今天</button>
+    </div>
 
     <!-- 跳过按钮 -->
     <button class="narrative-skip" type="button" id="narrativeSkip">跳过</button>
   </div>
 
-  <script src="./script.js?v=20260713a"></script>
+  <script src="./script.js?v=20260713c"></script>
 </body>
 </html>
