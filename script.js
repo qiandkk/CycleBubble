@@ -2683,18 +2683,20 @@
     });
   }
 
-  // ====== Narrative Demo 叙事短片引擎 ======
+  // ====== Narrative Demo 叙事短片引擎 v3 ======
   // 「一个 Bubble 是如何诞生的」
-  // 6 个 Scene 自动播放，总约 60 秒
-  // 价值链：记录 → AI理解 → Pattern → Bubble成长 → 自我理解 → 共鸣 → 结束
+  // Bubble = 产品同一颗 Bubble（复用 .breathing-bubble 结构）
+  // AI 不可见 — Bubble 本身就是 AI 的载体
+  // 故事：被老板骂→难过（Bubble 变冷下沉）→两周后又被骂→不那么难过了（发现周期关联）
+  //       →一个月后→从沉溺情绪转向处理问题（Bubble 变暖上升，纹理丰富）→共鸣
 
-  var ndEl = null, ndBubble = null, ndCaption = null, ndInput = null;
-  var ndInputText = null, ndCursor = null, ndDate = null, ndAi = null;
-  var ndAiNodes = null, ndResonance = null, ndTexture = null, ndParticles = null;
+  var ndEl = null, ndBubble = null, ndLiquid = null, ndCaption = null, ndInput = null;
+  var ndInputText = null, ndCursor = null, ndTexture = null, ndParticles = null;
+  var ndLightPoints = null, ndResonance = null, ndEnd = null;
   var ndTimers = [], ndActive = false, ndSceneIdx = 0;
   var ndAudioCtx = null;
 
-  // ---- 声音引擎（Web Audio API，无外部文件） ----
+  // 与产品 moodColorMap 一致的色温（CSS data-mood 实现，这里只做属性切换）
   function ndInitAudio() {
     if (ndAudioCtx) return;
     try { ndAudioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
@@ -2708,504 +2710,377 @@
       osc.type = type || 'sine';
       osc.frequency.value = freq;
       gain.gain.setValueAtTime(0, ndAudioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(gainVal || 0.04, ndAudioCtx.currentTime + 0.02);
+      gain.gain.linearRampToValueAtTime(gainVal || 0.03, ndAudioCtx.currentTime + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.001, ndAudioCtx.currentTime + duration);
       osc.connect(gain); gain.connect(ndAudioCtx.destination);
       osc.start(); osc.stop(ndAudioCtx.currentTime + duration);
     } catch (e) {}
   }
 
-  function ndSoundKey() { ndTone(800 + Math.random() * 200, 0.03, 'sine', 0.015); }
-  function ndSoundSave() { ndTone(523, 0.12, 'sine', 0.03); setTimeout(function(){ ndTone(659, 0.15, 'sine', 0.025); }, 80); }
-  function ndSoundDrop() { ndTone(440, 0.2, 'sine', 0.025); }
-  function ndSoundLink() { ndTone(1200, 0.06, 'triangle', 0.015); }
-  function ndSoundResonance() { ndTone(330, 0.4, 'sine', 0.02); setTimeout(function(){ ndTone(440, 0.3, 'sine', 0.015); }, 200); }
+  function ndSoundKey() { ndTone(700 + Math.random() * 200, 0.025, 'sine', 0.012); }
+  function ndSoundSave() { ndTone(523, 0.1, 'sine', 0.025); }
+  function ndSoundDrop() { ndTone(380, 0.18, 'sine', 0.02); }
+  function ndSoundResonance() { ndTone(294, 0.35, 'sine', 0.018); }
 
-  // ---- 工具函数 ----
-  function ndClearTimers() {
-    for (var i = 0; i < ndTimers.length; i++) clearTimeout(ndTimers[i]);
-    ndTimers = [];
-  }
-
+  function ndClearTimers() { for (var i = 0; i < ndTimers.length; i++) clearTimeout(ndTimers[i]); ndTimers = []; }
   function ndTimer(fn, ms) { ndTimers.push(setTimeout(fn, ms)); }
 
-  function ndSetBubbleStage(stage) {
-    if (ndBubble) ndBubble.setAttribute('data-stage', String(stage));
+  // 设置情绪色温（与产品 moodColorMap 一致）
+  function ndSetMood(mood) {
+    if (ndBubble) ndBubble.setAttribute('data-mood', mood);
+  }
+
+  // 设置液体高度百分比（与产品 applyBubbleState 机制一致）
+  function ndSetLiquid(pct, opacity) {
+    if (ndLiquid) {
+      ndLiquid.style.height = pct + '%';
+      if (opacity !== undefined) ndLiquid.style.opacity = String(opacity);
+    }
+  }
+
+  // 添加纹理层（与产品 applyBubbleState 的 texture 逻辑一致）
+  function ndSetTexture(layers, hue) {
+    if (!ndTexture) return;
+    ndTexture.innerHTML = '';
+    for (var i = 0; i < layers; i++) {
+      var layer = document.createElement('span');
+      var op = 0.06 + i * 0.02;
+      var x = 20 + i * 15;
+      var y = 30 + i * 10;
+      var h = hue || 275;
+      layer.style.cssText =
+        'position:absolute;inset:0;border-radius:50%;opacity:' + op + ';pointer-events:none;' +
+        'background:radial-gradient(circle at ' + x + '% ' + y + '%, ' +
+        'hsla(' + h + ', 40%, 70%, .5), transparent 40%);';
+      ndTexture.appendChild(layer);
+    }
+    if (layers > 0) ndTexture.classList.add('visible');
+    else ndTexture.classList.remove('visible');
+  }
+
+  // 添加共鸣光点（与产品 light-point 一致）
+  function ndAddLightPoint(type, leftPct, topPct) {
+    if (!ndLightPoints) return;
+    var p = document.createElement('span');
+    p.className = 'light-point light-point--' + (type || 'connection');
+    p.style.left = leftPct + '%';
+    p.style.top = topPct + '%';
+    ndLightPoints.appendChild(p);
   }
 
   function ndShowCaption(text, fadeMs) {
     if (!ndCaption) return;
     ndCaption.classList.add('narrative-caption--fade-out');
     ndTimer(function () {
-      ndCaption.textContent = text;
+      ndCaption.textContent = text || '';
       ndCaption.classList.remove('narrative-caption--fade-out');
       ndCaption.classList.remove('narrative-caption--fade-in');
       ndCaption.offsetHeight;
       ndCaption.classList.add('narrative-caption--fade-in');
-    }, fadeMs || 800);
+    }, fadeMs || 500);
   }
 
-  function ndHideCaption() {
-    if (ndCaption) ndCaption.classList.add('narrative-caption--fade-out');
-  }
+  function ndHideCaption() { if (ndCaption) ndCaption.classList.add('narrative-caption--fade-out'); }
 
-  // 打字机效果
   function ndTypewriter(text, element, speed, onChar, onDone) {
     element.textContent = '';
     var i = 0;
     function typeNext() {
-      if (i >= text.length) {
-        if (onDone) onDone();
-        return;
-      }
+      if (i >= text.length) { if (onDone) onDone(); return; }
       element.textContent += text[i];
       if (onChar) onChar();
       i++;
-      ndTimer(typeNext, speed || 120);
+      ndTimer(typeNext, speed || 110);
     }
     typeNext();
   }
 
-  // 添加粒子
   function ndAddParticle(leftPct, bottomPct, color) {
     if (!ndParticles) return;
     var p = document.createElement('span');
     p.className = 'narrative-particle';
     p.style.left = leftPct + '%';
     p.style.bottom = bottomPct + '%';
-    p.style.background = color || 'rgba(232,163,167,.5)';
-    p.style.boxShadow = '0 0 6px ' + (color || 'rgba(232,163,167,.5)');
+    p.style.background = color || 'rgba(255,255,255,.5)';
+    p.style.boxShadow = '0 0 5px ' + (color || 'rgba(255,255,255,.5)');
     ndParticles.appendChild(p);
   }
 
-  // 添加纹理层
-  function ndAddTextureLayers(count) {
-    if (!ndTexture) return;
-    ndTexture.innerHTML = '';
-    for (var i = 0; i < count; i++) {
-      var layer = document.createElement('span');
-      var op = 0.06 + i * 0.025;
-      var x = 20 + i * 15;
-      var y = 30 + i * 10;
-      layer.style.cssText =
-        'position:absolute;inset:0;border-radius:50%;opacity:' + op +
-        ';pointer-events:none;background:radial-gradient(circle at ' + x + '% ' + y + '%, ' +
-        'hsla(275,40%,70%,.5), transparent 40%);';
-      ndTexture.appendChild(layer);
-    }
-  }
-
-  // 添加涟漪
   function ndAddRipple() {
     if (!ndEl) return;
     var ripple = document.createElement('div');
     ripple.className = 'narrative-ripple';
-    ripple.style.left = '50%';
-    ripple.style.top = '50%';
+    ripple.style.left = '50%'; ripple.style.top = '50%';
     ripple.style.transform = 'translate(-50%, -50%)';
     ndEl.appendChild(ripple);
     setTimeout(function () { if (ripple.parentNode) ripple.remove(); }, 3000);
   }
 
-  // ---- 6 个 Scene 实现 ----
-
+  // ====== Scene 1：第一次记录 — 被老板骂，难过 ======
+  // Bubble: 未明→低落（变冷蓝），液体从 30%→18%，呼吸变慢
   function ndScene1() {
-    // Scene 1：今天发生了一件小事（8秒）
-    ndSetBubbleStage(0);
-    ndShowCaption('', 500);
-
+    ndSetMood('未明');
+    ndSetLiquid(30, 0.72);
+    ndSetTexture(0);
     ndTimer(function () {
-      // 显示输入框
       if (ndInput) ndInput.hidden = false;
       if (ndCursor) ndCursor.style.display = 'inline-block';
-
-      // 打字机输入第一段文字
-      var text = '今天下班以后……\n不知道为什么……\n一点都不想说话。';
-      ndTypewriter(text, ndInputText, 130, function () {
-        ndSoundKey();
-      }, function () {
-        // 输入完成，保存
+      ndTypewriter('今天被老板骂了，好难过。', ndInputText, 120, function () { ndSoundKey(); }, function () {
+        if (ndCursor) ndCursor.style.display = 'none';
+        ndSoundSave();
+        // 保存瞬间：Bubble 开始变冷
         ndTimer(function () {
-          if (ndCursor) ndCursor.style.display = 'none';
-          ndSoundSave();
-
-          // Bubble 第一次出现一点光
-          ndTimer(function () {
-            ndSetBubbleStage(1);
-            ndSoundDrop();
-          }, 600);
-
-          // 显示旁白
-          ndTimer(function () {
-            ndShowCaption('每一次记录，都会留下一条线索。');
-          }, 1800);
-        }, 500);
+          ndSetMood('低落');
+          ndSetLiquid(18, 0.78);
+          ndSoundDrop();
+          ndAddParticle('30%', '40%', 'rgba(184,184,222,.6)');
+        }, 300);
+        ndTimer(function () {
+          ndShowCaption('每一次记录，\n都会留下一个线索。');
+        }, 1500);
       });
-    }, 1000);
+    }, 600);
   }
 
+  // ====== Scene 2：遇见共鸣 ======
+  // 远处出现共鸣 Bubble，中心 Bubble 轻微涟漪
   function ndScene2() {
-    // Scene 2：时间慢慢留下痕迹（10秒）
-    // 清除输入框
     if (ndInput) {
       ndInput.style.opacity = '0';
-      ndTimer(function () {
-        ndInput.hidden = true;
-        ndInput.style.opacity = '1';
-        if (ndInputText) ndInputText.textContent = '';
-        if (ndCursor) ndCursor.style.display = 'inline-block';
-      }, 1000);
+      ndTimer(function () { ndInput.hidden = true; ndInput.style.opacity = '1'; }, 500);
     }
-
-    // 日期变化
     ndTimer(function () {
-      if (ndDate) {
-        ndDate.hidden = false;
-        ndDate.textContent = '两周后';
-      }
-    }, 1200);
-
-    // Bubble 轻轻呼吸（已在呼吸动画中）
-    // 第二次记录
-    ndTimer(function () {
-      if (ndInput) ndInput.hidden = false;
-      var text = '今天也是。\n快到生理期了。\n又开始觉得自己很差。';
-      ndTypewriter(text, ndInputText, 130, function () {
-        ndSoundKey();
-      }, function () {
-        ndTimer(function () {
-          if (ndCursor) ndCursor.style.display = 'none';
-          ndSoundSave();
-
-          // 第二颗粒子进入
-          ndTimer(function () {
-            ndAddParticle('35%', '40%', 'rgba(181,169,207,.5)');
-            ndSoundDrop();
-          }, 500);
-
-          // 纹理开始出现
-          ndTimer(function () {
-            ndSetBubbleStage(2);
-            ndAddTextureLayers(1);
-          }, 1200);
-
-          // 旁白
-          ndTimer(function () {
-            ndShowCaption('重复出现的体验，\n开始形成属于你的 Pattern。');
-          }, 2500);
-        }, 400);
-      });
-    }, 2500);
-  }
-
-  function ndScene3() {
-    // Scene 3：AI 开始理解（10秒）
-    if (ndInput) {
-      ndInput.style.opacity = '0';
-      ndTimer(function () { ndInput.hidden = true; ndInput.style.opacity = '1'; }, 800);
-    }
-
-    ndTimer(function () {
-      // 显示 AI 节点区域
-      if (ndAi) ndAi.hidden = false;
-      if (!ndAiNodes) return;
-
-      var nodes = [
-        { label: '工作结束后', x: '10%', y: '20%' },
-        { label: '黄体期', x: '70%', y: '15%' },
-        { label: '疲惫', x: '25%', y: '65%' },
-        { label: '重复出现', x: '65%', y: '70%' }
-      ];
-
-      // 逐个显示节点
-      for (var i = 0; i < nodes.length; i++) {
-        (function (idx) {
-          ndTimer(function () {
-            var node = document.createElement('div');
-            node.className = 'narrative-ai-node';
-            node.textContent = nodes[idx].label;
-            node.style.left = nodes[idx].x;
-            node.style.top = nodes[idx].y;
-            ndAiNodes.appendChild(node);
-            ndTimer(function () {
-              node.classList.add('narrative-ai-node--visible');
-              ndSoundLink();
-            }, 100);
-          }, idx * 1200);
-        })(i);
-      }
-
-      // 连线（在第3和第4个节点出现后）
-      ndTimer(function () {
-        var links = [
-          { from: 0, to: 1 },
-          { from: 0, to: 2 },
-          { from: 1, to: 3 },
-          { from: 2, to: 3 }
-        ];
-        for (var j = 0; j < links.length; j++) {
-          (function (idx) {
-            ndTimer(function () {
-              var fromEl = ndAiNodes.children[links[idx].from];
-              var toEl = ndAiNodes.children[links[idx].to];
-              if (!fromEl || !toEl) return;
-              var fromRect = fromEl.getBoundingClientRect();
-              var toRect = toEl.getBoundingClientRect();
-              var containerRect = ndAiNodes.getBoundingClientRect();
-              var x1 = fromRect.left + fromRect.width / 2 - containerRect.left;
-              var y1 = fromRect.top + fromRect.height / 2 - containerRect.top;
-              var x2 = toRect.left + toRect.width / 2 - containerRect.left;
-              var y2 = toRect.top + toRect.height / 2 - containerRect.top;
-              var dx = x2 - x1, dy = y2 - y1;
-              var len = Math.sqrt(dx * dx + dy * dy);
-              var angle = Math.atan2(dy, dx) * 180 / Math.PI;
-              var link = document.createElement('div');
-              link.className = 'narrative-ai-link';
-              link.style.left = x1 + 'px';
-              link.style.top = y1 + 'px';
-              link.style.width = len + 'px';
-              link.style.transform = 'rotate(' + angle + 'deg)';
-              ndAiNodes.appendChild(link);
-              ndTimer(function () {
-                link.classList.add('narrative-ai-link--visible');
-                ndSoundLink();
-              }, 50);
-            }, idx * 600);
-          })(j);
-        }
-      }, 5200);
-
-      // Bubble 内部新层次
-      ndTimer(function () {
-        ndSetBubbleStage(3);
-        ndAddParticle('50%', '30%', 'rgba(242,195,199,.5)');
-        ndAddTextureLayers(2);
-      }, 4000);
-
-      // 旁白
-      ndTimer(function () {
-        ndShowCaption('AI 不会定义你。\n它只是帮助你看见那些容易忽略的联系。');
-      }, 6500);
-    }, 1200);
-  }
-
-  function ndScene4() {
-    // Scene 4：Bubble 成长（10秒）
-    if (ndAi) {
-      ndAi.style.opacity = '0';
-      ndTimer(function () { ndAi.hidden = true; ndAi.style.opacity = '1'; if (ndAiNodes) ndAiNodes.innerHTML = ''; }, 1000);
-    }
-
-    ndTimer(function () {
-      // Bubble 变得更加完整
-      ndSetBubbleStage(4);
-      ndAddParticle('45%', '55%', 'rgba(232,163,167,.5)');
-      ndAddTextureLayers(3);
-      ndSoundDrop();
-    }, 1500);
-
-    ndTimer(function () {
-      ndSetBubbleStage(5);
-      ndAddParticle('60%', '35%', 'rgba(181,169,207,.4)');
-      ndSoundDrop();
-    }, 5000);
-
-    ndTimer(function () {
-      ndShowCaption('有些答案，\n不是一天找到的。\n而是在一次次记录中慢慢浮现。');
-    }, 3000);
-  }
-
-  function ndScene5() {
-    // Scene 5：遇见共鸣（10秒）
-    ndSetBubbleStage(6);
-    ndAddTextureLayers(4);
-
-    ndTimer(function () {
-      // 远处缓缓出现几个 Bubble
       if (!ndResonance) return;
       ndResonance.hidden = false;
-
-      var distantBubbles = [
-        { left: '8%', top: '25%', size: 40, color: 'rgba(245,217,216,.3)', delay: 0,
-          text: '我也是这样。', textLeft: '5%', textTop: '32%' },
-        { left: '82%', top: '20%', size: 32, color: 'rgba(181,169,207,.3)', delay: 1500,
-          text: '谢谢你写下这些。', textLeft: '72%', textTop: '27%' },
-        { left: '15%', top: '65%', size: 28, color: 'rgba(232,163,167,.25)', delay: 3000,
-          text: '', textLeft: '', textTop: '' }
+      var distant = [
+        { left: '8%', top: '28%', size: 36, color: 'rgba(245,217,216,.3)', delay: 0, text: '我也被骂过。', textLeft: '4%', textTop: '36%' },
+        { left: '82%', top: '22%', size: 30, color: 'rgba(181,169,207,.3)', delay: 1000, text: '不是你的错。', textLeft: '66%', textTop: '30%' }
       ];
-
-      for (var i = 0; i < distantBubbles.length; i++) {
+      for (var i = 0; i < distant.length; i++) {
         (function (idx) {
-          var b = distantBubbles[idx];
+          var b = distant[idx];
           ndTimer(function () {
             var bubble = document.createElement('div');
             bubble.className = 'narrative-distant-bubble';
-            bubble.style.left = b.left;
-            bubble.style.top = b.top;
-            bubble.style.width = b.size + 'px';
-            bubble.style.height = b.size + 'px';
+            bubble.style.left = b.left; bubble.style.top = b.top;
+            bubble.style.width = b.size + 'px'; bubble.style.height = b.size + 'px';
             bubble.style.background = 'radial-gradient(circle at 32% 24%, ' + b.color + ', transparent 60%)';
-            bubble.style.boxShadow = '0 0 ' + (b.size * 0.8) + 'px ' + b.color;
+            bubble.style.boxShadow = '0 0 ' + (b.size * 0.7) + 'px ' + b.color;
             ndResonance.appendChild(bubble);
-            ndTimer(function () {
-              bubble.classList.add('narrative-distant-bubble--visible');
-              ndSoundResonance();
-            }, 100);
-
-            // 文字浮现
+            ndTimer(function () { bubble.classList.add('narrative-distant-bubble--visible'); ndSoundResonance(); }, 100);
             if (b.text) {
               ndTimer(function () {
                 var text = document.createElement('div');
                 text.className = 'narrative-distant-text';
                 text.textContent = b.text;
-                text.style.left = b.textLeft;
-                text.style.top = b.textTop;
+                text.style.left = b.textLeft; text.style.top = b.textTop;
                 ndResonance.appendChild(text);
-                ndTimer(function () {
-                  text.classList.add('narrative-distant-text--visible');
-                }, 100);
-              }, 1200);
+                ndTimer(function () { text.classList.add('narrative-distant-text--visible'); }, 100);
+              }, 800);
             }
           }, b.delay);
         })(i);
       }
-
-      // 主 Bubble 涟漪
-      ndTimer(function () {
-        ndAddRipple();
-      }, 2000);
-
-      // 旁白
-      ndTimer(function () {
-        ndShowCaption('原来，\n不是只有我。');
-      }, 4500);
-    }, 1500);
+      ndTimer(function () { ndAddRipple(); }, 1600);
+    }, 500);
+    ndTimer(function () { ndShowCaption('原来，\n不是只有我。'); }, 2500);
   }
 
+  // ====== Scene 3：两周后 — 又被骂，但这次没那么难受 ======
+  // Bubble: 低落→平静（回暖），液体 18%→28%，呼吸稳定
+  // 发现：原来黄体期就是会低落一点
+  function ndScene3() {
+    if (ndResonance) { ndResonance.style.opacity = '0'; }
+    ndTimer(function () { if (ndResonance) { ndResonance.hidden = true; ndResonance.style.opacity = '1'; ndResonance.innerHTML = ''; } }, 500);
+    ndTimer(function () {
+      if (ndInput) ndInput.hidden = false;
+      if (ndInputText) ndInputText.textContent = '';
+      if (ndCursor) ndCursor.style.display = 'inline-block';
+      ndTypewriter('今天又被说了，但好像没那么难受。', ndInputText, 100, function () { ndSoundKey(); }, function () {
+        if (ndCursor) ndCursor.style.display = 'none';
+        ndSoundSave();
+        ndTimer(function () {
+          // 从低落转向平静 — 液体回升，色温回暖
+          ndSetMood('平静');
+          ndSetLiquid(28, 0.82);
+          ndSoundDrop();
+          ndAddParticle('45%', '35%', 'rgba(180,220,210,.5)');
+          // 添加第一层纹理 — 理解开始沉积
+          ndSetTexture(1, 180);
+          ndAddLightPoint('connection', '30%', '60%');
+        }, 300);
+        ndTimer(function () { ndShowCaption('身体在不同的阶段，\n感受也会不同。'); }, 1500);
+      });
+    }, 800);
+  }
+
+  // ====== Scene 4：一个月后 — 从情绪转向行动 ======
+  // Bubble: 平静→力量（变暖金），液体 28%→45%，纹理 1→3 层，光点增加
+  // Bubble 自己发现了变化 — 不说 AI，只让 Bubble 变化
+  function ndScene4() {
+    if (ndInput) {
+      ndInput.style.opacity = '0';
+      ndTimer(function () { ndInput.hidden = true; ndInput.style.opacity = '1'; }, 500);
+    }
+    ndTimer(function () {
+      if (ndInput) ndInput.hidden = false;
+      if (ndInputText) ndInputText.textContent = '';
+      if (ndCursor) ndCursor.style.display = 'inline-block';
+      ndTypewriter('今天又被说了，我在想怎么解决。', ndInputText, 100, function () { ndSoundKey(); }, function () {
+        if (ndCursor) ndCursor.style.display = 'none';
+        ndSoundSave();
+        ndTimer(function () {
+          // 从平静转向力量 — 液体上升，色温变暖金
+          ndSetMood('力量');
+          ndSetLiquid(45, 0.88);
+          ndSoundDrop();
+          ndAddParticle('50%', '30%', 'rgba(255,200,100,.5)');
+          // 纹理丰富到 3 层 — 理解积累
+          ndSetTexture(3, 50);
+          ndAddLightPoint('warmth', '40%', '50%');
+          ndAddLightPoint('warmth', '60%', '35%');
+          ndAddLightPoint('connection', '35%', '40%');
+        }, 300);
+        ndTimer(function () { ndShowCaption('原来，\n我早就在变化了。'); }, 1500);
+      });
+    }, 800);
+  }
+
+  // ====== Scene 5：共鸣 — 更多人因为你的记录被陪伴 ======
+  // 更多远处 Bubble 浮现，中心 Bubble 光点更亮
+  function ndScene5() {
+    if (ndInput) {
+      ndInput.style.opacity = '0';
+      ndTimer(function () { ndInput.hidden = true; ndInput.style.opacity = '1'; }, 500);
+    }
+    ndTimer(function () {
+      if (!ndResonance) return;
+      ndResonance.hidden = false;
+      ndResonance.innerHTML = '';
+      var distant = [
+        { left: '5%', top: '30%', size: 40, color: 'rgba(255,200,100,.25)', delay: 0, text: '谢谢你写下这些。', textLeft: '3%', textTop: '38%' },
+        { left: '85%', top: '25%', size: 32, color: 'rgba(245,217,216,.3)', delay: 800, text: '我也在学着处理。', textLeft: '68%', textTop: '32%' },
+        { left: '12%', top: '65%', size: 28, color: 'rgba(181,169,207,.25)', delay: 1600, text: null, textLeft: null, textTop: null }
+      ];
+      for (var i = 0; i < distant.length; i++) {
+        (function (idx) {
+          var b = distant[idx];
+          ndTimer(function () {
+            var bubble = document.createElement('div');
+            bubble.className = 'narrative-distant-bubble';
+            bubble.style.left = b.left; bubble.style.top = b.top;
+            bubble.style.width = b.size + 'px'; bubble.style.height = b.size + 'px';
+            bubble.style.background = 'radial-gradient(circle at 32% 24%, ' + b.color + ', transparent 60%)';
+            bubble.style.boxShadow = '0 0 ' + (b.size * 0.7) + 'px ' + b.color;
+            ndResonance.appendChild(bubble);
+            ndTimer(function () { bubble.classList.add('narrative-distant-bubble--visible'); ndSoundResonance(); }, 100);
+            if (b.text) {
+              ndTimer(function () {
+                var text = document.createElement('div');
+                text.className = 'narrative-distant-text';
+                text.textContent = b.text;
+                text.style.left = b.textLeft; text.style.top = b.textTop;
+                ndResonance.appendChild(text);
+                ndTimer(function () { text.classList.add('narrative-distant-text--visible'); }, 100);
+              }, 700);
+            }
+          }, b.delay);
+        })(i);
+      }
+      ndTimer(function () { ndAddRipple(); ndAddLightPoint('warmth', '55%', '45%'); }, 2000);
+    }, 500);
+    ndTimer(function () { ndShowCaption('每一次记录，\n都在陪伴另一个人。'); }, 3000);
+  }
+
+  // ====== Scene 6：结束 — 镜头拉远，只留按钮 ======
   function ndScene6() {
-    // Scene 6：结束（10秒）
-    // 镜头慢慢拉远
     var wrap = document.getElementById('narrativeBubbleWrap');
-    if (wrap) wrap.classList.add('narrative-bubble-wrap--zoom-out');
-
-    ndTimer(function () {
-      ndShowCaption('每一次记录，\n都会让你更理解自己。');
-    }, 2000);
-
-    // 淡出
-    ndTimer(function () {
-      if (ndEl) ndEl.classList.add('narrative-demo--fade-out');
-    }, 7000);
-
-    ndTimer(function () {
-      endNarrativeDemo();
-    }, 8000);
+    if (wrap) { wrap.classList.add('narrative-bubble-wrap--zoom-out'); }
+    if (ndResonance) ndResonance.style.opacity = '0';
+    ndTimer(function () { if (ndResonance) { ndResonance.hidden = true; ndResonance.style.opacity = '1'; ndResonance.innerHTML = ''; } }, 800);
+    ndTimer(function () { ndShowCaption('每一次记录，\n都会让你更理解自己。'); }, 600);
+    ndTimer(function () { ndHideCaption(); if (ndEnd) ndEnd.hidden = false; }, 2500);
   }
 
-  // ---- 场景调度 ----
   var NARRATIVE_SCENES = [
     { duration: 8000, fn: ndScene1 },
-    { duration: 10000, fn: ndScene2 },
-    { duration: 10000, fn: ndScene3 },
-    { duration: 10000, fn: ndScene4 },
-    { duration: 10000, fn: ndScene5 },
-    { duration: 8000, fn: ndScene6 }
+    { duration: 6000, fn: ndScene2 },
+    { duration: 8000, fn: ndScene3 },
+    { duration: 8000, fn: ndScene4 },
+    { duration: 7000, fn: ndScene5 },
+    { duration: 4000, fn: ndScene6 }
   ];
 
   function ndPlayScene(idx) {
-    if (!ndActive || idx >= NARRATIVE_SCENES.length) {
-      if (idx >= NARRATIVE_SCENES.length) endNarrativeDemo();
-      return;
-    }
+    if (!ndActive || idx >= NARRATIVE_SCENES.length) return;
     ndSceneIdx = idx;
     var scene = NARRATIVE_SCENES[idx];
     ndClearTimers();
     scene.fn();
-    // 调度下一场景
-    ndTimer(function () {
-      ndPlayScene(idx + 1);
-    }, scene.duration);
+    ndTimer(function () { ndPlayScene(idx + 1); }, scene.duration);
   }
 
   function startNarrativeDemo() {
     ndEl = document.getElementById('narrativeDemo');
     if (!ndEl) return;
-
-    // 初始化所有引用
     ndBubble = document.getElementById('narrativeBubble');
+    ndLiquid = document.getElementById('narrativeLiquid');
     ndCaption = document.getElementById('narrativeCaption');
     ndInput = document.getElementById('narrativeInput');
     ndInputText = document.getElementById('narrativeInputText');
     ndCursor = document.getElementById('narrativeCursor');
-    ndDate = document.getElementById('narrativeDate');
-    ndAi = document.getElementById('narrativeAi');
-    ndAiNodes = document.getElementById('narrativeAiNodes');
-    ndResonance = document.getElementById('narrativeResonance');
     ndTexture = document.getElementById('narrativeTexture');
     ndParticles = document.getElementById('narrativeParticles');
-
-    // 重置状态
+    ndLightPoints = document.getElementById('narrativeLightPoints');
+    ndResonance = document.getElementById('narrativeResonance');
+    ndEnd = document.getElementById('narrativeEnd');
     ndActive = true;
     ndSceneIdx = 0;
     ndClearTimers();
-    if (ndBubble) { ndBubble.removeAttribute('data-stage'); }
+    if (ndBubble) ndBubble.removeAttribute('data-mood');
     if (ndInput) { ndInput.hidden = true; ndInput.style.opacity = '1'; }
     if (ndInputText) ndInputText.textContent = '';
     if (ndCursor) ndCursor.style.display = 'none';
-    if (ndDate) ndDate.hidden = true;
-    if (ndAi) { ndAi.hidden = true; ndAi.style.opacity = '1'; }
-    if (ndAiNodes) ndAiNodes.innerHTML = '';
-    if (ndResonance) { ndResonance.hidden = true; ndResonance.innerHTML = ''; }
-    if (ndTexture) ndTexture.innerHTML = '';
+    if (ndResonance) { ndResonance.hidden = true; ndResonance.innerHTML = ''; ndResonance.style.opacity = '1'; }
+    if (ndTexture) { ndTexture.innerHTML = ''; ndTexture.classList.remove('visible'); }
     if (ndParticles) ndParticles.innerHTML = '';
+    if (ndLightPoints) ndLightPoints.innerHTML = '';
     if (ndCaption) { ndCaption.textContent = ''; ndCaption.className = 'narrative-caption'; }
+    if (ndEnd) ndEnd.hidden = true;
     var wrap = document.getElementById('narrativeBubbleWrap');
-    if (wrap) wrap.classList.remove('narrative-bubble-wrap--zoom-out');
-
-    // 显示 overlay
+    if (wrap) { wrap.classList.remove('narrative-bubble-wrap--zoom-in'); wrap.classList.remove('narrative-bubble-wrap--zoom-out'); }
     ndEl.hidden = false;
     ndEl.classList.remove('narrative-demo--fade-out');
     ndEl.classList.add('narrative-demo--fade-in');
-
-    // 初始化声音
     ndInitAudio();
-
-    // 跳过按钮
     var skipBtn = document.getElementById('narrativeSkip');
-    if (skipBtn) {
-      skipBtn.onclick = function () { endNarrativeDemo(); };
-    }
-
-    // 开始播放
+    if (skipBtn) skipBtn.onclick = function () { endNarrativeDemo(); };
+    var endBtn = document.getElementById('narrativeEndBtn');
+    if (endBtn) endBtn.onclick = function () { endNarrativeDemo(); };
     ndPlayScene(0);
   }
 
   function endNarrativeDemo() {
     ndActive = false;
     ndClearTimers();
-
-    // 清理远处共鸣
-    if (ndResonance) { ndResonance.innerHTML = ''; ndResonance.hidden = true; }
-
-    // 隐藏 overlay
     if (ndEl) {
       ndEl.classList.add('narrative-demo--fade-out');
       ndTimer(function () {
         ndEl.hidden = true;
         ndEl.classList.remove('narrative-demo--fade-out');
         ndEl.classList.remove('narrative-demo--fade-in');
-        // 重置所有元素
-        if (ndBubble) ndBubble.removeAttribute('data-stage');
+        if (ndBubble) ndBubble.removeAttribute('data-mood');
         if (ndInput) ndInput.hidden = true;
-        if (ndDate) ndDate.hidden = true;
-        if (ndAi) ndAi.hidden = true;
-        if (ndAiNodes) ndAiNodes.innerHTML = '';
-        if (ndTexture) ndTexture.innerHTML = '';
+        if (ndResonance) { ndResonance.hidden = true; ndResonance.innerHTML = ''; }
+        if (ndTexture) { ndTexture.innerHTML = ''; ndTexture.classList.remove('visible'); }
         if (ndParticles) ndParticles.innerHTML = '';
+        if (ndLightPoints) ndLightPoints.innerHTML = '';
         if (ndCaption) { ndCaption.textContent = ''; ndCaption.className = 'narrative-caption'; }
+        if (ndEnd) ndEnd.hidden = true;
+        if (ndLiquid) { ndLiquid.style.height = ''; ndLiquid.style.opacity = ''; }
         var wrap = document.getElementById('narrativeBubbleWrap');
-        if (wrap) wrap.classList.remove('narrative-bubble-wrap--zoom-out');
-      }, 1000);
+        if (wrap) { wrap.classList.remove('narrative-bubble-wrap--zoom-in'); wrap.classList.remove('narrative-bubble-wrap--zoom-out'); }
+      }, 800);
     }
   }
 
