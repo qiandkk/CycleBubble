@@ -54,8 +54,27 @@ source venv/bin/activate
 pip install -r requirements.txt --quiet 2>&1 | tail -3 | tee -a "$LOG"
 
 # 4. Refresh frontend files
+# 用 for-loop 强制逐个 cp + log，规避单行 cp 多文件时跳过 admin.* 的隐患
 log "[4/6] copy frontend to nginx root"
-cp -f index.html styles.css script.js api.js admin.html admin.js "$WEB_ROOT/"
+FRONTEND_FILES="index.html styles.css script.js api.js admin.html admin.js"
+COPY_FAIL=0
+for f in $FRONTEND_FILES; do
+    if [[ -f "$f" ]]; then
+        if cp -f "$f" "$WEB_ROOT/$f" 2>>"$LOG"; then
+            log "  copied: $f"
+        else
+            log "  WARN: failed to copy $f"
+            COPY_FAIL=1
+        fi
+    else
+        log "  WARN: source file not found: $f"
+        COPY_FAIL=1
+    fi
+done
+if [[ $COPY_FAIL -ne 0 ]]; then
+    log "  ERROR: some frontend files failed to copy; aborting"
+    exit 1
+fi
 chown -R www:www "$WEB_ROOT"
 # 目录必须有 755（x 权限）才能被 nginx worker 进入，文件 644
 chmod 755 "$WEB_ROOT"
