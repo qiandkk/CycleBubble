@@ -526,7 +526,7 @@
     var richness = p.themeCount + p.recoveryCount;
 
     if (p.totalMemories === 0) {
-      return "Bubble 还在等你写下第一句话";
+      return "Bubble 在等你写下第一句";
     }
     if (richness >= 5 && bubbleDNA.totalResponses >= 2) {
       return "Bubble 想和你分享一些最近才发现的变化";
