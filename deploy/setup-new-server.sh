@@ -194,9 +194,9 @@ info "=== 注册 watchdog cron ==="
 
 # 16. 开放 webhook 端口（firewalld 层）
 if systemctl list-unit-files | grep -q firewalld; then
-    firewall-cmd --permanent --add-port=9000/tcp
+    firewall-cmd --permanent --add-port=9001/tcp
     firewall-cmd --reload
-    info "已开放 9000/tcp (firewalld)"
+    info "已开放 9001/tcp (firewalld)"
 fi
 
 # 17. 验证
@@ -207,7 +207,7 @@ curl -s -m 5 http://127.0.0.1:8000/api/health -w "  HTTP:%{http_code}\n" 2>/dev/
 echo -n "  /api/healthz (深度检查 DB): "
 curl -s -m 5 http://127.0.0.1:8000/api/healthz -w "  HTTP:%{http_code}\n" 2>/dev/null || echo "FAILED"
 echo -n "  webhook health: "
-curl -s -m 5 http://127.0.0.1:9000/health -w "  HTTP:%{http_code}\n" 2>/dev/null || echo "FAILED"
+curl -s -m 5 http://127.0.0.1:9001/health -w "  HTTP:%{http_code}\n" 2>/dev/null || echo "FAILED"
 echo -n "  主页: "
 curl -s -o /dev/null -m 5 -w "HTTP:%{http_code} 大小:%{size_download}B\n" http://127.0.0.1/
 
@@ -216,9 +216,9 @@ info "================================================"
 info "✅ 部署完成！"
 info "================================================"
 info "下一步需要做："
-info "1. 阿里云 ECS 控制台 → 安全组 → 入方向放行端口 22, 80, 443, 9000"
+info "1. 阿里云 ECS 控制台 → 安全组 → 入方向放行端口 22, 80, 443, 9001"
 info "2. GitHub 仓库 → Settings → Webhooks → 添加："
-info "     URL:    http://YOUR_SERVER_IP:9000/webhook"
+info "     URL:    http://YOUR_SERVER_IP:9001/webhook"
 info "     Secret: ${WH_SECRET:0:8}...（共 ${#WH_SECRET} 字符）"
 info "     Event:  Just the push event"
 info "3. 跑一次 seed_demo 填演示数据："
