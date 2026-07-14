@@ -127,3 +127,5 @@ scp root@8.160.187.143:/var/www/app/cyclebubble_demo.db ./demo-backup-$(date +%Y
 | Webhook failed to connect | 阿里云安全组放行 9000 + 服务器 firewalld 放行 9000 |
 | 更新没生效 | `tail -50 /var/log/app/auto-update.log` |
 | admin_setting UNIQUE 错误 | 已修复：见 PR `fix(backend): admin_setting seed 原子 upsert` |
+## Migration smoke test 2026-07-14T17:25:54
+- pushed to verify new webhook end-to-end
