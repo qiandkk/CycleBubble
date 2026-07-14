@@ -2,7 +2,7 @@
 """
 CycleBubble GitHub Webhook receiver.
 
-Listens on 0.0.0.0:9000 (or $PORT), validates GitHub HMAC-SHA256 signature,
+Listens on 0.0.0.0:9001 (or $PORT), validates GitHub HMAC-SHA256 signature,
 runs update.sh on push events to the configured branch.
 
 Setup:
@@ -130,6 +130,6 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 9000))
+    port = int(os.environ.get("PORT", 9001))
     log(f"webhook listener starting on 0.0.0.0:{port}")
     HTTPServer(("0.0.0.0", port), Handler).serve_forever()
