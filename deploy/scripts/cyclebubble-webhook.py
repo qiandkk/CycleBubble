@@ -8,7 +8,7 @@ runs update.sh on push events to the configured branch.
 Setup:
   1. Save the shared secret to /etc/cyclebubble-webhook-secret (chmod 600)
   2. Register webhook in GitHub repo Settings → Webhooks:
-       Payload URL: http://YOUR_SERVER:9000/webhook
+       Payload URL: http://YOUR_SERVER:9001/webhook
        Content type: application/json
        Secret: <must match /etc/cyclebubble-webhook-secret>
        Events: Just the push event
